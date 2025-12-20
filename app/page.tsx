@@ -12,7 +12,7 @@ export default function Home() {
           </div>
           
           <h1 className="mx-auto max-w-4xl text-6xl font-900 tracking-tight text-foreground md:text-7xl lg:text-8xl">
-            Addis GigFind
+            Addis Ababa GigFind
           </h1>
           
           <p className="mx-auto max-w-2xl text-2xl font-300 text-foreground/80 md:text-3xl">
