@@ -75,7 +75,7 @@ export default function MessagesPage() {
               </Avatar>
               <h3 className="font-semibold text-lg">{selectedConversation.name}</h3>
             </div>
-            <ScrollArea className="flex-1 p-4">
+            <ScrollArea className="flex-1 p-4 h-[calc(100vh-22rem)]">
               <div className="space-y-4">
                 {messagesData[selectedConversation.id].map(msg => (
                   <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>

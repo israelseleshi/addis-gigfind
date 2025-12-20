@@ -9,7 +9,7 @@ const freelancerNavLinks = [
   { href: "/freelancer/find-work", label: "Find Work" },
   { href: "/freelancer/my-jobs", label: "My Jobs" },
   { href: "/freelancer/messages", label: "Messages" },
-  { href: "/freelancer/settings", label: "Profile & Identity" },
+  { href: "/freelancer/settings", label: "Settings" },
 ];
 
 export default function FreelancerLayout({ children }: { children: React.ReactNode }) {

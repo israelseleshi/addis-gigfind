@@ -41,9 +41,8 @@ export default function DashboardLayout({
 
   const navLinks = isFreelancer ? freelancerNavLinks : clientNavLinks;
 
-  if (isFreelancer) {
-    return <main className="flex-1">{children}</main>;
-  }
+  // This layout is now deprecated and the logic is handled in the respective dashboards
+  return <main className="flex-1">{children}</main>;
 
   return (
     <SidebarProvider defaultOpen={true}>
