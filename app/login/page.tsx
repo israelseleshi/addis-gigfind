@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,6 +32,7 @@ type SignInFormValues = z.infer<typeof signInSchema>
 export default function SignInPage() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [showPassword, setShowPassword] = React.useState(false)
+  const router = useRouter()
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -43,15 +45,16 @@ export default function SignInPage() {
 
   async function onSubmit(values: SignInFormValues) {
     setIsLoading(true)
-    try {
-      // TODO: Replace with actual API call
-      console.log("Sign In:", values)
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      alert("Signed in successfully!")
-    } catch (error) {
-      console.error("Sign in error:", error)
-    } finally {
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    if (values.email === "client@demo.com" && values.password === "password123") {
+      router.push("/client/dashboard")
+    } else if (values.email === "freelancer@demo.com" && values.password === "password123") {
+      router.push("/freelancer/dashboard")
+    } else {
+      // TODO: Replace with a more user-friendly error message
+      alert("Invalid email or password. Please use the demo credentials.")
       setIsLoading(false)
     }
   }
