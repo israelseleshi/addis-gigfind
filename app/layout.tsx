@@ -3,7 +3,9 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import { usePathname } from 'next/navigation';
-import { Header } from "@/components/header";
+import dynamic from 'next/dynamic';
+
+const Header = dynamic(() => import('@/components/header').then(mod => mod.Header), { ssr: false });
 import { Toaster } from 'sonner';
 import "./globals.css";
 
@@ -23,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const hideHeaderPaths = ['/register/freelancer', '/register/client', '/client', '/freelancer'];
+  const hideHeaderPaths = ['/client', '/freelancer'];
   const showHeader = !hideHeaderPaths.some(path => pathname.startsWith(path));
 
   return (

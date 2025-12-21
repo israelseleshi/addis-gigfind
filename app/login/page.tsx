@@ -177,22 +177,11 @@ export default function SignInPage() {
                   </div>
                 </div>
 
-                {/* Sign Up Links */}
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs text-slate-600 mb-2">New to Addis GigFind?</p>
-                    <Link
-                      href="/register/client"
-                      className="block w-full text-center rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 py-2 text-sm font-semibold transition"
-                    >
-                      Sign up as Client
-                    </Link>
-                  </div>
-                  <Link
-                    href="/register/freelancer"
-                    className="block w-full text-center rounded-md border border-amber-500 text-amber-600 hover:bg-amber-50 py-2 text-sm font-semibold transition"
-                  >
-                    Sign up as Freelancer
+                {/* Sign Up Link */}
+                <div className="text-center text-sm text-slate-600">
+                  New to Addis GigFind?{" "}
+                  <Link href="/signup" className="text-blue-600 hover:underline font-medium">
+                    Create Account
                   </Link>
                 </div>
 

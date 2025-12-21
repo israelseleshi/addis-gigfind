@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Mail, Lock, User, Building2, MapPin, Phone } from "lucide-react"
+import { Mail, Lock, User, Building2, MapPin, Phone, Eye, EyeOff } from "lucide-react"
 
 const clientSignUpSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -67,6 +67,8 @@ const locations = [
 
 export default function ClientSignUpPage() {
   const [isLoading, setIsLoading] = React.useState(false)
+  const [showPassword, setShowPassword] = React.useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
 
   const form = useForm<ClientSignUpFormValues>({
     resolver: zodResolver(clientSignUpSchema),
@@ -98,26 +100,8 @@ export default function ClientSignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      
-      <div className="flex flex-1 items-center justify-center px-4 py-12">
-        <Card className="w-full max-w-2xl">
-          <CardHeader className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-blue-600/10 flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl">Sign up as Client</CardTitle>
-                <CardDescription>
-                  Create your account to start posting gigs and hiring freelancers
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <Form {...form}>
+    <div className="py-12">
+      <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-slate-700">Account Information</h3>
@@ -165,7 +149,10 @@ export default function ClientSignUpPage() {
                           <FormControl>
                             <div className="relative">
                               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                              <Input placeholder="••••••••" type="password" className="pl-10" {...field} />
+                              <Input placeholder="••••••••" type={showPassword ? "text" : "password"} className="pl-10" {...field} />
+                              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                                {showPassword ? <EyeOff /> : <Eye />}
+                              </button>
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -181,7 +168,10 @@ export default function ClientSignUpPage() {
                           <FormControl>
                             <div className="relative">
                               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                              <Input placeholder="••••••••" type="password" className="pl-10" {...field} />
+                              <Input placeholder="••••••••" type={showConfirmPassword ? "text" : "password"} className="pl-10" {...field} />
+                              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                                {showConfirmPassword ? <EyeOff /> : <Eye />}
+                              </button>
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -297,9 +287,6 @@ export default function ClientSignUpPage() {
                 </div>
               </form>
             </Form>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   )
 }

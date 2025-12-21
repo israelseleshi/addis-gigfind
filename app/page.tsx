@@ -5,33 +5,33 @@ import { Briefcase, UserPlus, Search } from 'lucide-react';
 export default function Home() {
   return (
     <div className="w-full">
-      <main className="relative z-10 flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center bg-cover bg-center" style={{backgroundImage: "url('https://images.unsplash.com/photo-1589149098258-3e9102cd63d3?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"}}>
-        <div className="absolute inset-0 bg-black/50" />
+      <main className="relative z-10 flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center bg-cover bg-center" style={{backgroundImage: "url('https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"}}>
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
         <div className="relative z-10">
         <div className="space-y-4">
-          <div className="inline-block rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+          <div className="inline-block rounded-full border border-foreground/20 bg-background/80 px-4 py-2 text-sm font-medium text-foreground shadow-lg">
             Welcome to the Future of Work
           </div>
           
-          <h1 className="mx-auto max-w-4xl text-6xl font-900 tracking-tight text-foreground md:text-7xl lg:text-8xl">
+          <h1 className="mx-auto max-w-4xl text-6xl font-black tracking-tight text-white [text-shadow:_0_4px_8px_rgb(0_0_0_/_40%)] md:text-7xl lg:text-8xl">
             Addis GigFind
           </h1>
           
-          <p className="mx-auto max-w-2xl text-2xl font-300 text-foreground/80 md:text-3xl">
+          <p className="mx-auto max-w-2xl text-2xl font-light text-white/80 [text-shadow:_0_2px_4px_rgb(0_0_0_/_30%)] md:text-3xl">
             A Local Skills Marketplace
           </p>
         </div>
         
-        <p className="mx-auto max-w-2xl text-lg leading-relaxed text-foreground/60 md:text-xl">
+        <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-white/70 [text-shadow:_0_1px_2px_rgb(0_0_0_/_20%)] md:text-xl">
           Connecting skilled professionals with clients in Addis Ababa. Discover talent, build relationships, and grow your business.
         </p>
         
-        <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-          <button className="group relative inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 font-semibold text-primary-foreground transition-all duration-300 hover:shadow-lg hover:shadow-primary/50 active:scale-95">
+        <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <button className="group relative inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 font-semibold text-primary-foreground transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/50 active:scale-95">
             Get Started
             <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
           </button>
-          <button className="inline-flex items-center justify-center rounded-full border border-foreground/20 px-8 py-4 font-semibold text-foreground transition-all duration-300 hover:border-foreground/40 hover:bg-foreground/5">
+          <button className="inline-flex items-center justify-center rounded-full bg-background/80 px-8 py-4 font-semibold text-foreground transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl active:scale-95">
             Learn More
           </button>
         </div>
@@ -73,7 +73,7 @@ export default function Home() {
         <div className="container mx-auto text-center">
           <h2 className="text-4xl font-bold mb-12">Featured Categories</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {["Design", "Writing", "Plumbing", "Electrical"].map(category => (
+                        {["Design", "Writing", "Plumbing", "Electrical", "Tutoring", "Marketing", "Development", "Photography"].map(category => (
               <Card key={category} className="p-6 text-center hover:shadow-lg transition-shadow">
                 <h3 className="text-xl font-semibold">{category}</h3>
               </Card>
