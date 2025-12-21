@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut } from 'lucide-react';
+import { Bell, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardHeader() {
@@ -19,6 +19,9 @@ export default function DashboardHeader() {
     <header className="flex items-center justify-between p-4 border-b">
       <h1 className="text-2xl font-bold">Freelancer Dashboard</h1>
       <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" className="cursor-pointer">
+          <Bell className="w-5 h-5" />
+        </Button>
         <Avatar>
           <AvatarImage src="/placeholder-user.jpg" />
           <AvatarFallback>U</AvatarFallback>

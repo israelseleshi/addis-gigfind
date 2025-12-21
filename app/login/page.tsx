@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Header } from "@/components/header"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -54,7 +54,7 @@ export default function SignInPage() {
       router.push("/freelancer/dashboard")
     } else {
       // TODO: Replace with a more user-friendly error message
-      alert("Invalid email or password. Please use the demo credentials.")
+      toast.error("Invalid email or password. Please use the demo credentials.")
       setIsLoading(false)
     }
   }

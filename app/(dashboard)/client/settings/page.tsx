@@ -39,25 +39,20 @@ function ProfileForm() {
     <div className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
-        <Input id="username" defaultValue="Abebe Kebede" />
-        <p className="text-xs text-gray-500">This is your public display name. It can be your real name or a pseudonym.</p>
+        <Input id="username" defaultValue="Client User" />
+        <p className="text-xs text-gray-500">This is your public display name.</p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" defaultValue="abebe@addisbusiness.et" />
+        <Input id="email" type="email" defaultValue="client@demo.com" />
         <p className="text-xs text-gray-500">You can manage verified email addresses in your email settings.</p>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="bio">Bio</Label>
-        <Textarea id="bio" defaultValue="I am a freelance software developer with over 5 years of experience." />
-        <p className="text-xs text-gray-500">You can @mention other users and organizations to link to them.</p>
       </div>
       <div className="space-y-2">
         <Label>Profile Picture</Label>
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
             <AvatarImage src="/placeholder-user.jpg" />
-            <AvatarFallback>AK</AvatarFallback>
+            <AvatarFallback>CU</AvatarFallback>
           </Avatar>
           <Button variant="outline" className="cursor-pointer">Upload Image</Button>
         </div>

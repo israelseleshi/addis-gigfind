@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import { usePathname } from 'next/navigation';
 import { Header } from "@/components/header";
+import { Toaster } from 'sonner';
 import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -22,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const hideHeaderPaths = ['/freelancer', '/client'];
+  const hideHeaderPaths = ['/register/freelancer', '/register/client', '/client', '/freelancer'];
   const showHeader = !hideHeaderPaths.some(path => pathname.startsWith(path));
 
   return (
@@ -32,6 +33,11 @@ export default function RootLayout({
       >
         {showHeader && <Header />}
         {children}
+        <Toaster position="top-right" toastOptions={{
+          classNames: {
+            success: 'bg-green-500 text-white',
+          },
+        }} />
       </body>
     </html>
   );

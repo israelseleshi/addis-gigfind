@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 
-export function MyGigs() {
+export default function GigsPage() {
 return (
 <Card>
 <CardHeader>

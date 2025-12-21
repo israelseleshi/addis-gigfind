@@ -4,7 +4,6 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -96,8 +95,7 @@ export default function FreelancerSignUpPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Header />
-
+      
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <Card className="w-full max-w-2xl">
           <CardHeader className="space-y-2">
