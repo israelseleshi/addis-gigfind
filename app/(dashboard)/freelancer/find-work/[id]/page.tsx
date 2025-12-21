@@ -1,7 +1,13 @@
+"use client";
+
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 // Mock Data - In a real app, you'd fetch this data
 const gigs = [
@@ -21,7 +27,13 @@ const gigs = [
   { id: 14, title: "Virtual Assistant for a Busy Executive", category: "Writing", location: "CMC", budget: "10,000 ETB / month", posted: "3mo ago", description: "A busy executive is looking for a virtual assistant to manage their schedule, handle emails, and perform administrative tasks. The ideal candidate should be highly organized and proactive." },
 ];
 
+// Mock verification status - in a real app, this would come from your auth context or API
+const isVerified = false;
+
 export default function GigDetailPage({ params }: { params: { id: string } }) {
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+
   const gig = gigs.find(g => g.id === parseInt(params.id));
 
   if (!gig) {
@@ -51,9 +63,41 @@ export default function GigDetailPage({ params }: { params: { id: string } }) {
         </CardHeader>
         <CardContent>
           <p className="text-gray-700 whitespace-pre-line">{gig.description}</p>
-          <Button className="w-full mt-6 cursor-pointer">Apply Now</Button>
+          <Button onClick={() => isVerified ? setIsApplyModalOpen(true) : setIsVerificationModalOpen(true)} className="w-full mt-6 cursor-pointer">Apply Now</Button>
         </CardContent>
       </Card>
+
+      {/* Application Modal */}
+      <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Apply for {gig.title}</DialogTitle>
+            <DialogDescription>Submit your proposal for this gig.</DialogDescription>
+          </DialogHeader>
+          <Textarea placeholder="Write a compelling cover note to attract the client..." className="min-h-[150px]" />
+          <DialogFooter>
+            <Button onClick={() => {
+              toast.success('Application submitted successfully!');
+              setIsApplyModalOpen(false);
+            }} className="cursor-pointer">Submit Application</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Verification Prompt Modal */}
+      <Dialog open={isVerificationModalOpen} onOpenChange={setIsVerificationModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><ShieldAlert className="text-yellow-500" /> Account Verification Required</DialogTitle>
+            <DialogDescription>You must be a verified freelancer to apply for gigs. Please upload your ID documents to get the 'Verified' badge.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button asChild className="cursor-pointer">
+              <Link href="/freelancer/kyc">Verify Account Now</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

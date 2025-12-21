@@ -33,6 +33,9 @@ const locations = ["Bole", "Kazanchis", "4 Kilo", "CMC", "Piassa"];
 
 const GIGS_PER_PAGE = 5;
 
+// Mock logged in status - in a real app, this would come from your auth context
+const isLoggedIn = false;
+
 export default function FindWorkPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -116,7 +119,13 @@ export default function FindWorkPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="flex gap-2">
-                    <Button className="cursor-pointer">Apply Now</Button>
+                    {isLoggedIn ? (
+                      <Button className="cursor-pointer">Apply Now</Button>
+                    ) : (
+                      <Button asChild className="cursor-pointer">
+                        <Link href="/login">Login to Apply</Link>
+                      </Button>
+                    )}
                     <Button variant="outline" asChild className="cursor-pointer">
                       <Link href={`/freelancer/find-work/${gig.id}`}>View Details</Link>
                     </Button>
