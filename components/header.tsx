@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { motion } from "framer-motion"
 import Link from "next/link"
 import {
   NavigationMenu,
@@ -14,7 +15,12 @@ import { cn } from "@/lib/utils"
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <motion.header
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ ease: "easeOut", duration: 0.5 }}
+      className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    >
       <div className="container flex h-16 max-w-7xl items-center justify-between mx-auto px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
@@ -118,7 +124,7 @@ export function Header() {
           </Link>
         </div>
       </div>
-    </header>
+    </motion.header>
   )
 }
 
