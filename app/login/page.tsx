@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -143,17 +144,18 @@ export default function SignInPage() {
                   control={form.control}
                   name="rememberMe"
                   render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                      <input
-                        type="checkbox"
-                        id="rememberMe"
-                        checked={field.value}
-                        onChange={field.onChange}
-                        className="h-4 w-4 rounded border border-input bg-transparent cursor-pointer"
-                      />
-                      <FormLabel htmlFor="rememberMe" className="cursor-pointer font-normal">
-                        Remember me
-                      </FormLabel>
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Remember me
+                        </FormLabel>
+                      </div>
                     </FormItem>
                   )}
                 />

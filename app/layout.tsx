@@ -1,7 +1,7 @@
 "use client";
 
 import type { Metadata } from "next";
-import { JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Public_Sans } from "next/font/google";
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
@@ -11,6 +11,11 @@ import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
+  subsets: ["latin"],
+});
+
+const publicSans = Public_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
@@ -31,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${jetbrainsMono.variable} antialiased`}
+        className={`${publicSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         {showHeader && <Header />}
         {children}
