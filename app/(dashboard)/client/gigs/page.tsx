@@ -6,9 +6,12 @@ import { Badge } from "@/components/ui/badge";
 export default function GigsPage() {
 return (
 <Card>
-<CardHeader>
-<CardTitle>My Gigs</CardTitle>
-</CardHeader>
+<CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>My Gigs</CardTitle>
+          <Button asChild>
+            <a href="/client/gigs/create">Post a New Gig</a>
+          </Button>
+        </CardHeader>
 <CardContent className="space-y-4">
 {[
 { title: "House Painting", status: "Open" },

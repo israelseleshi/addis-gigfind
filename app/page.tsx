@@ -37,7 +37,12 @@ export default function Home() {
     <div className="w-full">
       <section className="py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-6 text-center lg:text-left">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="space-y-6 text-center lg:text-left"
+          >
             <Badge className="mb-4">New: Now serving all of Addis</Badge>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-tight">
               Find & Hire Freelancers in Addis Ababa
@@ -49,8 +54,12 @@ export default function Home() {
               <Button size="lg">Get Started</Button>
               <Button size="lg" variant="outline">Learn More</Button>
             </div>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
             <Image
               src="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="Hero Image"
@@ -58,48 +67,54 @@ export default function Home() {
               height={400}
               className="rounded-2xl border border-slate-200 shadow-lg"
             />
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* How It Works Section */}
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold mb-12">How It Works</h2>
+          <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="text-4xl font-bold mb-12">How It Works</motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="border-slate-200 bg-transparent shadow-none">
-              <CardHeader>
-                <div className="mx-auto h-16 w-16 rounded-md bg-slate-100 flex items-center justify-center">
-                  <UserPlus className="h-8 w-8 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <h3 className="text-2xl font-bold">1. Create Account</h3>
-                <p className="text-muted-foreground">Sign up as a client or freelancer to get started.</p>
-              </CardContent>
-            </Card>
-            <Card className="border-slate-200 bg-transparent shadow-none">
-              <CardHeader>
-                <div className="mx-auto h-16 w-16 rounded-md bg-slate-100 flex items-center justify-center">
-                  <Search className="h-8 w-8 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <h3 className="text-2xl font-bold">2. Find or Post Gigs</h3>
-                <p className="text-muted-foreground">Browse available gigs or post a job for freelancers to apply to.</p>
-              </CardContent>
-            </Card>
-            <Card className="border-slate-200 bg-transparent shadow-none">
-              <CardHeader>
-                <div className="mx-auto h-16 w-16 rounded-md bg-slate-100 flex items-center justify-center">
-                  <Briefcase className="h-8 w-8 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <h3 className="text-2xl font-bold">3. Get to Work</h3>
-                <p className="text-muted-foreground">Collaborate, manage projects, and get paid securely.</p>
-              </CardContent>
-            </Card>
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }}>
+              <Card className="border-slate-200 bg-transparent shadow-none h-full">
+                <CardHeader>
+                  <div className="mx-auto h-16 w-16 rounded-md bg-slate-100 flex items-center justify-center">
+                    <UserPlus className="h-8 w-8 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <h3 className="text-2xl font-bold">1. Create Account</h3>
+                  <p className="text-muted-foreground">Sign up as a client or freelancer to get started.</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }}>
+              <Card className="border-slate-200 bg-transparent shadow-none h-full">
+                <CardHeader>
+                  <div className="mx-auto h-16 w-16 rounded-md bg-slate-100 flex items-center justify-center">
+                    <Search className="h-8 w-8 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <h3 className="text-2xl font-bold">2. Find or Post Gigs</h3>
+                  <p className="text-muted-foreground">Browse available gigs or post a job for freelancers to apply to.</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.6 }}>
+              <Card className="border-slate-200 bg-transparent shadow-none h-full">
+                <CardHeader>
+                  <div className="mx-auto h-16 w-16 rounded-md bg-slate-100 flex items-center justify-center">
+                    <Briefcase className="h-8 w-8 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <h3 className="text-2xl font-bold">3. Get to Work</h3>
+                  <p className="text-muted-foreground">Collaborate, manage projects, and get paid securely.</p>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -107,7 +122,7 @@ export default function Home() {
       {/* Featured Categories Section */}
       <section className="py-20 px-4 bg-primary/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold mb-12">Featured Categories</h2>
+          <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="text-4xl font-bold mb-12">Featured Categories</motion.h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {[ 
               { name: "Design", icon: <Paintbrush className="h-8 w-8 mx-auto mb-4 text-primary" /> },
@@ -118,11 +133,13 @@ export default function Home() {
               { name: "Marketing", icon: <Megaphone className="h-8 w-8 mx-auto mb-4 text-primary" /> },
               { name: "Development", icon: <Code className="h-8 w-8 mx-auto mb-4 text-primary" /> },
               { name: "Photography", icon: <Camera className="h-8 w-8 mx-auto mb-4 text-primary" /> },
-            ].map(category => (
-              <Card key={category.name} className="p-6 text-center border-slate-200 hover:border-black transition-colors cursor-pointer">
-                {category.icon}
-                <h3 className="text-lg font-semibold">{category.name}</h3>
-              </Card>
+            ].map((category, index) => (
+              <motion.div key={category.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: index * 0.1 }}>
+                <Card className="p-6 text-center border-slate-200 hover:border-black transition-colors cursor-pointer h-full">
+                  {category.icon}
+                  <h3 className="text-lg font-semibold">{category.name}</h3>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>

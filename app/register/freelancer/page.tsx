@@ -60,7 +60,7 @@ const locations = [
   "Kolfe",
 ]
 
-export default function FreelancerSignUpPage() {
+export function FreelancerSignUpForm() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)

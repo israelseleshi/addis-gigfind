@@ -65,7 +65,7 @@ const locations = [
   "Kolfe",
 ]
 
-export default function ClientSignUpPage() {
+export function ClientSignUpForm() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)

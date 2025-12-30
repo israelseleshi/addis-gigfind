@@ -1,42 +1,27 @@
 "use client";
 
-import { usePathname, useRouter } from 'next/navigation';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Sidebar } from "@/components/sidebar";
 import DashboardHeader from '@/components/dashboard-header';
+import { Home, Package, ShoppingCart, Users } from "lucide-react";
 
-const freelancerNavLinks = [
-  { href: "/freelancer/dashboard", label: "Overview" },
-  { href: "/freelancer/find-work", label: "Find Work" },
-  { href: "/freelancer/my-jobs", label: "My Jobs" },
-  { href: "/freelancer/messages", label: "Messages" },
-  { href: "/freelancer/settings", label: "Settings" },
+const navItems = [
+  { href: "/freelancer/dashboard", icon: <Home className="h-4 w-4" />, label: "Dashboard" },
+  { href: "/freelancer/gigs", icon: <Package className="h-4 w-4" />, label: "Active Gigs" },
+  { href: "/freelancer/proposals", icon: <Users className="h-4 w-4" />, label: "Proposals" },
+  { href: "/freelancer/messages", icon: <ShoppingCart className="h-4 w-4" />, label: "Messages", badge: 2 },
 ];
 
-export default function FreelancerLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const handleTabChange = (value: string) => {
-    router.push(value);
-  };
-
+export default function FreelancerDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div>
-      <DashboardHeader />
-      <div className="p-6">
-        <div className="flex justify-center">
-          <Tabs value={pathname} onValueChange={handleTabChange}>
-            <TabsList>
-              {freelancerNavLinks.map((link) => (
-                <TabsTrigger key={link.href} value={link.href} className="cursor-pointer">
-                  {link.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </div>
-        <div className="mt-6">{children}</div>
+    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+      <Sidebar navItems={navItems} />
+      <div className="flex flex-col">
+        <DashboardHeader />
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+          {children}
+        </main>
       </div>
     </div>
   );
 }
+

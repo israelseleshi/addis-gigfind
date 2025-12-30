@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 
 const Header = dynamic(() => import('@/components/header').then(mod => mod.Header), { ssr: false });
 import { Toaster } from 'sonner';
+import PageTransition from '@/components/page-transition';
 import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -39,7 +40,7 @@ export default function RootLayout({
         className={`${publicSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         {showHeader && <Header />}
-        {children}
+        <PageTransition>{children}</PageTransition>
         <Toaster position="top-right" toastOptions={{
           classNames: {
             success: 'bg-green-500 text-white',
