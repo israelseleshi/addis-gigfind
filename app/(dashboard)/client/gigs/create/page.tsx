@@ -15,7 +15,7 @@ const gigFormSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters." }),
   category: z.string().min(1, { message: "Please select a category." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
-  budget: z.coerce.number().min(1, { message: "Please enter a valid budget." }),
+  budget: z.number().min(1, { message: "Please enter a valid budget." }),
   location: z.string().min(1, { message: "Please select a location." }),
 });
 
@@ -117,7 +117,12 @@ export default function PostGigPage() {
                       <FormItem>
                         <FormLabel>Budget (in Birr)</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="e.g., 5000" {...field} />
+                          <Input 
+                            type="number" 
+                            placeholder="e.g., 5000" 
+                            {...field} 
+                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

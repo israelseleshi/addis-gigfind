@@ -1,5 +1,5 @@
-import { ClientSignUpForm } from "./client/page";
-import { FreelancerSignUpForm } from "./freelancer/page";
+import { ClientSignUpForm } from "./_components/ClientSignUpForm";
+import { FreelancerSignUpForm } from "./_components/FreelancerSignUpForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function RegisterPage() {
