@@ -1,0 +1,57 @@
+src/
+├── app/
+│   ├── (dashboard)/
+│   │   ├── client/
+│   │   │   ├── dashboard/
+│   │   │   │   └── page.tsx
+│   │   │   ├── settings/
+│   │   │   │   └── page.tsx
+│   │   │   └── layout.tsx
+│   │   ├── freelancer/
+│   │   │   ├── dashboard/
+│   │   │   │   └── page.tsx
+│   │   │   ├── find-work/
+│   │   │   │   └── page.tsx
+│   │   │   └── layout.tsx
+│   │   └── layout.tsx
+│   ├── (main)/
+│   │   ├── layout.tsx
+│   │   └── onboarding/
+│   │       └── page.tsx
+│   ├── about/
+│   │   └── page.tsx
+│   ├── auth/
+│   │   └── page.tsx
+│   ├── login/
+│   │   └── page.tsx
+│   ├── register/
+│   │   └── page.tsx
+│   ├── search/
+│   │   └── page.tsx
+│   ├── services/
+│   │   └── page.tsx
+│   ├── forgot-password/
+│   │   └── page.tsx
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── globals.css
+├── components/
+│   ├── auth/
+│   ├── blocks/
+│   ├── layout/
+│   ├── ui/
+│   ├── header.tsx
+│   ├── footer.tsx
+│   ├── client-dashboard-header.tsx
+│   └── dashboard-header.tsx
+├── lib/
+│   ├── actions/
+│   ├── supabase/
+│   ├── validations/
+│   ├── constants.ts
+│   ├── database.types.ts
+│   ├── demo-data.ts
+│   └── utils.ts
+├── hooks/
+│   └── use-mobile.ts
+└── middleware.ts
