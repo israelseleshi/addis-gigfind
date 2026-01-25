@@ -47,30 +47,22 @@ export function LoginForm() {
 
   function onSubmit(values: z.infer<typeof loginSchema>) {
     startTransition(async () => {
-      try {
-        const result = await loginUser(values)
-        if (result?.error) {
-          toast.error(result.error)
-        }
-      } catch {
-        toast.error('Something went wrong. Please try again.')
+      const result = await loginUser(values)
+      if (result?.error) {
+        toast.error(result.error)
       }
     })
   }
 
   function onForgotPasswordSubmit(values: z.infer<typeof forgotPasswordSchema>) {
     startTransition(async () => {
-      try {
-        const result = await recoverPassword(values)
-        if (result?.error) {
-          toast.error(result.error)
-        } else {
-          toast.success('Password reset link sent. Please check your email.')
-          forgotPasswordForm.reset()
-          setShowForgotPassword(false)
-        }
-      } catch {
-        toast.error('Something went wrong. Please try again.')
+      const result = await recoverPassword(values)
+      if (result?.error) {
+        toast.error(result.error)
+      } else {
+        toast.success('Password reset link sent. Please check your email.')
+        forgotPasswordForm.reset()
+        setShowForgotPassword(false)
       }
     })
   }

@@ -10,7 +10,7 @@ export function Footer() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8">
           {/* Company */}
           <div>
-            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wider">Company</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-tight">Company</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="/about">About</Link></li>
               <li><Link href="/blog">Blog</Link></li>
@@ -19,7 +19,7 @@ export function Footer() {
           </div>
           {/* Marketplace */}
           <div>
-            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wider">Marketplace</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-tight">Marketplace</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="/services">Services</Link></li>
               <li><Link href="/categories">Categories</Link></li>
@@ -28,7 +28,7 @@ export function Footer() {
           </div>
           {/* Support */}
           <div>
-            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wider">Support</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-tight">Support</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="/help">Help Center</Link></li>
               <li><Link href="/contact">Contact Us</Link></li>
@@ -37,7 +37,7 @@ export function Footer() {
           </div>
           {/* Legal */}
           <div>
-            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wider">Legal</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-tight">Legal</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="#">Terms of Service</Link></li>
               <li><Link href="#">Privacy Policy</Link></li>
@@ -45,7 +45,7 @@ export function Footer() {
           </div>
           {/* Newsletter */}
           <div className="col-span-2 sm:col-span-1 md:col-span-1">
-            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wider">Stay Updated</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-tight">Stay Updated</h3>
             <p className="text-sm text-muted-foreground mb-4">Subscribe to our newsletter for the latest news.</p>
             <form className="flex w-full max-w-sm">
               <input type="email" placeholder="Email" className="flex-1 rounded-l-md border border-border px-3 py-2 text-sm focus:outline-none" />

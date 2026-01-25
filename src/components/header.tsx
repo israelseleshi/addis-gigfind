@@ -8,7 +8,7 @@ import {
   NavigationMenuList,
   NavigationMenuItem,
 } from "@/components/ui/navigation-menu"
-import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetTrigger, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
 import { Menu } from "lucide-react"
 
@@ -67,6 +67,7 @@ export function Header() {
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="p-6 md:hidden">
+              <SheetTitle className="sr-only">Main Navigation Menu</SheetTitle>
               <nav className="mt-8 flex flex-col space-y-4">
                 <Link href="/search" className="text-lg font-medium">Search</Link>
                 <Link href="/about" className="text-lg font-medium">About Us</Link>

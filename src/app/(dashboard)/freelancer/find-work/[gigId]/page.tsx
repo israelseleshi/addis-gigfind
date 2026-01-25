@@ -1,43 +1,83 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, use } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, ShieldAlert, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { createClient } from "@/lib/supabase/client";
 
-// Mock Data - In a real app, you'd fetch this data
-const gigs = [
-  { id: 1, title: "Urgent Plumbing for Leaky Pipe", category: "Plumbing", location: "Bole", budget: "2,000 ETB", posted: "2h ago", description: "We have a leaky pipe under the kitchen sink that needs urgent attention. The ideal candidate should have experience with residential plumbing and be available to start immediately." },
-  { id: 2, title: "Graphic Designer for Startup Logo", category: "Design", location: "Kazanchis", budget: "5,500 ETB", posted: "8h ago", description: "Our new startup needs a modern and memorable logo. We're looking for a creative designer with a strong portfolio in branding and identity design." },
-  { id: 3, title: "Part-time English Tutor for University Student", category: "Tutoring", location: "4 Kilo", budget: "3,000 ETB / month", posted: "1d ago", description: "Seeking an experienced English tutor to help a university student improve their academic writing and conversational skills. Sessions will be twice a week." },
-  { id: 4, title: "House Wiring and Electrical Setup", category: "Electrical", location: "CMC", budget: "8,000 ETB", posted: "3d ago", description: "We are renovating our house and need a certified electrician to handle the complete wiring and setup of electrical outlets and fixtures." },
-  { id: 5, title: "Content Writer for Tech Blog", category: "Writing", location: "Piassa", budget: "1,500 ETB per article", posted: "5d ago", description: "Our tech blog is looking for a skilled writer to produce high-quality articles on topics like software development, AI, and cybersecurity." },
-  { id: 6, title: "Social Media Manager for a Cafe", category: "Design", location: "Bole", budget: "6,000 ETB / month", posted: "1w ago", description: "A popular cafe in Bole is looking for a social media manager to handle their Instagram and Facebook accounts, create engaging content, and run ad campaigns." },
-  { id: 7, title: "Private Chef for a Dinner Party", category: "Tutoring", location: "Kazanchis", budget: "4,000 ETB", posted: "2w ago", description: "We are hosting a dinner party for 10 guests and need a private chef to prepare a three-course meal. The menu can be discussed and finalized with the chef." },
-  { id: 8, title: "Website Developer for a Small Business", category: "Electrical", location: "4 Kilo", budget: "15,000 ETB", posted: "3w ago", description: "A small retail business needs a simple e-commerce website to sell their products online. The ideal candidate should have experience with Shopify or WooCommerce." },
-  { id: 9, title: "Data Entry Specialist", category: "Writing", location: "CMC", budget: "2,500 ETB", posted: "1mo ago", description: "We are looking for a detail-oriented data entry specialist to input customer information into our database. Accuracy and speed are essential for this role." },
-  { id: 10, title: "Mobile App UI/UX Designer", category: "Design", location: "Piassa", budget: "12,000 ETB", posted: "1mo ago", description: "We are developing a new mobile app and need an experienced UI/UX designer to create an intuitive and visually appealing interface. A strong portfolio is a must." },
-  { id: 11, title: "Translator (Amharic to English)", category: "Writing", location: "Bole", budget: "500 ETB / page", posted: "2mo ago", description: "We need a professional translator to translate legal documents from Amharic to English. The candidate must be fluent in both languages and have experience with legal terminology." },
-  { id: 12, title: "Handyman for Furniture Assembly", category: "Plumbing", location: "Kazanchis", budget: "1,000 ETB", posted: "2mo ago", description: "We have purchased new furniture for our office and need a handyman to assemble desks, chairs, and shelves. All tools and instructions will be provided." },
-  { id: 13, title: "Event Photographer", category: "Design", location: "4 Kilo", budget: "7,000 ETB", posted: "3mo ago", description: "We are hosting a corporate event and need a professional photographer to capture the key moments. The event will be for 4 hours, and we expect high-quality edited photos." },
-  { id: 14, title: "Virtual Assistant for a Busy Executive", category: "Writing", location: "CMC", budget: "10,000 ETB / month", posted: "3mo ago", description: "A busy executive is looking for a virtual assistant to manage their schedule, handle emails, and perform administrative tasks. The ideal candidate should be highly organized and proactive." },
-];
-
-// Mock verification status - in a real app, this would come from your auth context or API
-const isVerified = false;
-
-export default function GigDetailPage({ params }: { params: { gigId: string } }) {
+export default function GigDetailPage({ params }: { params: Promise<{ gigId: string }> }) {
+  const resolvedParams = use(params);
+  const gigId = resolvedParams.gigId;
+  
+  const [gig, setGig] = useState<any>(null);
+  const [client, setClient] = useState<any>(null);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const gig = gigs.find(g => g.id === parseInt(params.gigId));
+  useEffect(() => {
+    loadGig();
+  }, [gigId]);
+
+  const loadGig = async () => {
+    try {
+      const supabase = createClient();
+      
+      // Fetch gig details
+      const { data: gigData, error: gigError } = await supabase
+        .from('gigs')
+        .select(`
+          *,
+          client:profiles!gigs_client_id_fkey(id, full_name, avatar_url, average_rating)
+        `)
+        .eq('id', gigId)
+        .single();
+
+      if (gigError) {
+        console.error('Error loading gig:', gigError);
+        setGig(null);
+      } else {
+        setGig(gigData);
+        setClient(gigData?.client);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        </div>
+      </div>
+    );
+  }
 
   if (!gig) {
-    return <p>Gig not found.</p>;
+    return (
+      <div className="container mx-auto p-6">
+        <Button asChild variant="outline" className="mb-6 cursor-pointer">
+          <Link href="/freelancer/find-work">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Gigs
+          </Link>
+        </Button>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <p className="text-zinc-500">Gig not found.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -50,20 +90,38 @@ export default function GigDetailPage({ params }: { params: { gigId: string } })
       </Button>
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div>
-              <CardTitle className="text-3xl">{gig.title}</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl lg:text-3xl">{gig.title}</CardTitle>
               <CardDescription className="mt-2">{gig.category} · {gig.location}</CardDescription>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-green-600">{gig.budget}</p>
-              <p className="text-sm text-gray-500">Posted {gig.posted}</p>
+            <div className="text-left sm:text-right">
+              <p className="text-xl sm:text-2xl font-bold text-green-600">
+                {gig.budget ? `ETB ${gig.budget.toLocaleString()}` : 'Negotiable'}
+              </p>
+              <p className="text-sm text-gray-500">Posted {new Date(gig.created_at).toLocaleDateString()}</p>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <p className="text-gray-700 whitespace-pre-line">{gig.description}</p>
-          <Button onClick={() => isVerified ? setIsApplyModalOpen(true) : setIsVerificationModalOpen(true)} className="w-full mt-6 cursor-pointer">Apply Now</Button>
+          
+          {/* Client Info */}
+          {client && (
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
+                {client.full_name?.charAt(0) || 'C'}
+              </div>
+              <div>
+                <p className="font-medium">{client.full_name}</p>
+                {client.average_rating && (
+                  <p className="text-sm text-amber-500">★ {client.average_rating.toFixed(1)}</p>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <Button onClick={() => setIsApplyModalOpen(true)} className="w-full cursor-pointer">Apply Now</Button>
         </CardContent>
       </Card>
 
@@ -80,21 +138,6 @@ export default function GigDetailPage({ params }: { params: { gigId: string } })
               toast.success('Application submitted successfully!');
               setIsApplyModalOpen(false);
             }} className="cursor-pointer">Submit Application</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Verification Prompt Modal */}
-      <Dialog open={isVerificationModalOpen} onOpenChange={setIsVerificationModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><ShieldAlert className="text-yellow-500" /> Account Verification Required</DialogTitle>
-            <DialogDescription>You must be a verified freelancer to apply for gigs. Please upload your ID documents to get the &apos;Verified&apos; badge.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button asChild className="cursor-pointer">
-              <Link href="/freelancer/kyc">Verify Account Now</Link>
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

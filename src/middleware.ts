@@ -49,21 +49,6 @@ export async function middleware(request: NextRequest) {
     if (!session) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
-
-    // Check verification status for freelancers
-    if (request.nextUrl.pathname.startsWith('/freelancer') && 
-        !request.nextUrl.pathname.startsWith('/freelancer/kyc')) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('verification_status')
-        .eq('id', session.user.id)
-        .single()
-      
-      if (profile?.verification_status === 'unverified' || 
-          profile?.verification_status === 'rejected') {
-        return NextResponse.redirect(new URL('/freelancer/kyc', request.url))
-      }
-    }
   }
 
   // Redirect logged in users away from auth pages

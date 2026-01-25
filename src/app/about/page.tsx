@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { Footer } from '@/components/footer'
 
 export const metadata: Metadata = {
   title: 'About Us - Addis GigFind',
@@ -44,6 +45,7 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

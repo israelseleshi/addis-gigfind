@@ -1,0 +1,156 @@
+import { createClient } from './supabase/server'
+import { cookies } from 'next/headers'
+
+export type OTPurpose = 'signup' | 'reset_password' | 'email_change'
+
+export function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
+export async function sendOTPEmail(email: string, otp: string, purpose: OTPurpose): Promise<boolean> {
+  const subjectMap = {
+    signup: 'Verify Your Email - Addis GigFind',
+    reset_password: 'Reset Your Password - Addis GigFind',
+    email_change: 'Verify Your New Email - Addis GigFind',
+  }
+
+  const bodyMap = {
+    signup: `
+      <h2>Welcome to Addis GigFind!</h2>
+      <p>Your verification code is:</p>
+      <h1 style="font-size: 48px; letter-spacing: 8px; text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px;">${otp}</h1>
+      <p>This code will expire in 1 hour.</p>
+      <p>If you didn't create an account with Addis GigFind, please ignore this email.</p>
+    `,
+    reset_password: `
+      <h2>Password Reset Request</h2>
+      <p>Your password reset code is:</p>
+      <h1 style="font-size: 48px; letter-spacing: 8px; text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px;">${otp}</h1>
+      <p>This code will expire in 1 hour.</p>
+      <p>If you didn't request a password reset, please ignore this email.</p>
+    `,
+    email_change: `
+      <h2>Email Change Verification</h2>
+      <p>Your verification code is:</p>
+      <h1 style="font-size: 48px; letter-spacing: 8px; text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px;">${otp}</h1>
+      <p>This code will expire in 1 hour.</p>
+    `,
+  }
+
+  try {
+    const supabase = await createClient()
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?type=${purpose}`,
+    })
+
+    if (error) {
+      console.error('Error sending OTP email:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error in sendOTPEmail:', error)
+    return false
+  }
+}
+
+export async function storeOTP(email: string, otp: string, purpose: OTPurpose): Promise<boolean> {
+  try {
+    const supabase = await createClient()
+
+    const { error } = await supabase
+      .from('otp_verifications')
+      .insert({
+        email,
+        otp_code: otp,
+        purpose,
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      })
+
+    if (error) {
+      console.error('Error storing OTP:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error in storeOTP:', error)
+    return false
+  }
+}
+
+export async function verifyOTP(email: string, otp: string, purpose: OTPurpose): Promise<boolean> {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('otp_verifications')
+      .select('*')
+      .eq('email', email)
+      .eq('otp_code', otp)
+      .eq('purpose', purpose)
+      .eq('verified', false)
+      .gt('expires_at', new Date().toISOString())
+      .single()
+
+    if (error || !data) {
+      return false
+    }
+
+    const { error: updateError } = await supabase
+      .from('otp_verifications')
+      .update({ verified: true })
+      .eq('id', data.id)
+
+    if (updateError) {
+      console.error('Error updating OTP verification:', updateError)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error in verifyOTP:', error)
+    return false
+  }
+}
+
+export async function resendOTP(email: string, purpose: OTPurpose): Promise<boolean> {
+  const otp = generateOTP()
+
+  const stored = await storeOTP(email, otp, purpose)
+  if (!stored) return false
+
+  const sent = await sendOTPEmail(email, otp, purpose)
+  return sent
+}
+
+export async function cleanupExpiredOTPs(): Promise<void> {
+  try {
+    const supabase = await createClient()
+
+    await supabase.rpc('cleanup_expired_otps')
+  } catch (error) {
+    console.error('Error cleaning up expired OTPs:', error)
+  }
+}
+
+export async function hasValidOTP(email: string, purpose: OTPurpose): Promise<boolean> {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('otp_verifications')
+      .select('id')
+      .eq('email', email)
+      .eq('purpose', purpose)
+      .eq('verified', false)
+      .gt('expires_at', new Date().toISOString())
+      .single()
+
+    return !error && !!data
+  } catch {
+    return false
+  }
+}

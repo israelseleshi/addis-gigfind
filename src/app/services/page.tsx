@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { Footer } from '@/components/footer'
 
 export const metadata: Metadata = {
   title: 'Services - Addis GigFind',
@@ -41,15 +42,7 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      {/* CTA Section */}
-      <div className="bg-blue-900 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl font-bold text-white">Ready to get started?</h2>
-          <p className="mt-4 text-blue-100">
-            Browse our available professionals or post a job today.
-          </p>
-        </div>
-      </div>
+      <Footer />
     </div>
   )
 }

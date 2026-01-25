@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, MapPin, DollarSign, Clock } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,76 +14,20 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Footer } from '@/components/footer';
+import Link from 'next/link';
 
-// Mock gig data
-const MOCK_GIGS = [
-  {
-    id: 1,
-    title: 'Website Redesign for Local Business',
-    category: 'Web Design',
-    location: 'Bole',
-    budget: '5000 - 10000',
-    currency: 'Birr',
-    postedTime: '2 hours ago',
-    description: 'Need a modern website redesign for our e-commerce store',
-    isNew: true,
-  },
-  {
-    id: 2,
-    title: 'Plumbing Repair - Bathroom Renovation',
-    category: 'Plumbing',
-    location: 'Kazanchis',
-    budget: '2000 - 3500',
-    currency: 'Birr',
-    postedTime: '4 hours ago',
-    description: 'Complete bathroom plumbing work including pipe installation',
-    isNew: false,
-  },
-  {
-    id: 3,
-    title: 'English Tutoring for High School Students',
-    category: 'Tutoring',
-    location: 'Bole',
-    budget: '500 - 800',
-    currency: 'Birr',
-    postedTime: '1 day ago',
-    description: 'Need experienced English teacher for exam preparation',
-    isNew: false,
-  },
-  {
-    id: 4,
-    title: 'Electrical Installation - Office Setup',
-    category: 'Electrical',
-    location: 'Nifas Silk',
-    budget: '3000 - 5000',
-    currency: 'Birr',
-    postedTime: '6 hours ago',
-    description: 'Office electrical wiring and installation project',
-    isNew: true,
-  },
-  {
-    id: 5,
-    title: 'Mobile App Development',
-    category: 'Software Development',
-    location: 'Bole',
-    budget: '15000 - 25000',
-    currency: 'Birr',
-    postedTime: '3 days ago',
-    description: 'Build a custom mobile app for inventory management',
-    isNew: false,
-  },
-  {
-    id: 6,
-    title: 'Graphic Design - Logo Creation',
-    category: 'Design',
-    location: 'Kazanchis',
-    budget: '1500 - 3000',
-    currency: 'Birr',
-    postedTime: '5 hours ago',
-    description: 'Professional logo design for startup company',
-    isNew: true,
-  },
-];
+interface Gig {
+  id: string;
+  title: string;
+  category: string;
+  location: string;
+  budget: number;
+  description: string;
+  created_at: string;
+  status: string;
+}
 
 const CATEGORIES = [
   'All Categories',
@@ -107,14 +52,62 @@ const LOCATIONS = [
   'Arada',
 ];
 
+function formatLocation(value: string) {
+  return value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
+function formatCategory(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function timeAgo(dateString: string) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+  return `${Math.floor(seconds / 604800)} weeks ago`;
+}
+
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedLocation, setSelectedLocation] = useState('All Locations');
-  const [mounted] = useState(() => true);
+  const [gigs, setGigs] = useState<Gig[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  // Filter gigs based on search criteria
-  const filteredGigs = MOCK_GIGS.filter((gig) => {
+  useEffect(() => {
+    setMounted(true);
+    fetchGigs();
+  }, []);
+
+  const fetchGigs = async () => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('gigs')
+        .select('*')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setGigs(data || []);
+      }
+    } catch {
+      setError('Failed to fetch gigs');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredGigs = gigs.filter((gig) => {
     const matchesSearch =
       gig.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       gig.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -127,6 +120,13 @@ export default function SearchPage() {
 
     return matchesSearch && matchesCategory && matchesLocation;
   });
+
+  const isNew = (createdAt: string) => {
+    const date = new Date(createdAt);
+    const now = new Date();
+    const hours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    return hours < 24;
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -233,7 +233,31 @@ export default function SearchPage() {
         </div>
 
         {/* Gigs Grid */}
-        {filteredGigs.length > 0 ? (
+        {loading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <div className="space-y-2 border-t border-slate-200 pt-4">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-4 w-1/4" />
+                    <Skeleton className="h-4 w-1/3" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 py-12 text-center">
+            <p className="text-red-600">Error loading gigs: {error}</p>
+          </div>
+        ) : filteredGigs.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredGigs.map((gig) => (
               <Card
@@ -247,10 +271,10 @@ export default function SearchPage() {
                         {gig.title}
                       </h3>
                       <p className="mt-1 text-sm text-slate-600">
-                        {gig.category}
+                        {formatCategory(gig.category)}
                       </p>
                     </div>
-                    {gig.isNew && (
+                    {isNew(gig.created_at) && (
                       <Badge className="shrink-0 bg-amber-500 text-white hover:bg-amber-600">
                         New
                       </Badge>
@@ -267,27 +291,32 @@ export default function SearchPage() {
                   <div className="space-y-2 border-t border-slate-200 pt-4">
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <MapPin className="h-4 w-4 text-slate-400" />
-                      {gig.location}
+                      {formatLocation(gig.location)}
                     </div>
 
                     <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                       <DollarSign className="h-4 w-4 text-amber-500" />
-                      {gig.budget} {gig.currency}
+                      ETB {gig.budget.toLocaleString()}
                     </div>
 
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       <Clock className="h-4 w-4" />
-                      {gig.postedTime}
+                      {timeAgo(gig.created_at)}
                     </div>
                   </div>
 
-                  {/* Apply Button - Blurred */}
-                  <Button
-                    disabled
-                    className="mt-4 w-full bg-slate-300 text-slate-500 hover:bg-slate-300"
-                  >
-                    Apply Now
-                  </Button>
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 mt-4">
+                    <Button variant="outline" asChild className="flex-1">
+                      <Link href={`/search/${gig.id}`}>View Details</Link>
+                    </Button>
+                    <Button
+                      disabled
+                      className="flex-1 bg-slate-300 text-slate-500 hover:bg-slate-300"
+                    >
+                      Apply
+                    </Button>
+                  </div>
                   <p className="text-center text-xs text-slate-500">
                     Login required to apply
                   </p>
@@ -307,6 +336,7 @@ export default function SearchPage() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

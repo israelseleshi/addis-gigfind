@@ -24,6 +24,7 @@ import {
 import { Mail, Lock, User, Building2, Phone, Eye, EyeOff } from "lucide-react"
 import { registerClient } from "@/lib/actions/auth"
 import { useRouter } from "next/navigation"
+import { OTPVerification } from "@/components/auth/otp-verification"
 
 const clientSignUpSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -69,6 +70,8 @@ export function ClientSignUpForm() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
+  const [step, setStep] = React.useState<"form" | "otp">("form")
+  const [formData, setFormData] = React.useState<ClientSignUpFormValues | null>(null)
   const router = useRouter()
 
   const form = useForm<ClientSignUpFormValues>({
@@ -87,19 +90,40 @@ export function ClientSignUpForm() {
 
   async function onSubmit(values: ClientSignUpFormValues) {
     setIsLoading(true)
+    setFormData(values)
+    setStep("otp")
+    setIsLoading(false)
+  }
+
+  async function handleOTPSuccess() {
+    if (!formData) return
+
+    setIsLoading(true)
     try {
-      const result = await registerClient(values)
+      const result = await registerClient(formData)
       if (result?.error) {
         alert(result.error)
+        setStep("form")
       } else {
         router.push('/onboarding')
       }
     } catch (error) {
       console.error("Sign up error:", error)
       alert("An error occurred. Please try again.")
+      setStep("form")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (step === "otp" && formData) {
+    return (
+      <OTPVerification
+        email={formData.email}
+        onVerified={handleOTPSuccess}
+        purpose="signup"
+      />
+    )
   }
 
   return (
@@ -108,7 +132,7 @@ export function ClientSignUpForm() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-slate-700">Account Information</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="fullName"
@@ -142,7 +166,7 @@ export function ClientSignUpForm() {
                       )}
                     />
                   </div>
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="password"
@@ -186,7 +210,7 @@ export function ClientSignUpForm() {
 
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-slate-700">Company Information</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="companyName"
@@ -220,7 +244,7 @@ export function ClientSignUpForm() {
                       )}
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="industry"

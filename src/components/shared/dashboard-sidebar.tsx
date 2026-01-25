@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Briefcase, Settings, Search, LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Settings, Search, Users, CheckCircle, LucideIcon } from 'lucide-react';
 
 export interface NavLink {
   href: string;
@@ -47,7 +47,8 @@ export function DashboardSidebar({ navLinks }: DashboardSidebarProps) {
 
 export const clientNavLinks: NavLink[] = [
   { href: '/client/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/client/my-jobs', label: 'My Jobs', icon: Briefcase },
+  { href: '/client/my-gigs', label: 'My Gigs', icon: Briefcase },
+  { href: '/client/applicants', label: 'Applicants', icon: Users },
   { href: '/client/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -55,5 +56,6 @@ export const freelancerNavLinks: NavLink[] = [
   { href: '/freelancer/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/freelancer/find-work', label: 'Find Work', icon: Search },
   { href: '/freelancer/my-applications', label: 'My Applications', icon: Briefcase },
+  { href: '/freelancer/active-jobs', label: 'Active Jobs', icon: CheckCircle },
   { href: '/freelancer/settings', label: 'Settings', icon: Settings },
 ];

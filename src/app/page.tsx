@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Quote } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { HeroHighlight, Highlight } from "@/components/ui/hero-highlight";
 
 const testimonials = [
   {
@@ -35,38 +36,38 @@ const testimonials = [
 export default function Home() {
   return (
     <div className="w-full">
-      <section className="py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="relative min-h-[40rem] lg:min-h-[45rem] flex items-center">
+        {/* Full background image with orange fade from right to left */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            alt="Hero Image"
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* Orange fade from right to left */}
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-600/90 via-orange-500/50 to-transparent" />
+        </div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="space-y-6 text-center lg:text-left"
+            className="space-y-6 text-center lg:text-left max-w-xl"
           >
-            <Badge className="mb-4">New: Now serving all of Addis</Badge>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-tight">
-              Find & Hire Freelancers in Addis Ababa
+            <Badge className="mb-4 bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">New: Now serving all of Addis</Badge>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-tight text-white">
+              Find & Hire <span className="text-white">Freelancers</span> in <span className="text-white">Addis Ababa</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0">
+            <p className="text-lg text-white/90 max-w-lg mx-auto lg:mx-0">
               Connecting skilled professionals with clients in Addis Ababa. Discover talent, build relationships, and grow your business.
             </p>
             <div className="flex gap-4 justify-center lg:justify-start">
-              <Button size="lg">Get Started</Button>
-              <Button size="lg" variant="outline">Learn More</Button>
+              <Button size="lg" className="bg-amber-500 hover:bg-amber-600">Get Started</Button>
+              <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20">Learn More</Button>
             </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <Image
-              src="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-              alt="Hero Image"
-              width={600}
-              height={400}
-              className="rounded-2xl border border-zinc-200 shadow-lg"
-            />
           </motion.div>
         </div>
       </section>

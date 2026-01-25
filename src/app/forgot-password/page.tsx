@@ -1,5 +1,6 @@
 import { ForgotPasswordForm } from '@/components/auth/forgot-password-form'
 import Link from 'next/link'
+import { Footer } from '@/components/footer'
 
 export default function ForgotPasswordPage() {
   return (
@@ -13,6 +14,7 @@ export default function ForgotPasswordPage() {
           </Link>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }
