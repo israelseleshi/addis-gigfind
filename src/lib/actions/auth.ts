@@ -212,7 +212,7 @@ export async function recoverPassword(values: z.infer<typeof forgotPasswordSchem
   const { email } = validated.data
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: '/update-password',
+    redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/update-password`,
   })
 
   if (error) {

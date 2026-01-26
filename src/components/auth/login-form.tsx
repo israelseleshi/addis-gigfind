@@ -172,10 +172,10 @@ export function LoginForm() {
       </Card>
 
       <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
-        <DialogContent className="backdrop-blur-sm">
+        <DialogContent className="bg-amber-500 border-amber-600">
           <DialogHeader>
-            <DialogTitle>Forgot Password</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white">Forgot Password</DialogTitle>
+            <DialogDescription className="text-white/90">
               Enter your email and we&apos;ll send you a link to reset your password.
             </DialogDescription>
           </DialogHeader>
@@ -186,15 +186,19 @@ export function LoginForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-white">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your email address" {...field} />
+                      <Input 
+                        placeholder="Enter your email address" 
+                        className="bg-white/90 border-white/50 text-slate-900 placeholder:text-slate-500"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isPending}>
+              <Button type="submit" className="w-full bg-white text-amber-500 hover:bg-white/90" disabled={isPending}>
                 {isPending ? 'Sending...' : 'Send Reset Link'}
               </Button>
             </form>

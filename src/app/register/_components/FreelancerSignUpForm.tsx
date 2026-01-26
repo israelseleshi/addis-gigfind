@@ -26,6 +26,7 @@ import { Mail, Lock, User, Phone, Star, Eye, EyeOff } from "lucide-react"
 import { registerFreelancer } from "@/lib/actions/auth"
 import { useRouter } from "next/navigation"
 import { OTPVerification } from "@/components/auth/otp-verification"
+import { toast } from "sonner"
 
 const freelancerSignUpSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -99,14 +100,15 @@ export function FreelancerSignUpForm() {
     try {
       const result = await registerFreelancer(formData)
       if (result?.error) {
-        alert(result.error)
+        toast.error(result.error)
         setStep("form")
       } else {
+        toast.success("Account created successfully! Please check your email for confirmation.")
         router.push('/onboarding')
       }
     } catch (error) {
       console.error("Sign up error:", error)
-      alert("An error occurred. Please try again.")
+      toast.error("An error occurred. Please try again.")
       setStep("form")
     } finally {
       setIsLoading(false)

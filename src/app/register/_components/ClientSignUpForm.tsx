@@ -25,6 +25,7 @@ import { Mail, Lock, User, Building2, Phone, Eye, EyeOff } from "lucide-react"
 import { registerClient } from "@/lib/actions/auth"
 import { useRouter } from "next/navigation"
 import { OTPVerification } from "@/components/auth/otp-verification"
+import { toast } from "sonner"
 
 const clientSignUpSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -102,14 +103,15 @@ export function ClientSignUpForm() {
     try {
       const result = await registerClient(formData)
       if (result?.error) {
-        alert(result.error)
+        toast.error(result.error)
         setStep("form")
       } else {
+        toast.success("Account created successfully! Please check your email for confirmation.")
         router.push('/onboarding')
       }
     } catch (error) {
       console.error("Sign up error:", error)
-      alert("An error occurred. Please try again.")
+      toast.error("An error occurred. Please try again.")
       setStep("form")
     } finally {
       setIsLoading(false)

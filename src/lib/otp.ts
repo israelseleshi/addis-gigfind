@@ -40,8 +40,14 @@ export async function sendOTPEmail(email: string, otp: string, purpose: OTPurpos
   try {
     const supabase = await createClient()
 
+    // Use the correct redirect URL based on the environment
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const redirectTo = purpose === 'reset_password' 
+      ? `${baseUrl}/update-password`
+      : `${baseUrl}/auth/callback?type=${purpose}`
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?type=${purpose}`,
+      redirectTo,
     })
 
     if (error) {

@@ -47,10 +47,10 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md bg-amber-500 border-amber-600">
       <CardHeader>
-        <CardTitle className="text-2xl">Forgot Password</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-2xl text-white">Forgot Password</CardTitle>
+        <CardDescription className="text-white/90">
           Enter your email and we&apos;ll send you a link to reset your password.
         </CardDescription>
       </CardHeader>
@@ -62,15 +62,19 @@ export function ForgotPasswordForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-white">Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your email address" {...field} />
+                    <Input 
+                      placeholder="Enter your email address" 
+                      className="bg-white/90 border-white/50 text-slate-900 placeholder:text-slate-500"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button type="submit" className="w-full bg-white text-amber-500 hover:bg-white/90" disabled={isPending}>
               {isPending ? 'Sending...' : 'Send Reset Link'}
             </Button>
           </form>
