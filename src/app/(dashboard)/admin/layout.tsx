@@ -1,12 +1,12 @@
 
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  LayoutDashboard, Users, Briefcase, Shield, FileText, 
-  Settings, LogOut, Menu
+import {
+  LayoutDashboard, Users, Briefcase, Shield, FileText,
+  LogOut, Menu
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -26,27 +26,13 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [loading, setLoading] = useState(true)
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
 
-  useEffect(() => {
-    // Demo mode - allow access without auth check
-    setLoading(false)
-  }, [])
-
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-      </div>
-    )
   }
 
   return (

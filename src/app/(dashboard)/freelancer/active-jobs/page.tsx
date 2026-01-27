@@ -7,11 +7,39 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Briefcase, MapPin, Clock, MessageSquare } from 'lucide-react'
+import { Briefcase, MapPin, MessageSquare } from 'lucide-react'
+
+interface Gig {
+  id: string
+  title: string
+  description: string
+  budget: number
+  location: string
+  category: string
+  status: string
+  client_id: string
+  client?: {
+    full_name: string
+    avatar_url?: string
+    average_rating?: number
+  }
+}
+
+interface Application {
+  id: string
+  gig_id: string
+  status: string
+  gig?: Gig
+  gig_client?: {
+    full_name: string
+    avatar_url?: string
+    average_rating?: number
+  }
+}
 
 export default function ActiveJobsPage() {
   const [loading, setLoading] = useState(true)
-  const [activeJobs, setActiveJobs] = useState<any[]>([])
+  const [activeJobs, setActiveJobs] = useState<Application[]>([])
 
   useEffect(() => {
     loadActiveJobs()
@@ -69,9 +97,11 @@ export default function ActiveJobsPage() {
           }
 
           // Combine the data
-          const combinedJobs = applications.map(app => ({
-            ...app,
-            gig: gigs?.find(g => g.id === app.gig_id),
+          const combinedJobs: Application[] = applications.map(app => ({
+            id: app.id,
+            gig_id: app.gig_id,
+            status: app.status,
+            gig: gigs?.find(g => g.id === app.gig_id) || undefined,
             gig_client: profiles?.find(p => p.id === gigs?.find(g => g.id === app.gig_id)?.client_id)
           }))
 
@@ -90,7 +120,7 @@ export default function ActiveJobsPage() {
       assigned: 'bg-blue-500',
       in_progress: 'bg-amber-500',
     }
-    return <Badge className={colors[status] || 'bg-gray-500'}>{status.replace('_', ' ')}</Badge>
+    return <Badge className={colors[status] || 'bg-gray-500'}>{(status || '').replace('_', ' ')}</Badge>
   }
 
   if (loading) {
@@ -151,7 +181,7 @@ export default function ActiveJobsPage() {
             <Briefcase className="h-12 w-12 mx-auto text-gray-300 mb-4" />
             <h3 className="text-lg font-medium mb-2">No Active Jobs</h3>
             <p className="text-gray-500 mb-4">
-              You don't have any active jobs yet. Start applying to gigs!
+              You don&apos;t have any active jobs yet. Start applying to gigs!
             </p>
             <Button asChild className="bg-amber-500 hover:bg-amber-600">
               <Link href="/freelancer/find-work">Browse Gigs</Link>
@@ -165,7 +195,7 @@ export default function ActiveJobsPage() {
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                   <CardTitle className="text-base sm:text-lg">{job.gig?.title}</CardTitle>
-                  {getStatusBadge(job.gig?.status)}
+                  {getStatusBadge(job.gig?.status || '')}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -190,16 +220,16 @@ export default function ActiveJobsPage() {
                 {/* Client Info */}
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={job.gig?.client?.avatar_url} />
+                    <AvatarImage src={job.gig_client?.avatar_url || ''} />
                     <AvatarFallback>
-                      {job.gig?.client?.full_name?.charAt(0) || 'C'}
+                      {(job.gig_client?.full_name || '').charAt(0) || 'C'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{job.gig?.client?.full_name}</p>
-                    {job.gig?.client?.average_rating && (
+                    <p className="text-sm font-medium truncate">{job.gig_client?.full_name || 'Unknown Client'}</p>
+                    {job.gig_client?.average_rating && (
                       <p className="text-xs text-amber-500">
-                        ★ {job.gig.client.average_rating.toFixed(1)}
+                        ★ {job.gig_client.average_rating.toFixed(1)}
                       </p>
                     )}
                   </div>
@@ -222,11 +252,12 @@ export default function ActiveJobsPage() {
                     size="sm" 
                     className="w-full bg-amber-500 hover:bg-amber-600"
                     onClick={async () => {
+                      if (!job.gig?.id) return
                       const supabase = createClient()
                       await supabase
                         .from('gigs')
                         .update({ status: 'in_progress' })
-                        .eq('id', job.gig?.id)
+                        .eq('id', job.gig.id)
                       loadActiveJobs()
                     }}
                   >

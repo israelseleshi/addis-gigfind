@@ -2,12 +2,11 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-
 import { createClient } from '@/lib/supabase/server'
-import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import {
   clientSignUpSchema,
   freelancerSignUpSchema,
+  adminSignUpSchema,
   loginSchema,
   forgotPasswordSchema,
 } from '@/lib/validations/auth'
@@ -16,15 +15,13 @@ import { generateOTP, storeOTP, verifyOTP } from '@/lib/otp'
 
 export async function sendOTP(email: string, purpose: 'signup') {
   try {
-    const supabase = await createClient()
-    
     const otp = generateOTP()
     const stored = await storeOTP(email, otp, purpose)
-    
+
     if (!stored) {
       return { error: 'Failed to generate OTP' }
     }
-    
+
     return { success: true, otp }
   } catch (error) {
     console.error('Error sending OTP:', error)
@@ -140,6 +137,48 @@ export async function registerFreelancer(values: z.infer<typeof freelancerSignUp
   }
 }
 
+export async function registerAdmin(values: z.infer<typeof adminSignUpSchema>) {
+  try {
+    console.log('[registerAdmin] Starting admin signup...')
+    const supabase = await createClient()
+
+    const validated = adminSignUpSchema.safeParse(values)
+    if (!validated.success) {
+      console.error('Validation failed:', validated.error.flatten().fieldErrors)
+      return { error: 'Invalid form data. Please check your inputs.' }
+    }
+
+    const { fullName, email, password } = validated.data
+
+    // Sign up admin WITHOUT email confirmation - direct creation
+    const { data: signUpData, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: undefined, // Disable Supabase email confirmation
+        data: {
+          full_name: fullName,
+          role: 'admin',
+        },
+      },
+    })
+
+    if (error) {
+      console.error('Admin sign up error:', error)
+      return { error: error.message }
+    }
+
+    console.log('[registerAdmin] Admin user created:', signUpData.user?.id)
+    // Profile is created automatically by the trigger with admin role
+
+    return { success: true, userId: signUpData.user?.id }
+  } catch (e) {
+    console.error('Caught exception in registerAdmin:', e)
+    const errorMessage = e instanceof Error ? e.message : 'An unknown server error occurred.'
+    return { error: errorMessage }
+  }
+}
+
 export async function loginUser(credentials: z.infer<typeof loginSchema>) {
   const supabase = await createClient()
 
@@ -190,7 +229,12 @@ export async function loginUser(credentials: z.infer<typeof loginSchema>) {
   }
 
   revalidatePath('/', 'layout')
-  const redirectUrl = profile.role === 'client' ? '/client/dashboard' : profile.role === 'admin' || profile.role === 'regulator' ? '/admin/dashboard' : '/freelancer/dashboard'
+  let redirectUrl = '/freelancer/dashboard'; // Default to freelancer
+  if (profile.role === 'client') {
+    redirectUrl = '/client/dashboard';
+  } else if (profile.role === 'admin' || profile.role === 'regulator') {
+    redirectUrl = '/admin/dashboard';
+  }
   redirect(redirectUrl)
 }
 

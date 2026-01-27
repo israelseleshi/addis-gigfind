@@ -9,19 +9,47 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle2, Upload, FileText, Shield, CreditCard } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { CheckCircle2, Upload, FileText, Shield, CreditCard, Clock, XCircle, AlertCircle } from "lucide-react"
 
 export default function KycPage() {
   const router = useRouter()
   const supabase = createClient()
   const [isLoading, setIsLoading] = React.useState(false)
   const [isSubmitted, setIsSubmitted] = React.useState(false)
+  const [verificationStatus, setVerificationStatus] = React.useState<string | null>(null)
+  const [verificationData, setVerificationData] = React.useState<any>(null)
   const [idType, setIdType] = React.useState<"kebele" | "passport" | "driver_license">("kebele")
   const [formData, setFormData] = React.useState({
     idNumber: "",
     idPhoto: null as File | null,
     description: "",
   })
+
+  // Load current verification status on component mount
+  React.useEffect(() => {
+    const loadVerificationStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('verification_status, verification_data')
+          .eq('id', user.id)
+          .single()
+
+        if (profile) {
+          setVerificationStatus(profile.verification_status)
+          setVerificationData(profile.verification_data)
+        }
+      } catch (error) {
+        console.error('Error loading verification status:', error)
+      }
+    }
+
+    loadVerificationStatus()
+  }, [supabase])
 
   const idTypeOptions = [
     { value: "kebele", label: "Kebele ID", icon: CreditCard },
@@ -33,6 +61,142 @@ export default function KycPage() {
     if (e.target.files && e.target.files[0]) {
       setFormData({ ...formData, idPhoto: e.target.files[0] })
     }
+  }
+
+  // Status badge component
+  const StatusBadge = ({ status }: { status: string }) => {
+    const statusConfig = {
+      pending: { icon: Clock, color: "bg-amber-100 text-amber-700 border-amber-200", label: "Pending Review" },
+      verified: { icon: CheckCircle2, color: "bg-green-100 text-green-700 border-green-200", label: "Verified" },
+      rejected: { icon: XCircle, color: "bg-red-100 text-red-700 border-red-200", label: "Rejected" },
+    }
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
+    const Icon = config.icon
+
+    return (
+      <Badge className={`flex items-center gap-1 ${config.color} border`}>
+        <Icon className="w-3 h-3" />
+        {config.label}
+      </Badge>
+    )
+  }
+
+  // If already verified, show success state
+  if (verificationStatus === 'verified') {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-green-600">Account Verified!</h2>
+              <p className="text-muted-foreground">
+                Your identity has been verified. You can now apply for jobs and access all freelancer features.
+              </p>
+              <div className="space-y-2">
+                {verificationData?.id_type && (
+                  <p className="text-sm text-gray-600">
+                    <strong>ID Type:</strong> {verificationData.id_type.replace('_', ' ').toUpperCase()}
+                  </p>
+                )}
+                {verificationData?.approved_at && (
+                  <p className="text-sm text-gray-600">
+                    <strong>Verified on:</strong> {new Date(verificationData.approved_at).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+              <Button
+                onClick={() => router.push("/freelancer/find-work")}
+                className="w-full mt-4 bg-green-600 hover:bg-green-700"
+              >
+                Find Work Now
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // If rejected, show rejection state
+  if (verificationStatus === 'rejected') {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <XCircle className="w-8 h-8 text-red-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-red-600">Verification Rejected</h2>
+              <p className="text-muted-foreground">
+                Your verification was rejected. Please review the feedback and try again.
+              </p>
+              {verificationData?.rejection_reason && (
+                <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                  <p className="text-sm text-red-700">
+                    <strong>Reason:</strong> {verificationData.rejection_reason}
+                  </p>
+                </div>
+              )}
+              <Button
+                onClick={() => {
+                  setVerificationStatus(null)
+                  setVerificationData(null)
+                  setIsSubmitted(false)
+                }}
+                className="w-full mt-4"
+                variant="outline"
+              >
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // If pending, show pending state
+  if (verificationStatus === 'pending') {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
+                <Clock className="w-8 h-8 text-amber-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-amber-600">Verification Pending</h2>
+              <p className="text-muted-foreground">
+                Your verification is under review. This usually takes 1-2 business days.
+              </p>
+              <div className="space-y-2">
+                {verificationData?.id_type && (
+                  <p className="text-sm text-gray-600">
+                    <strong>ID Type:</strong> {verificationData.id_type.replace('_', ' ').toUpperCase()}
+                  </p>
+                )}
+                {verificationData?.submitted_at && (
+                  <p className="text-sm text-gray-600">
+                    <strong>Submitted on:</strong> {new Date(verificationData.submitted_at).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+              <Button
+                onClick={() => router.push("/freelancer/dashboard")}
+                className="w-full mt-4"
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +217,7 @@ export default function KycPage() {
       if (formData.idPhoto) {
         const fileExt = formData.idPhoto.name.split(".").pop()
         const fileName = `${user.id}/kyc-${Date.now()}.${fileExt}`
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("verification-docs")
           .upload(fileName, formData.idPhoto)
 

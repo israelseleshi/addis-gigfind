@@ -1,5 +1,4 @@
 import { createClient } from './supabase/server'
-import { cookies } from 'next/headers'
 
 export type OTPurpose = 'signup' | 'reset_password' | 'email_change'
 
@@ -8,35 +7,6 @@ export function generateOTP(): string {
 }
 
 export async function sendOTPEmail(email: string, otp: string, purpose: OTPurpose): Promise<boolean> {
-  const subjectMap = {
-    signup: 'Verify Your Email - Addis GigFind',
-    reset_password: 'Reset Your Password - Addis GigFind',
-    email_change: 'Verify Your New Email - Addis GigFind',
-  }
-
-  const bodyMap = {
-    signup: `
-      <h2>Welcome to Addis GigFind!</h2>
-      <p>Your verification code is:</p>
-      <h1 style="font-size: 48px; letter-spacing: 8px; text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px;">${otp}</h1>
-      <p>This code will expire in 1 hour.</p>
-      <p>If you didn't create an account with Addis GigFind, please ignore this email.</p>
-    `,
-    reset_password: `
-      <h2>Password Reset Request</h2>
-      <p>Your password reset code is:</p>
-      <h1 style="font-size: 48px; letter-spacing: 8px; text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px;">${otp}</h1>
-      <p>This code will expire in 1 hour.</p>
-      <p>If you didn't request a password reset, please ignore this email.</p>
-    `,
-    email_change: `
-      <h2>Email Change Verification</h2>
-      <p>Your verification code is:</p>
-      <h1 style="font-size: 48px; letter-spacing: 8px; text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px;">${otp}</h1>
-      <p>This code will expire in 1 hour.</p>
-    `,
-  }
-
   try {
     const supabase = await createClient()
 

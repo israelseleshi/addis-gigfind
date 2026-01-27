@@ -148,7 +148,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex bg-white rounded-lg overflow-hidden border border-gray-200">
+    <div className="h-[calc(100vh-6rem)] flex bg-white rounded-lg overflow-hidden border border-gray-200">
       {/* Sidebar - Conversation List */}
       <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-col border-r border-gray-200 bg-gray-50`}>
         {/* Header */}

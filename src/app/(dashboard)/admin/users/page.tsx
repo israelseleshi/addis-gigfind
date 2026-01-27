@@ -2,19 +2,28 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
-import { Search, Users, Shield, Ban, CheckCircle, XCircle } from 'lucide-react'
+import { Search, Ban, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
+
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: string;
+  is_banned: boolean;
+  verification_status: string;
+}
 
 export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
-  const [users, setUsers] = useState<any[]>([])
+  const [users, setUsers] = useState<UserProfile[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -103,7 +112,7 @@ export default function AdminUsersPage() {
     return <Badge className={colors[role] || 'bg-gray-500'}>{role}</Badge>
   }
 
-  const getStatusBadge = (user: any) => {
+  const getStatusBadge = (user: UserProfile) => {
     if (user.is_banned) {
       return <Badge className="bg-red-500">Banned</Badge>
     }
@@ -209,7 +218,7 @@ export default function AdminUsersPage() {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={user.avatar_url} />
+                    <AvatarImage src={user.avatar_url || ''} />
                     <AvatarFallback>{user.full_name?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                   <div>

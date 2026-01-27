@@ -2,19 +2,30 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createClient } from '@/lib/supabase/client'
-import { Check, X, FileText, User, Clock } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import { toast } from 'sonner'
+
+interface VerificationProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  verification_status: string;
+  verification_data?: {
+    national_id?: string;
+    description?: string;
+  };
+}
 
 export default function AdminVerificationsPage() {
   const [loading, setLoading] = useState(true)
-  const [pendingVerifications, setPendingVerifications] = useState<any[]>([])
-  const [allVerifications, setAllVerifications] = useState<any[]>([])
+  const [pendingVerifications, setPendingVerifications] = useState<VerificationProfile[]>([])
+  const [allVerifications, setAllVerifications] = useState<VerificationProfile[]>([])
 
   useEffect(() => {
     loadVerifications()
@@ -174,7 +185,7 @@ export default function AdminVerificationsPage() {
                   <div className="flex justify-between items-start">
                     <div className="flex gap-4">
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src={user.avatar_url} />
+                        <AvatarImage src={user.avatar_url || ''} />
                         <AvatarFallback>{user.full_name?.charAt(0) || 'U'}</AvatarFallback>
                       </Avatar>
                       <div>
@@ -215,7 +226,7 @@ export default function AdminVerificationsPage() {
                 <div className="flex justify-between items-start">
                   <div className="flex gap-4">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.avatar_url} />
+                      <AvatarImage src={user.avatar_url || ''} />
                       <AvatarFallback>{user.full_name?.charAt(0) || 'U'}</AvatarFallback>
                     </Avatar>
                     <div>

@@ -1,8 +1,6 @@
 
 "use client"
 
-import { createClient } from '@/lib/supabase/client'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { logoutUser } from '@/lib/actions/auth'
 import Link from 'next/link'
@@ -10,13 +8,13 @@ import {
   LogOut,
   Menu,
   X,
-  LayoutDashboard,
-  Search,
   Briefcase,
-  CheckCircle,
   Settings,
-  ChevronLeft,
-  ChevronRight
+  Search,
+  CheckCircle,
+  LayoutDashboard,
+  MessageSquare,
+  Shield
 } from 'lucide-react'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
@@ -26,6 +24,8 @@ const navItems = [
   { href: '/freelancer/find-work', label: 'Find Work', icon: Search },
   { href: '/freelancer/my-applications', label: 'My Applications', icon: Briefcase },
   { href: '/freelancer/active-jobs', label: 'Active Jobs', icon: CheckCircle },
+  { href: '/freelancer/kyc', label: 'Verification', icon: Shield },
+  { href: '/freelancer/chat', label: 'Chat', icon: MessageSquare },
   { href: '/freelancer/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -80,7 +80,7 @@ export default function FreelancerLayout({
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
           >
-            {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            <Menu className="h-4 w-4" />
           </button>
         </div>
         
@@ -107,7 +107,7 @@ export default function FreelancerLayout({
         
         <div className="p-4 border-t border-gray-200">
           <form action={logoutUser}>
-            <Button variant="ghost" className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'} text-gray-600 hover:text-red-600 hover:bg-red-50`} type="submit">
+            <Button variant="destructive" className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'}`} type="submit">
               <LogOut className={`h-5 w-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
               {!isSidebarCollapsed && <span>Logout</span>}
             </Button>
@@ -117,7 +117,7 @@ export default function FreelancerLayout({
 
       {/* Main Content - Adjust padding based on sidebar state */}
       <main className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
-        <div className="p-4 lg:p-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           {children}
         </div>
       </main>
@@ -168,7 +168,7 @@ export default function FreelancerLayout({
               </nav>
               <div className="p-4 border-t border-gray-200">
                 <form action={logoutUser}>
-                  <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" type="submit">
+                  <Button variant="destructive" className="w-full justify-start" type="submit">
                     <LogOut className="h-5 w-5 mr-3" />
                     Logout
                   </Button>

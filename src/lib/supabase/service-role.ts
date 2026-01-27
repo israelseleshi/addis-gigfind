@@ -1,5 +1,4 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 
 export async function createServiceRoleClient() {
   return createServerClient(
@@ -7,11 +6,11 @@ export async function createServiceRoleClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       cookies: {
-        get(name: string) {
+        get() {
           return undefined
         },
-        set(name: string, value: string, options: CookieOptions) {},
-        remove(name: string, options: CookieOptions) {},
+        set() {},
+        remove() {},
       },
     }
   )

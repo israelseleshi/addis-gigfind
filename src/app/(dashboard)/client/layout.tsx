@@ -1,7 +1,6 @@
 
 "use client"
 
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { logoutUser } from '@/lib/actions/auth'
 import Link from 'next/link'
@@ -12,11 +11,8 @@ import {
   Home,
   Briefcase,
   Users,
-  FileText,
   Settings,
   PlusCircle,
-  ChevronLeft,
-  ChevronRight,
   MessageSquare
 } from 'lucide-react'
 import { useState } from 'react'
@@ -33,7 +29,7 @@ export default function ClientLayout({
 
   const navItems = [
     { href: '/client/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/client/my-jobs', label: 'My Jobs', icon: Briefcase },
+    { href: '/client/my-gigs', label: 'My Gigs', icon: Briefcase },
     { href: '/client/chat', label: 'Chat', icon: MessageSquare },
     { href: '/client/applicants', label: 'Applicants', icon: Users },
     { href: '/client/gigs/create', label: 'Post Gig', icon: PlusCircle },
@@ -82,7 +78,7 @@ export default function ClientLayout({
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-500"
           >
-            {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            <Menu className="h-4 w-4" />
           </button>
         </div>
         
@@ -109,7 +105,7 @@ export default function ClientLayout({
         
         <div className="p-4 border-t border-zinc-200">
           <form action={logoutUser}>
-            <Button variant="ghost" className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'} text-zinc-600 hover:text-red-600 hover:bg-red-50`} type="submit">
+            <Button variant="destructive" className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'}`} type="submit">
               <LogOut className={`h-5 w-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
               {!isSidebarCollapsed && <span>Logout</span>}
             </Button>
@@ -170,7 +166,7 @@ export default function ClientLayout({
               </nav>
               <div className="p-4 border-t border-zinc-200">
                 <form action={logoutUser}>
-                  <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" type="submit">
+                  <Button variant="destructive" className="w-full justify-start" type="submit">
                     <LogOut className="h-5 w-5 mr-3" />
                     Logout
                   </Button>

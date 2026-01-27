@@ -1,17 +1,41 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
-import { List, Map, Loader2 } from 'lucide-react';
+import { List, Map, Loader2, MapPin, Star, Search } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
 import { createClient } from "@/lib/supabase/client";
 
 const GIGS_PER_PAGE = 5;
+
+interface Gig {
+  id: string;
+  title: string;
+  category: string;
+  location: string;
+  budget: number | null;
+  created_at: string;
+  client: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    average_rating: number | null;
+  } | null;
+}
+
+function formatLocation(value: string) {
+  return value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
+function formatCategory(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 
 export default function FindWorkPage() {
   const supabase = createClient()
@@ -19,16 +43,12 @@ export default function FindWorkPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [gigs, setGigs] = useState<any[]>([]);
+  const [gigs, setGigs] = useState<Gig[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadGigs();
-  }, []);
-
-  const loadGigs = async () => {
+  const loadGigs = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -48,8 +68,8 @@ export default function FindWorkPage() {
         setGigs(data || []);
         
         // Extract unique categories and locations
-        const uniqueCategories = [...new Set(data?.map((g: any) => g.category).filter(Boolean) || [])];
-        const uniqueLocations = [...new Set(data?.map((g: any) => g.location).filter(Boolean) || [])];
+        const uniqueCategories = [...new Set(data?.map((g: Gig) => g.category).filter(Boolean) || [])];
+        const uniqueLocations = [...new Set(data?.map((g: Gig) => g.location).filter(Boolean) || [])];
         setCategories(uniqueCategories);
         setLocations(uniqueLocations);
       }
@@ -58,7 +78,12 @@ export default function FindWorkPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    loadGigs();
+  }, [loadGigs]);
+
 
   const filteredGigs = useMemo(() => {
     return gigs.filter(gig =>
@@ -79,7 +104,7 @@ export default function FindWorkPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <Card className="shadow-md">
           <CardContent className="pt-6 flex justify-center items-center min-h-[200px]">
             <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
@@ -90,7 +115,7 @@ export default function FindWorkPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Filter Section */}
       <Card className="shadow-md">
         <CardContent className="pt-4 sm:pt-6 flex flex-col gap-3">
@@ -110,7 +135,7 @@ export default function FindWorkPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                {categories.map(cat => <SelectItem key={cat} value={cat}>{formatCategory(cat)}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select onValueChange={(value) => { setSelectedLocation(value); setCurrentPage(1); }} value={selectedLocation}>
@@ -119,7 +144,7 @@ export default function FindWorkPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Locations</SelectItem>
-                {locations.map(loc => <SelectItem key={loc} value={loc}>{loc}</SelectItem>)}
+                {locations.map(loc => <SelectItem key={loc} value={loc}>{formatLocation(loc)}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -141,38 +166,100 @@ export default function FindWorkPage() {
         </div>
 
         <TabsContent value="list">
-          <div className="space-y-3 sm:space-y-4">
-            {paginatedGigs.length > 0 ? (
-              paginatedGigs.map((gig) => (
-                <Card key={gig.id} className="shadow-md">
-                  <CardHeader className="flex flex-col sm:flex-row justify-between items-start gap-2 pb-2">
-                    <div className="flex-1">
-                      <CardTitle className="text-base sm:text-lg">{gig.title}</CardTitle>
-                      <CardDescription className="text-xs sm:text-sm">{gig.category} · {gig.location}</CardDescription>
+          {paginatedGigs.length > 0 ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {paginatedGigs.map((gig) => (
+                <Card key={gig.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white via-orange-50/30 to-amber-50/20 overflow-hidden">
+                  {/* Gradient border effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 via-amber-500/20 to-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  <CardHeader className="relative pb-3">
+                    {/* Category badge */}
+                    <div className="flex items-center justify-between mb-3">
+                      <Badge className="bg-gradient-to-r from-orange-500 to-amber-600 text-white px-3 py-1 text-xs font-semibold">
+                        {formatCategory(gig.category)}
+                      </Badge>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <MapPin className="w-3 h-3" />
+                        {formatLocation(gig.location)}
+                      </div>
                     </div>
-                    <div className="text-left sm:text-right">
-                      <p className="text-lg sm:text-xl font-bold text-green-600">
-                        {gig.budget ? `ETB ${gig.budget.toLocaleString()}` : 'Negotiable'}
-                      </p>
-                      <p className="text-xs text-zinc-500">Posted {new Date(gig.created_at).toLocaleDateString()}</p>
+                    
+                    <div className="space-y-2">
+                      <CardTitle className="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2">
+                        {gig.title}
+                      </CardTitle>
+                      
+                      {/* Client info */}
+                      {gig.client && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-orange-400 to-amber-500 flex items-center justify-center text-white text-xs font-bold">
+                            {gig.client.full_name?.charAt(0) || 'C'}
+                          </div>
+                          <span className="truncate">{gig.client.full_name}</span>
+                          {gig.client.average_rating && (
+                            <div className="flex items-center gap-1">
+                              <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                              <span className="text-xs">{gig.client.average_rating}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </CardHeader>
-                  <CardContent className="flex flex-col sm:flex-row gap-2">
-                    <Button className="w-full sm:w-auto cursor-pointer">Apply Now</Button>
-                    <Button variant="outline" asChild className="w-full sm:w-auto cursor-pointer">
-                      <Link href={`/freelancer/find-work/${gig.id}`}>View Details</Link>
-                    </Button>
+                  
+                  <CardContent className="relative pt-0 space-y-4">
+                    {/* Budget highlight */}
+                    <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-3 border border-orange-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Budget</span>
+                        <span className="text-lg font-bold text-orange-600">
+                          {gig.budget ? `ETB ${gig.budget.toLocaleString()}` : 'Negotiable'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Time posted */}
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>Posted {new Date(gig.created_at).toLocaleDateString()}</span>
+                      <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
+                        Available
+                      </Badge>
+                    </div>
+                    
+                    {/* Action buttons */}
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        className="flex-1 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm"
+                        onClick={() => {
+                          // Handle apply action
+                        }}
+                      >
+                        Apply Now
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        asChild 
+                        className="flex-1 border-2 border-orange-200 hover:border-orange-400 hover:bg-orange-50 transition-all duration-300 text-sm"
+                      >
+                        <Link href={`/freelancer/find-work/${gig.id}`}>View</Link>
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
-              ))
-            ) : (
-              <Card className="shadow-md">
-                <CardContent className="pt-6 text-center py-12">
-                  <p className="text-zinc-500">No gigs found matching your criteria.</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <Card className="shadow-md border-0 bg-gradient-to-br from-gray-50 to-orange-50">
+              <CardContent className="pt-12 pb-12 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-200 flex items-center justify-center">
+                  <Search className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">No gigs found</h3>
+                <p className="text-gray-500">Try adjusting your search filters or check back later</p>
+              </CardContent>
+            </Card>
+          )}
           {totalPages > 1 && (
             <div className="flex justify-center mt-6">
               <Pagination>

@@ -16,5 +16,5 @@ create policy "Allow users to view their own verification docs"
 on storage.objects for select
 using (
   bucket_id = 'verification-docs' and
-  (storage.foldername(name))[1] = auth.uid()
+  (storage.foldername(name))[1] = auth.uid()::text
 );

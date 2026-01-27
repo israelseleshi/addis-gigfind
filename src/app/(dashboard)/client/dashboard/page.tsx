@@ -7,6 +7,45 @@ import { Briefcase, Users, Clock, TrendingUp, Plus, ArrowRight, Activity, Zap } 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
+import { getClientDashboardStats, getRecentGigs, getRecentActivity } from '@/lib/actions/dashboard'
+import { Skeleton } from '@/components/ui/skeleton'
+
+interface ClientDashboardStats {
+  activeGigs: number
+  totalHires: number
+  pendingApplications: number
+  completedJobs: number
+}
+
+interface Gig {
+  id: string
+  title: string
+  status: string
+  budget: string
+  applicants: number
+  created_at: string
+}
+
+interface Activity {
+  id: string
+  text: string
+  time: string
+  type: string
+}
+
+interface StatItem {
+  title: string
+  value: string
+  icon: React.ElementType
+  color: string
+}
+
+interface QuickAction {
+  icon: React.ElementType
+  label: string
+  href: string
+  color: string
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -21,7 +60,7 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 }
 
-function StatCard({ title, value, icon: Icon, color, delay }: { title: string; value: string; icon: any; color: string; delay: number }) {
+function StatCard({ title, value, icon: Icon, color, delay }: { title: string; value: string; icon: React.ElementType; color: string; delay: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -34,7 +73,6 @@ function StatCard({ title, value, icon: Icon, color, delay }: { title: string; v
           <div className={`p-2 rounded-lg bg-gradient-to-br ${color} shadow-md`}>
             <Icon className="h-5 w-5 text-white" />
           </div>
-          <span className="text-xs font-medium text-muted-foreground bg-zinc-100 px-2 py-1 rounded-full">+12%</span>
         </CardHeader>
         <CardContent>
           <div className="text-4xl font-bold tracking-tight">{value}</div>
@@ -45,7 +83,7 @@ function StatCard({ title, value, icon: Icon, color, delay }: { title: string; v
   )
 }
 
-function QuickAction({ icon: Icon, label, href, color }: { icon: any; label: string; href: string; color: string }) {
+function QuickAction({ icon: Icon, label, href, color }: { icon: React.ElementType; label: string; href: string; color: string }) {
   return (
     <Link href={href}>
       <motion.div
@@ -83,69 +121,113 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function ClientDashboardPage() {
   const [loading, setLoading] = useState(true)
-  const [profile, setProfile] = useState<any>(null)
-
+  const [profile, setProfile] = useState<{ full_name: string } | null>(null)
+  const [stats, setStats] = useState<ClientDashboardStats | null>(null)
+  const [recentGigs, setRecentGigs] = useState<Gig[]>([])
+  const [activities, setActivities] = useState<Activity[]>([])
   useEffect(() => {
-    loadProfile()
-  }, [])
-
-  const loadProfile = async () => {
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user) {
-        const { data } = await supabase
+    const fetchData = async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) {
+          console.error('No user found')
+          setLoading(false)
+          return
+        }
+        
+        
+        // Fetch profile
+        const { data: profileData } = await supabase
           .from('profiles')
           .select('full_name')
           .eq('id', user.id)
           .single()
-        setProfile(data)
+        setProfile(profileData)
+        
+        // Fetch all dashboard data
+        const [statsData, gigsData, activitiesData] = await Promise.all([
+          getClientDashboardStats(user.id),
+          getRecentGigs(user.id),
+          getRecentActivity(user.id)
+        ])
+        
+        setStats(statsData || {
+          activeGigs: 0,
+          totalHires: 0,
+          pendingApplications: 0,
+          completedJobs: 0,
+        })
+        setRecentGigs(gigsData)
+        setActivities(activitiesData)
+      } catch (error) {
+        console.error('Dashboard fetch error:', error)
+      } finally {
+        setLoading(false)
       }
-    } catch {
-      console.error('Error loading profile')
-    } finally {
-      setLoading(false)
     }
-  }
 
-  const stats = [
-    { title: 'Active Gigs', value: '3', icon: Briefcase, color: 'from-blue-500 to-blue-600' },
-    { title: 'Total Hires', value: '12', icon: Users, color: 'from-green-500 to-green-600' },
-    { title: 'Pending Applications', value: '5', icon: Clock, color: 'from-amber-500 to-orange-500' },
-    { title: 'Completed Jobs', value: '8', icon: TrendingUp, color: 'from-purple-500 to-purple-600' },
+    fetchData()
+  }, [])
+
+  const statsData: StatItem[] = [
+    { title: 'Active Gigs', value: stats?.activeGigs.toString() || '0', icon: Briefcase, color: 'from-blue-500 to-blue-600' },
+    { title: 'Total Hires', value: stats?.totalHires.toString() || '0', icon: Users, color: 'from-green-500 to-green-600' },
+    { title: 'Pending Applications', value: stats?.pendingApplications.toString() || '0', icon: Clock, color: 'from-amber-500 to-orange-500' },
+    { title: 'Completed Jobs', value: stats?.completedJobs.toString() || '0', icon: TrendingUp, color: 'from-purple-500 to-purple-600' },
   ]
 
-  const quickActions = [
+  const quickActions: QuickAction[] = [
     { icon: Plus, label: 'Post New Gig', href: '/client/gigs/create', color: 'from-orange-500 to-amber-500' },
     { icon: Activity, label: 'View Applicants', href: '/client/applicants', color: 'from-blue-500 to-cyan-500' },
     { icon: Zap, label: 'Active Gigs', href: '/client/my-jobs', color: 'from-green-500 to-emerald-500' },
     { icon: Users, label: 'Manage Team', href: '/client/hired', color: 'from-purple-500 to-pink-500' },
   ]
 
-  const recentGigs = [
-    { id: 1, title: 'Web Developer needed for E-commerce site', status: 'Active', applicants: 4, budget: 'ETB 15,000' },
-    { id: 2, title: 'Logo Design for Startup', status: 'Completed', applicants: 0, budget: 'ETB 5,000' },
-    { id: 3, title: 'Content Writer for Blog', status: 'Draft', applicants: 0, budget: 'ETB 3,500' },
-    { id: 4, title: 'Mobile App UI Design', status: 'Pending', applicants: 7, budget: 'ETB 20,000' },
-  ]
-
-  const activities = [
-    { id: 1, text: 'New application received for "Web Developer"', time: '2 hours ago', type: 'application' },
-    { id: 2, text: 'Gig "Logo Design" marked as completed', time: '5 hours ago', type: 'completed' },
-    { id: 3, text: 'Payment released for "Content Writer"', time: '1 day ago', type: 'payment' },
-    { id: 4, text: 'New message from freelancer', time: '2 days ago', type: 'message' },
-  ]
-
   if (loading) {
     return (
-      <div className="p-6 space-y-6 min-h-screen bg-zinc-50">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-zinc-200 rounded-xl animate-pulse" />
-          ))}
+      <div className="min-h-screen bg-zinc-50 p-4 lg:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-20" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-16" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-20 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-        <div className="h-64 bg-zinc-200 rounded-xl animate-pulse" />
       </div>
     )
   }
@@ -169,7 +251,7 @@ export default function ClientDashboardPage() {
 
       {/* Stats Grid - Full width on mobile */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {stats.map((stat, index) => (
+        {statsData.map((stat: StatItem, index: number) => (
           <StatCard key={stat.title} {...stat} delay={index * 0.1} />
         ))}
       </div>
@@ -249,19 +331,25 @@ export default function ClientDashboardPage() {
               </CardHeader>
               <CardContent className="px-4 pb-4">
                 <div className="space-y-3">
-                  {activities.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                        activity.type === 'application' ? 'bg-orange-500' :
-                        activity.type === 'completed' ? 'bg-green-500' :
-                        activity.type === 'payment' ? 'bg-blue-500' : 'bg-purple-500'
-                      }`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-zinc-900 line-clamp-2">{activity.text}</p>
-                        <p className="text-xs text-muted-foreground">{activity.time}</p>
+                  {activities.length > 0 ? (
+                    activities.map((activity) => (
+                      <div key={activity.id} className="flex items-start gap-3">
+                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                          activity.type === 'application' ? 'bg-orange-500' :
+                          activity.type === 'completed' ? 'bg-green-500' :
+                          activity.type === 'payment' ? 'bg-blue-500' : 'bg-purple-500'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-zinc-900 line-clamp-2">{activity.text}</p>
+                          <p className="text-xs text-muted-foreground">{activity.time}</p>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">No recent activity</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>

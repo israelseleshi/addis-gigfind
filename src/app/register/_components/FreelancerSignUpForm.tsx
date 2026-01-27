@@ -88,6 +88,7 @@ export function FreelancerSignUpForm() {
 
   async function onSubmit(values: FreelancerSignUpFormValues) {
     setIsLoading(true)
+    toast.info("Please check your email for the verification code.")
     setFormData(values)
     setStep("otp")
     setIsLoading(false)
@@ -103,8 +104,8 @@ export function FreelancerSignUpForm() {
         toast.error(result.error)
         setStep("form")
       } else {
-        toast.success("Account created successfully! Please check your email for confirmation.")
-        router.push('/onboarding')
+        toast.success("Account created successfully! Please check your email for verification.")
+        router.push('/login')
       }
     } catch (error) {
       console.error("Sign up error:", error)

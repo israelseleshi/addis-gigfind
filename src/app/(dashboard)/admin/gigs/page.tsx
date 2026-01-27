@@ -7,12 +7,24 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
-import { Search, Briefcase, Trash2, Eye } from 'lucide-react'
+import { Search, Trash2, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+
+interface Gig {
+  id: string;
+  title: string;
+  status: string;
+  category: string;
+  location: string;
+  budget: number | null;
+  client: {
+    full_name: string;
+  } | null;
+}
 
 export default function AdminGigsPage() {
   const [loading, setLoading] = useState(true)
-  const [gigs, setGigs] = useState<any[]>([])
+  const [gigs, setGigs] = useState<Gig[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 

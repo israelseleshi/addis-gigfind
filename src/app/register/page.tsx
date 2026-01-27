@@ -1,5 +1,6 @@
 import { ClientSignUpForm } from "@/components/auth/client-signup-form";
 import { FreelancerSignUpForm } from "@/components/auth/freelancer-signup-form";
+import { AdminSignUpForm } from "@/components/auth/admin-signup-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Footer } from '@/components/footer';
 
@@ -16,15 +17,19 @@ export default function RegisterPage() {
             </p>
           </div>
           <Tabs defaultValue="client" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="client">I&apos;m a Client</TabsTrigger>
               <TabsTrigger value="freelancer">I&apos;m a Freelancer</TabsTrigger>
+              <TabsTrigger value="admin">I&apos;m an Admin</TabsTrigger>
             </TabsList>
             <TabsContent value="client">
               <ClientSignUpForm />
             </TabsContent>
             <TabsContent value="freelancer">
               <FreelancerSignUpForm />
+            </TabsContent>
+            <TabsContent value="admin">
+              <AdminSignUpForm />
             </TabsContent>
           </Tabs>
         </div>

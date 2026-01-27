@@ -73,26 +73,40 @@ export default function PostGigPage() {
         return
       }
 
+      // Verify user is a client
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      
+      if (!profile || profile.role !== 'client') {
+        toast.error("Only clients can post gigs")
+        return
+      }
+
       const { error } = await supabase
         .from("gigs")
         .insert({
           title: data.title,
           category: data.category,
           description: data.description,
-          budget: data.budget,
+          budget: parseInt(data.budget),
           location: data.location,
           client_id: user.id,
           status: "open",
         })
 
       if (error) {
-        toast.error(error.message)
+        console.error('Gig creation error:', error)
+        toast.error(error.message || "Failed to create gig")
         return
       }
 
       toast.success("Gig posted successfully!")
       router.push("/client/my-gigs")
-    } catch {
+    } catch (error) {
+      console.error('Submit error:', error)
       toast.error("Something went wrong")
     } finally {
       setLoading(false)

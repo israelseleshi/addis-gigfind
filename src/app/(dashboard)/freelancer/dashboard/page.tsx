@@ -1,11 +1,51 @@
-
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Briefcase, FileText, CheckCircle, Clock, Plus, ArrowRight, Search, Zap } from 'lucide-react'
+import { Briefcase, FileText, CheckCircle, Clock, ArrowRight, Search, Zap } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { getFreelancerDashboardStats, getRecentApplications, getRecommendedGigs } from '@/lib/actions/dashboard'
+import { Skeleton } from '@/components/ui/skeleton'
+
+interface DashboardStats {
+  activeApplications: number
+  pendingJobs: number
+  completedJobs: number
+  availableGigs: number
+}
+
+interface Application {
+  id: string
+  gig: string
+  status: string
+  applied: string
+  budget: string
+}
+
+interface Gig {
+  id: string
+  title: string
+  budget: string
+  posted: string
+  skills: string[]
+}
+
+interface StatItem {
+  title: string
+  value: string
+  icon: React.ElementType
+  color: string
+}
+
+interface QuickAction {
+  icon: React.ElementType
+  label: string
+  href: string
+  color: string
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -20,7 +60,7 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 }
 
-function StatCard({ title, value, icon: Icon, color, delay }: { title: string; value: string; icon: any; color: string; delay: number }) {
+function StatCard({ title, value, icon: Icon, color, delay }: { title: string; value: string; icon: React.ElementType; color: string; delay: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -33,7 +73,6 @@ function StatCard({ title, value, icon: Icon, color, delay }: { title: string; v
           <div className={`p-2 rounded-lg bg-gradient-to-br ${color} shadow-md`}>
             <Icon className="h-5 w-5 text-white" />
           </div>
-          <span className="text-xs font-medium text-muted-foreground bg-zinc-100 px-2 py-1 rounded-full">+8%</span>
         </CardHeader>
         <CardContent>
           <div className="text-4xl font-bold tracking-tight">{value}</div>
@@ -44,7 +83,7 @@ function StatCard({ title, value, icon: Icon, color, delay }: { title: string; v
   )
 }
 
-function QuickAction({ icon: Icon, label, href, color }: { icon: any; label: string; href: string; color: string }) {
+function QuickAction({ icon: Icon, label, href, color }: { icon: React.ElementType; label: string; href: string; color: string }) {
   return (
     <Link href={href}>
       <motion.div
@@ -81,33 +120,107 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function FreelancerDashboardPage() {
-  const stats = [
-    { title: 'Active Applications', value: '4', icon: FileText, color: 'from-blue-500 to-blue-600' },
-    { title: 'Pending Jobs', value: '2', icon: Clock, color: 'from-amber-500 to-orange-500' },
-    { title: 'Completed Jobs', value: '7', icon: CheckCircle, color: 'from-green-500 to-green-600' },
-    { title: 'Available Gigs', value: '12', icon: Briefcase, color: 'from-purple-500 to-purple-600' },
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [recentApplications, setRecentApplications] = useState<Application[]>([])
+  const [recommendedGigs, setRecommendedGigs] = useState<Gig[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) {
+          console.error('No user found')
+          setLoading(false)
+          return
+        }
+        
+        
+        const [statsData, applicationsData, gigsData] = await Promise.all([
+          getFreelancerDashboardStats(user.id),
+          getRecentApplications(user.id),
+          getRecommendedGigs()
+        ])
+        
+        setStats(statsData || {
+          activeApplications: 0,
+          pendingJobs: 0,
+          completedJobs: 0,
+          availableGigs: 0,
+        })
+        setRecentApplications(applicationsData)
+        setRecommendedGigs(gigsData)
+      } catch (error) {
+        console.error('Dashboard fetch error:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-20" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-20 w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  const statsData: StatItem[] = [
+    { title: 'Active Applications', value: stats?.activeApplications.toString() || '0', icon: FileText, color: 'from-blue-500 to-blue-600' },
+    { title: 'Pending Jobs', value: stats?.pendingJobs.toString() || '0', icon: Clock, color: 'from-amber-500 to-orange-500' },
+    { title: 'Completed Jobs', value: stats?.completedJobs.toString() || '0', icon: CheckCircle, color: 'from-green-500 to-green-600' },
+    { title: 'Available Gigs', value: stats?.availableGigs.toString() || '0', icon: Briefcase, color: 'from-purple-500 to-purple-600' },
   ]
 
-  const quickActions = [
+  const quickActions: QuickAction[] = [
     { icon: Search, label: 'Find Work', href: '/freelancer/find-work', color: 'from-orange-500 to-amber-500' },
     { icon: FileText, label: 'My Applications', href: '/freelancer/my-applications', color: 'from-blue-500 to-cyan-500' },
     { icon: CheckCircle, label: 'Active Jobs', href: '/freelancer/active-jobs', color: 'from-green-500 to-emerald-500' },
     { icon: Zap, label: 'Profile Boost', href: '/freelancer/profile', color: 'from-purple-500 to-pink-500' },
   ]
 
-  const recentApplications = [
-    { id: 1, gig: 'Web Developer for E-commerce', status: 'In Review', applied: '2 days ago', budget: 'ETB 15,000' },
-    { id: 2, gig: 'Logo Design Project', status: 'Accepted', applied: '3 days ago', budget: 'ETB 5,000' },
-    { id: 3, gig: 'Content Writer for Blog', status: 'Pending', applied: '1 week ago', budget: 'ETB 3,500' },
-    { id: 4, gig: 'Mobile App UI Design', status: 'In Review', applied: '5 hours ago', budget: 'ETB 20,000' },
-  ]
-
-  const recommendedGigs = [
-    { id: 1, title: 'Mobile App Developer', budget: 'ETB 15,000-25,000', posted: '1 day ago', skills: ['React Native', 'TypeScript'] },
-    { id: 2, title: 'SEO Specialist', budget: 'ETB 8,000-12,000', posted: '2 days ago', skills: ['SEO', 'Analytics'] },
-    { id: 3, title: 'Video Editor', budget: 'ETB 5,000-10,000', posted: '3 days ago', skills: ['Premiere', 'After Effects'] },
-    { id: 4, title: 'Backend Developer', budget: 'ETB 20,000-30,000', posted: '5 hours ago', skills: ['Node.js', 'PostgreSQL'] },
-  ]
 
   return (
     <motion.div
@@ -127,8 +240,8 @@ export default function FreelancerDashboardPage() {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {stats.map((stat, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statsData.map((stat: StatItem, index: number) => (
           <StatCard key={stat.title} {...stat} delay={index * 0.1} />
         ))}
       </div>
@@ -220,7 +333,7 @@ export default function FreelancerDashboardPage() {
                       </div>
                       <p className="text-xs sm:text-sm text-muted-foreground mb-2">{gig.budget}</p>
                       <div className="flex flex-wrap gap-1 mb-3">
-                        {gig.skills.map((skill) => (
+                        {gig.skills.map((skill: string) => (
                           <span key={skill} className="text-xs bg-zinc-200 text-zinc-600 px-2 py-0.5 rounded-full">
                             {skill}
                           </span>

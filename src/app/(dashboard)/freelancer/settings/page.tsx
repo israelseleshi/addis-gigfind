@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,18 +35,20 @@ export default function SettingsPage() {
   );
 }
 
+interface Profile {
+  full_name?: string;
+  bio?: string;
+  avatar_url?: string;
+}
+
 function ProfileForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const supabase = createClient();
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -72,7 +74,12 @@ function ProfileForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
 
   const handleSave = async () => {
     setSaving(true);
@@ -86,8 +93,8 @@ function ProfileForm() {
       const { error } = await supabase
         .from('profiles')
         .update({
-          full_name: profile.full_name,
-          bio: profile.bio,
+          full_name: profile?.full_name,
+          bio: profile?.bio,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -124,7 +131,7 @@ function ProfileForm() {
         <Input
           id="fullName"
           value={profile?.full_name || ''}
-          onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+          onChange={(e) => setProfile(prev => ({ ...(prev as Profile), full_name: e.target.value }))}
           placeholder="Enter your full name"
         />
         <p className="text-xs text-zinc-500">This is your public display name. It can be your real name or a pseudonym.</p>
@@ -139,7 +146,7 @@ function ProfileForm() {
         <Textarea
           id="bio"
           value={profile?.bio || ''}
-          onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+          onChange={(e) => setProfile(prev => ({ ...(prev as Profile), bio: e.target.value }))}
           placeholder="Tell us about yourself..."
           rows={4}
         />

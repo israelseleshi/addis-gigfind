@@ -8,13 +8,27 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Plus, Search, Filter } from 'lucide-react'
+import { Plus, Search, Filter, RefreshCw, Edit, Trash2, MoreHorizontal } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog'
+import { toast } from 'sonner'
+
+interface Gig {
+  id: string;
+  title: string;
+  status: string;
+  description: string;
+  budget: number;
+  applications: { count: number }[];
+}
 
 export default function MyGigsPage() {
   const [loading, setLoading] = useState(true)
-  const [gigs, setGigs] = useState<any[]>([])
+  const [gigs, setGigs] = useState<Gig[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [gigToDelete, setGigToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     loadGigs()
@@ -26,11 +40,26 @@ export default function MyGigsPage() {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
+        console.log('Current user ID:', user.id)
+        
+        // First, let's check if there are any gigs at all
+        const { data: allGigs, error: allGigsError } = await supabase
+          .from('gigs')
+          .select('count')
+          .limit(1)
+
+        console.log('All gigs count:', allGigs)
+        console.log('All gigs error:', allGigsError)
+
+        // Now fetch user's gigs
         const { data, error } = await supabase
           .from('gigs')
           .select('*, applications(count)')
           .eq('client_id', user.id)
           .order('created_at', { ascending: false })
+
+        console.log('Fetched gigs:', data)
+        console.log('Error:', error)
 
         if (error) {
           console.error('Error loading gigs:', error)
@@ -51,6 +80,32 @@ export default function MyGigsPage() {
     return matchesSearch && matchesStatus
   })
 
+  const handleDelete = async (gigId: string) => {
+    setGigToDelete(gigId)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!gigToDelete) return
+    
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('gigs').delete().eq('id', gigToDelete)
+
+      if (error) {
+        toast.error('Failed to delete gig: ' + error.message)
+      } else {
+        toast.success('Gig deleted successfully')
+        loadGigs()
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('An error occurred while deleting the gig')
+    } finally {
+      setDeleteDialogOpen(false)
+      setGigToDelete(null)
+    }
+  }
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
       draft: 'bg-gray-500',
@@ -81,12 +136,18 @@ export default function MyGigsPage() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">My Gigs</h1>
-        <Button asChild className="bg-amber-500 hover:bg-amber-600">
-          <Link href="/client/gigs/create">
-            <Plus className="h-4 w-4 mr-2" />
-            Post New Gig
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={loadGigs} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button asChild className="bg-amber-500 hover:bg-amber-600">
+            <Link href="/client/gigs/create">
+              <Plus className="h-4 w-4 mr-2" />
+              Post New Gig
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -168,7 +229,31 @@ export default function MyGigsPage() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg">{gig.title}</CardTitle>
-                  {getStatusBadge(gig.status)}
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(gig.status)}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/client/gigs/${gig.id}/edit`}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDelete(gig.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -192,6 +277,28 @@ export default function MyGigsPage() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-red-500 text-white border-red-600">
+          <DialogHeader>
+            <DialogTitle className="text-white">Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-white">
+              Are you sure you want to delete this gig? This action cannot be undone.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="bg-white text-red-500 hover:bg-gray-100 border-white">
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete} className="bg-white text-red-500 hover:bg-gray-100">
+              Delete Gig
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

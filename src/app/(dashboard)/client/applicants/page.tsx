@@ -1,20 +1,45 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
-import { Check, X, Clock, User, Filter } from 'lucide-react'
+import { Check, X, Clock, Filter } from 'lucide-react'
 import { toast } from 'sonner'
+
+interface Gig {
+  id: string;
+  title: string;
+}
+
+interface Applicant {
+  id: string;
+  status: string;
+  gig_id: string;
+  bid_amount: number;
+  cover_note: string;
+  gig: {
+    id: string;
+    title: string;
+    status: string;
+  } | null;
+  freelancer: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    average_rating: number | null;
+    reviews_count: number | null;
+  } | null;
+}
 
 export default function ApplicantsPage() {
   const [loading, setLoading] = useState(true)
-  const [applicants, setApplicants] = useState<any[]>([])
-  const [gigs, setGigs] = useState<any[]>([])
+  const [applicants, setApplicants] = useState<Applicant[]>([])
+  const [gigs, setGigs] = useState<Gig[]>([])
   const [selectedGig, setSelectedGig] = useState<string>('all')
 
   useEffect(() => {
@@ -218,7 +243,7 @@ export default function ApplicantsPage() {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                     <div className="flex gap-3 sm:gap-4">
                       <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
-                        <AvatarImage src={app.freelancer?.avatar_url} />
+                        <AvatarImage src={app.freelancer?.avatar_url || ''} />
                         <AvatarFallback className="bg-amber-100 text-amber-600">
                           {app.freelancer?.full_name?.charAt(0) || 'U'}
                         </AvatarFallback>
@@ -291,7 +316,7 @@ export default function ApplicantsPage() {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                     <div className="flex gap-3 sm:gap-4">
                       <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
-                        <AvatarImage src={app.freelancer?.avatar_url} />
+                        <AvatarImage src={app.freelancer?.avatar_url || ''} />
                         <AvatarFallback className="bg-amber-100 text-amber-600">
                           {app.freelancer?.full_name?.charAt(0) || 'U'}
                         </AvatarFallback>

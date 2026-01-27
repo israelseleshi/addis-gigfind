@@ -22,7 +22,6 @@ interface Profile {
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
-  const [loading, setLoading] = useState(true);
 
   return (
     <div className="space-y-6 p-4 md:p-6">

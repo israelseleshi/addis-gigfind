@@ -5,8 +5,8 @@
  * Outputs to supabase_schema.txt
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 const MIGRATIONS_DIR = path.join(__dirname, '..', 'supabase', 'migrations');
 const OUTPUT_FILE = path.join(__dirname, '..', 'supabase_schema.txt');

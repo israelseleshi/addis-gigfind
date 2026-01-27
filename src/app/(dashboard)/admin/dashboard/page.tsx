@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
-import { Users, Briefcase, Shield, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { Users, Briefcase, Shield, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 
 export default function AdminDashboardPage() {
@@ -37,7 +37,10 @@ export default function AdminDashboardPage() {
         .from('gigs')
         .select('status')
 
-      const statusCounts = gigData?.reduce((acc: Record<string, number>, g: any) => {
+      interface GigStatus {
+        status: string;
+      }
+      const statusCounts = gigData?.reduce((acc: Record<string, number>, g: GigStatus) => {
         acc[g.status] = (acc[g.status] || 0) + 1
         return acc
       }, {}) || {}

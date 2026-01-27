@@ -3,7 +3,6 @@
 import * as React from "react"
 import { OTPInput } from "@/components/ui/otp-input"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { sendOTP, verifyOTPCode } from "@/lib/actions/auth"

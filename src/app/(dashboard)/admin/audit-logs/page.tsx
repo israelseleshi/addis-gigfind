@@ -17,7 +17,7 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 }
 
-function StatCard({ title, value, icon: Icon, color, delay, trend }: { title: string; value: string; icon: any; color: string; delay: number; trend: string }) {
+function StatCard({ title, value, icon: Icon, color, delay, trend }: { title: string; value: string; icon: React.ElementType; color: string; delay: number; trend: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -41,7 +41,7 @@ function StatCard({ title, value, icon: Icon, color, delay, trend }: { title: st
   )
 }
 
-function RecentActivityItem({ icon: Icon, color, title, description, time }: { icon: any; color: string; title: string; description: string; time: string }) {
+function RecentActivityItem({ icon: Icon, color, title, description, time }: { icon: React.ElementType; color: string; title: string; description: string; time: string }) {
   return (
     <motion.div
       whileHover={{ x: 4 }}
@@ -168,7 +168,7 @@ export default function AdminAuditLogsPage() {
             <Card className="border-0 shadow-lg">
               <CardHeader>
                 <CardTitle className="text-lg">Platform Summary</CardTitle>
-                <CardDescription>Today's overview</CardDescription>
+                <CardDescription>Today&apos;s overview</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">

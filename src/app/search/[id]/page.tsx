@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -56,19 +56,7 @@ export default function GigDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    console.log('Params:', params);
-    if (gigId) {
-      console.log('Fetching gig with ID:', gigId);
-      fetchGig();
-    } else {
-      console.log('No gigId found in params');
-      setError('Invalid gig ID');
-      setLoading(false);
-    }
-  }, [gigId]);
-
-  const fetchGig = async () => {
+  const fetchGig = useCallback(async () => {
     setLoading(true);
     try {
       const supabase = createClient();
@@ -95,7 +83,20 @@ export default function GigDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [gigId]);
+
+  useEffect(() => {
+    console.log('Params:', params);
+    if (gigId) {
+      console.log('Fetching gig with ID:', gigId);
+      fetchGig();
+    } else {
+      console.log('No gigId found in params');
+      setError('Invalid gig ID');
+      setLoading(false);
+    }
+  }, [gigId, fetchGig, params]);
+
 
   if (loading) {
     return (
