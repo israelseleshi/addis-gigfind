@@ -242,7 +242,7 @@ export default function ApplyPage() {
               <CardHeader>
                 <CardTitle>Submit Your Application</CardTitle>
                 <CardDescription>
-                  Write a cover letter explaining why you're the perfect fit for this gig.
+                  Write a cover letter explaining why you&apos;re the perfect fit for this gig.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -297,7 +297,7 @@ export default function ApplyPage() {
                 <div className="flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5" />
                   <p className="text-sm text-gray-600">
-                    Explain why you're interested in this particular gig
+                    Explain why you&apos;re interested in this particular gig
                   </p>
                 </div>
                 <div className="flex items-start gap-2">

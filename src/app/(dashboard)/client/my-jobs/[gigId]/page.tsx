@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Edit, Users, Calendar, MapPin, DollarSign } from 'lucide-react'
+import { ArrowLeft, Edit, Users, MapPin, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 

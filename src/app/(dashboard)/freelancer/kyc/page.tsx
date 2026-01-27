@@ -9,8 +9,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { CheckCircle2, Upload, FileText, Shield, CreditCard, Clock, XCircle, AlertCircle } from "lucide-react"
+import { CheckCircle2, Upload, FileText, Shield, CreditCard, Clock, XCircle } from "lucide-react"
+
+interface VerificationData {
+  id_type?: string;
+  submitted_at?: string;
+  approved_at?: string;
+  rejected_at?: string;
+  rejection_reason?: string;
+}
 
 export default function KycPage() {
   const router = useRouter()
@@ -18,7 +25,7 @@ export default function KycPage() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [isSubmitted, setIsSubmitted] = React.useState(false)
   const [verificationStatus, setVerificationStatus] = React.useState<string | null>(null)
-  const [verificationData, setVerificationData] = React.useState<any>(null)
+  const [verificationData, setVerificationData] = React.useState<VerificationData | null>(null)
   const [idType, setIdType] = React.useState<"kebele" | "passport" | "driver_license">("kebele")
   const [formData, setFormData] = React.useState({
     idNumber: "",
@@ -61,25 +68,6 @@ export default function KycPage() {
     if (e.target.files && e.target.files[0]) {
       setFormData({ ...formData, idPhoto: e.target.files[0] })
     }
-  }
-
-  // Status badge component
-  const StatusBadge = ({ status }: { status: string }) => {
-    const statusConfig = {
-      pending: { icon: Clock, color: "bg-amber-100 text-amber-700 border-amber-200", label: "Pending Review" },
-      verified: { icon: CheckCircle2, color: "bg-green-100 text-green-700 border-green-200", label: "Verified" },
-      rejected: { icon: XCircle, color: "bg-red-100 text-red-700 border-red-200", label: "Rejected" },
-    }
-
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
-    const Icon = config.icon
-
-    return (
-      <Badge className={`flex items-center gap-1 ${config.color} border`}>
-        <Icon className="w-3 h-3" />
-        {config.label}
-      </Badge>
-    )
   }
 
   // If already verified, show success state

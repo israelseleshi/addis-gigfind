@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, use, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -95,7 +95,7 @@ export default function GigDetailPage({ params }: { params: Promise<{ gigId: str
         toast.success('Application submitted successfully!');
         setIsApplyModalOpen(false);
       }
-    } catch (error) {
+    } catch {
       toast.error('An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);

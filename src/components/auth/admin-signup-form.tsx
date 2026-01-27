@@ -59,7 +59,7 @@ export function AdminSignUpForm() {
       } else {
         toast.error(result.error || "Failed to create admin account")
       }
-    } catch (error) {
+    } catch {
       toast.error("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
@@ -208,7 +208,7 @@ export function AdminSignUpForm() {
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-sm text-blue-800">
             <strong>Note:</strong> Admin accounts are created immediately without email verification. 
-            You'll have full access to manage users, gigs, and verifications.
+            You&apos;ll have full access to manage users, gigs, and verifications.
           </p>
         </div>
       </CardContent>
