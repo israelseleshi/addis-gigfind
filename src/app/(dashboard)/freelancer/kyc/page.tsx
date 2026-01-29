@@ -2,6 +2,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -10,13 +11,21 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle2, Upload, FileText, Shield, CreditCard, Clock, XCircle } from "lucide-react"
+import { uploadVerificationDocument, getVerificationStatus } from "@/lib/actions/verification"
+import { toast } from "sonner"
 
 interface VerificationData {
-  id_type?: string;
+  id?: string;
+  document_type?: string;
+  id_number?: string;
+  front_image_url?: string;
+  back_image_url?: string;
+  description?: string;
+  status?: string;
   submitted_at?: string;
   approved_at?: string;
   rejected_at?: string;
-  rejection_reason?: string;
+  admin_notes?: string;
 }
 
 export default function KycPage() {
@@ -32,6 +41,7 @@ export default function KycPage() {
     idPhoto: null as File | null,
     description: "",
   })
+  const [imagePreview, setImagePreview] = React.useState<string | null>(null)
 
   // Load current verification status on component mount
   React.useEffect(() => {
@@ -40,15 +50,11 @@ export default function KycPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('verification_status, verification_data')
-          .eq('id', user.id)
-          .single()
-
-        if (profile) {
-          setVerificationStatus(profile.verification_status)
-          setVerificationData(profile.verification_data)
+        const result = await getVerificationStatus(user.id)
+        
+        if (result.status && result.status !== 'unverified') {
+          setVerificationStatus(result.status)
+          setVerificationData(result.document)
         }
       } catch (error) {
         console.error('Error loading verification status:', error)
@@ -66,7 +72,32 @@ export default function KycPage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFormData({ ...formData, idPhoto: e.target.files[0] })
+      const file = e.target.files[0]
+      
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File size must be less than 5MB")
+        e.target.value = '' // Clear the input
+        setImagePreview(null) // Clear preview
+        return
+      }
+      
+      // Check file type (images only)
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please upload an image file")
+        e.target.value = '' // Clear the input
+        setImagePreview(null) // Clear preview
+        return
+      }
+      
+      setFormData({ ...formData, idPhoto: file })
+      
+      // Create image preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
@@ -85,9 +116,14 @@ export default function KycPage() {
                 Your identity has been verified. You can now apply for jobs and access all freelancer features.
               </p>
               <div className="space-y-2">
-                {verificationData?.id_type && (
+                {verificationData?.document_type && (
                   <p className="text-sm text-gray-600">
-                    <strong>ID Type:</strong> {verificationData.id_type.replace('_', ' ').toUpperCase()}
+                    <strong>ID Type:</strong> {verificationData.document_type.replace('_', ' ').toUpperCase()}
+                  </p>
+                )}
+                {verificationData?.id_number && (
+                  <p className="text-sm text-gray-600">
+                    <strong>ID Number:</strong> {verificationData.id_number}
                   </p>
                 )}
                 {verificationData?.approved_at && (
@@ -96,6 +132,41 @@ export default function KycPage() {
                   </p>
                 )}
               </div>
+              
+              {/* Display submitted images */}
+              {verificationData?.front_image_url && (
+                <div className="mt-4 space-y-3">
+                  <p className="text-sm font-medium text-gray-700">Submitted Documents:</p>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Front Image</p>
+                      <Image
+                        src={verificationData.front_image_url}
+                        alt="Submitted ID Front"
+                        width={800}
+                        height={320}
+                        unoptimized
+                        className="h-40 w-full cursor-pointer rounded border object-cover"
+                        onClick={() => window.open(verificationData.front_image_url, "_blank")}
+                      />
+                    </div>
+                    {verificationData.back_image_url && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Back Image</p>
+                        <Image
+                          src={verificationData.back_image_url}
+                          alt="Submitted ID Back"
+                          width={800}
+                          height={320}
+                          unoptimized
+                          className="h-40 w-full cursor-pointer rounded border object-cover"
+                          onClick={() => window.open(verificationData.back_image_url, "_blank")}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               <Button
                 onClick={() => router.push("/freelancer/find-work")}
                 className="w-full mt-4 bg-green-600 hover:bg-green-700"
@@ -123,11 +194,46 @@ export default function KycPage() {
               <p className="text-muted-foreground">
                 Your verification was rejected. Please review the feedback and try again.
               </p>
-              {verificationData?.rejection_reason && (
+              {verificationData?.admin_notes && (
                 <div className="p-3 bg-red-50 rounded-lg border border-red-200">
                   <p className="text-sm text-red-700">
-                    <strong>Reason:</strong> {verificationData.rejection_reason}
+                    <strong>Reason:</strong> {verificationData.admin_notes}
                   </p>
+                </div>
+              )}
+              
+              {/* Display submitted images */}
+              {verificationData?.front_image_url && (
+                <div className="mt-4 space-y-3">
+                  <p className="text-sm font-medium text-gray-700">Submitted Documents:</p>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Front Image</p>
+                      <Image
+                        src={verificationData.front_image_url}
+                        alt="Submitted ID Front"
+                        width={800}
+                        height={320}
+                        unoptimized
+                        className="h-40 w-full cursor-pointer rounded border object-cover"
+                        onClick={() => window.open(verificationData.front_image_url, "_blank")}
+                      />
+                    </div>
+                    {verificationData.back_image_url && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Back Image</p>
+                        <Image
+                          src={verificationData.back_image_url}
+                          alt="Submitted ID Back"
+                          width={800}
+                          height={320}
+                          unoptimized
+                          className="h-40 w-full cursor-pointer rounded border object-cover"
+                          onClick={() => window.open(verificationData.back_image_url, "_blank")}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               <Button
@@ -163,9 +269,14 @@ export default function KycPage() {
                 Your verification is under review. This usually takes 1-2 business days.
               </p>
               <div className="space-y-2">
-                {verificationData?.id_type && (
+                {verificationData?.document_type && (
                   <p className="text-sm text-gray-600">
-                    <strong>ID Type:</strong> {verificationData.id_type.replace('_', ' ').toUpperCase()}
+                    <strong>ID Type:</strong> {verificationData.document_type.replace('_', ' ').toUpperCase()}
+                  </p>
+                )}
+                {verificationData?.id_number && (
+                  <p className="text-sm text-gray-600">
+                    <strong>ID Number:</strong> {verificationData.id_number}
                   </p>
                 )}
                 {verificationData?.submitted_at && (
@@ -174,6 +285,41 @@ export default function KycPage() {
                   </p>
                 )}
               </div>
+              
+              {/* Display submitted images */}
+              {verificationData?.front_image_url && (
+                <div className="mt-4 space-y-3">
+                  <p className="text-sm font-medium text-gray-700">Submitted Documents:</p>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Front Image</p>
+                      <Image
+                        src={verificationData.front_image_url}
+                        alt="Submitted ID Front"
+                        width={800}
+                        height={320}
+                        unoptimized
+                        className="h-40 w-full cursor-pointer rounded border object-cover"
+                        onClick={() => window.open(verificationData.front_image_url, "_blank")}
+                      />
+                    </div>
+                    {verificationData.back_image_url && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Back Image</p>
+                        <Image
+                          src={verificationData.back_image_url}
+                          alt="Submitted ID Back"
+                          width={800}
+                          height={320}
+                          unoptimized
+                          className="h-40 w-full cursor-pointer rounded border object-cover"
+                          onClick={() => window.open(verificationData.back_image_url, "_blank")}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               <Button
                 onClick={() => router.push("/freelancer/dashboard")}
                 className="w-full mt-4"
@@ -195,55 +341,27 @@ export default function KycPage() {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
-        alert("Please log in first")
+        toast.error("Please log in first")
         router.push("/login")
         return
       }
 
-      let idPhotoUrl = ""
+      const result = await uploadVerificationDocument({
+        documentType: idType,
+        idNumber: formData.idNumber,
+        frontImage: formData.idPhoto!,
+        description: formData.description,
+      })
 
-      if (formData.idPhoto) {
-        const fileExt = formData.idPhoto.name.split(".").pop()
-        const fileName = `${user.id}/kyc-${Date.now()}.${fileExt}`
-        const { error: uploadError } = await supabase.storage
-          .from("verification-docs")
-          .upload(fileName, formData.idPhoto)
-
-        if (uploadError) {
-          console.error("Upload error:", uploadError)
-          throw new Error("Failed to upload ID photo")
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from("verification-docs")
-          .getPublicUrl(fileName)
-
-        idPhotoUrl = publicUrl
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success("Verification submitted successfully!")
+        setIsSubmitted(true)
       }
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          verification_status: "pending",
-          verification_data: {
-            id_type: idType,
-            id_number: formData.idNumber,
-            id_photo_url: idPhotoUrl,
-            description: formData.description,
-            submitted_at: new Date().toISOString(),
-          },
-        })
-        .eq("id", user.id)
-
-      if (updateError) {
-        console.error("Update error:", updateError)
-        throw new Error("Failed to submit verification")
-      }
-
-      setIsSubmitted(true)
     } catch (error) {
       console.error("KYC submission error:", error)
-      alert("Failed to submit verification. Please try again.")
+      toast.error("Failed to submit verification. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -335,10 +453,22 @@ export default function KycPage() {
                   className="hidden"
                 />
                 <label htmlFor="idPhoto" className="cursor-pointer">
-                  <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  {imagePreview ? (
+                    <Image
+                      src={imagePreview}
+                      alt="ID preview"
+                      width={800}
+                      height={256}
+                      unoptimized
+                      className="mx-auto mb-2 h-32 w-full rounded object-cover"
+                    />
+                  ) : (
+                    <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  )}
                   <p className="text-sm text-gray-500">
                     {formData.idPhoto ? formData.idPhoto.name : "Click to upload your ID photo"}
                   </p>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
                 </label>
               </div>
             </div>

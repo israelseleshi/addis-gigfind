@@ -297,27 +297,36 @@ export type Database = {
         Row: {
           admin_notes: string | null
           back_image_url: string | null
+          description: string | null
           document_type: string
           front_image_url: string
           id: string
+          id_number: string
+          status: string
           submitted_at: string | null
           user_id: string
         }
         Insert: {
           admin_notes?: string | null
           back_image_url?: string | null
+          description?: string | null
           document_type: string
           front_image_url: string
           id?: string
+          id_number: string
+          status?: string
           submitted_at?: string | null
           user_id: string
         }
         Update: {
           admin_notes?: string | null
           back_image_url?: string | null
+          description?: string | null
           document_type?: string
           front_image_url?: string
           id?: string
+          id_number?: string
+          status?: string
           submitted_at?: string | null
           user_id?: string
         }

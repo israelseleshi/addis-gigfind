@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Edit, Users, MapPin, DollarSign } from 'lucide-react'
 import Link from 'next/link'
@@ -212,24 +213,32 @@ export default function GigDetailPage() {
                   {gig.applications.slice(0, 3).map((application) => (
                     <div key={application.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h4 className="font-semibold">
-                            {application.freelancer?.full_name || 'Unknown Freelancer'}
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            Applied on {formatDate(application.created_at)}
-                          </p>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={application.freelancer?.avatar_url || ''} />
+                            <AvatarFallback>
+                              {application.freelancer?.full_name?.charAt(0) || 'F'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h4 className="font-semibold">
+                              {application.freelancer?.full_name || 'Unknown Freelancer'}
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              Applied on {formatDate(application.created_at)}
+                            </p>
+                          </div>
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-green-600">
-                            {application.bid_amount.toLocaleString()} ETB
+                            {application.bid_amount ? application.bid_amount.toLocaleString() : '0'} ETB
                           </p>
                           <Badge className={application.status === 'pending' ? 'bg-amber-500' : 'bg-green-500'}>
                             {application.status}
                           </Badge>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 line-clamp-2">
+                      <p className="text-sm text-gray-600 line-clamp-2 ml-13">
                         {application.cover_note}
                       </p>
                     </div>

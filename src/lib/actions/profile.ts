@@ -100,6 +100,16 @@ export async function uploadAvatar(formData: FormData) {
     return { error: 'No file provided.' }
   }
 
+  // Check file size (5MB limit)
+  if (file.size > 5 * 1024 * 1024) {
+    return { error: 'File size must be less than 5MB.' }
+  }
+
+  // Check file type (images only)
+  if (!file.type.startsWith('image/')) {
+    return { error: 'Please upload an image file.' }
+  }
+
   const fileName = `${user.id}/${Date.now()}-${file.name}`
   
   const { error } = await supabase.storage

@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, MapPin, Star } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Star, MapPin, ArrowLeft, Calendar, Tag, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { createClient } from "@/lib/supabase/client";
 import { applyForGig } from '@/lib/actions/applications';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface Gig {
@@ -49,8 +49,8 @@ export default function GigDetailPage({ params }: { params: Promise<{ gigId: str
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [coverNote, setCoverNote] = useState('');
-  const [bidAmount, setBidAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
 
   const loadGig = useCallback(async () => {
     try {
@@ -73,6 +73,16 @@ export default function GigDetailPage({ params }: { params: Promise<{ gigId: str
         setGig(gigData);
         setClient(gigData?.client);
       }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('verification_status')
+          .eq('id', user.id)
+          .single();
+        setVerificationStatus(profile?.verification_status ?? null);
+      }
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -88,7 +98,7 @@ export default function GigDetailPage({ params }: { params: Promise<{ gigId: str
   const handleApplySubmit = async () => {
     setIsSubmitting(true);
     try {
-      const result = await applyForGig({ gigId, coverNote, bidAmount: Number(bidAmount) });
+      const result = await applyForGig({ gigId, coverNote });
       if (result.error) {
         toast.error(result.error);
       } else {
@@ -183,8 +193,14 @@ export default function GigDetailPage({ params }: { params: Promise<{ gigId: str
                 </div>
 
                 {/* Apply Button */}
-                <Button 
-                  onClick={() => setIsApplyModalOpen(true)} 
+                <Button
+                  onClick={() => {
+                    if (verificationStatus !== 'verified') {
+                      toast.error('You must be verified to apply for gigs.')
+                      return
+                    }
+                    setIsApplyModalOpen(true)
+                  }}
                   className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   Apply for This Gig
@@ -203,26 +219,35 @@ export default function GigDetailPage({ params }: { params: Promise<{ gigId: str
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-orange-400 to-amber-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">
-                      {client.full_name?.charAt(0) || 'C'}
-                    </div>
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={client.avatar_url || ''} />
+                      <AvatarFallback className="text-xl font-bold bg-gradient-to-r from-orange-400 to-amber-500 text-white">
+                        {client.full_name?.charAt(0) || 'C'}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 text-lg">{client.full_name}</h4>
-                      {client.average_rating && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <Star 
-                                key={i} 
-                                className={`w-4 h-4 ${i < Math.floor(client.average_rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm text-gray-600 ml-1">{client.average_rating.toFixed(1)}</span>
+                    <h4 className="font-semibold text-gray-900 text-lg">{client.full_name}</h4>
+                    {client.average_rating ? (
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < Math.floor(client.average_rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                            />
+                          ))}
                         </div>
-                      )}
-                    </div>
+                        <span className="text-sm text-gray-600 ml-1">{client.average_rating.toFixed(1)}</span>
+                        <span className="text-sm text-gray-600 ml-1">{client.average_rating < 2 ? 'Newbie' : client.average_rating < 3 ? 'Rising Star' : client.average_rating < 4 ? 'Pro' : 'Master'}</span>
+                      </div>
+                    ) : (
+                      <div className="mt-1 space-y-1">
+                        <p className="text-sm text-gray-500">0 reviews so far</p>
+                        <p className="text-xs text-gray-400">New client — no ratings yet.</p>
+                      </div>
+                    )}
                   </div>
+                </div>
                   
                   <div className="pt-4 border-t border-gray-200">
                     <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
@@ -242,21 +267,33 @@ export default function GigDetailPage({ params }: { params: Promise<{ gigId: str
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Category</span>
+                  <span className="flex items-center gap-2 text-gray-600">
+                    <Tag className="h-4 w-4 text-gray-400" />
+                    Category
+                  </span>
                   <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200">{formatCategory(gig.category)}</Badge>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Location</span>
+                  <span className="flex items-center gap-2 text-gray-600">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    Location
+                  </span>
                   <span className="font-medium text-gray-900">{formatLocation(gig.location)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Budget</span>
+                  <span className="flex items-center gap-2 text-gray-600">
+                    <Badge className="h-4 w-4 rounded-full bg-green-100 text-green-600" />
+                    Budget
+                  </span>
                   <span className="font-bold text-green-600">
                     {gig.budget ? `ETB ${gig.budget.toLocaleString()}` : 'Negotiable'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-600">Posted</span>
+                  <span className="flex items-center gap-2 text-gray-600">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    Posted
+                  </span>
                   <span className="font-medium text-gray-900">{new Date(gig.created_at).toLocaleDateString()}</span>
                 </div>
               </CardContent>
@@ -267,7 +304,7 @@ export default function GigDetailPage({ params }: { params: Promise<{ gigId: str
 
       {/* Application Modal */}
       <Dialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] border-green-200 bg-green-50">
           <DialogHeader>
             <DialogTitle className="text-xl">Apply for {gig.title}</DialogTitle>
             <DialogDescription>
@@ -276,24 +313,13 @@ export default function GigDetailPage({ params }: { params: Promise<{ gigId: str
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="bidAmount" className="text-sm font-medium">Bid Amount (ETB)</Label>
-              <Input 
-                id="bidAmount" 
-                type="number" 
-                placeholder="Enter your bid amount" 
-                value={bidAmount} 
-                onChange={(e) => setBidAmount(e.target.value)}
-                className="text-base"
-              />
-            </div>
-            <div className="grid gap-2">
               <Label htmlFor="coverNote" className="text-sm font-medium">Cover Note</Label>
-              <Textarea 
-                id="coverNote" 
-                placeholder="Write a compelling cover note explaining why you're the perfect fit for this gig..." 
+              <Textarea
+                id="coverNote"
+                placeholder="Write a compelling cover note explaining why you're the perfect fit for this gig..."
                 className="min-h-[120px] resize-none"
-                value={coverNote} 
-                onChange={(e) => setCoverNote(e.target.value)} 
+                value={coverNote}
+                onChange={(e) => setCoverNote(e.target.value)}
               />
             </div>
           </div>

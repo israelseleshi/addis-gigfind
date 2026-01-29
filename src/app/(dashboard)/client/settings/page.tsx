@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { uploadProfilePicture, removeProfilePicture } from '@/lib/actions/profile-picture';
+import { Camera, Trash2 } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -46,8 +48,11 @@ export default function SettingsPage() {
 
 function ProfileForm() {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [_, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
@@ -73,7 +78,7 @@ function ProfileForm() {
           setProfile(data);
           setFormData({
             full_name: data.full_name || '',
-            phone: data.phone || '',
+            phone: data.phone_number || '',
           });
         }
       }
@@ -96,7 +101,7 @@ function ProfileForm() {
           .from('profiles')
           .update({
             full_name: formData.full_name,
-            phone: formData.phone,
+            phone_number: formData.phone,
             updated_at: new Date().toISOString(),
           })
           .eq('id', user.id);
@@ -112,16 +117,72 @@ function ProfileForm() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-        <div className="h-10 bg-gray-200 rounded"></div>
-        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-10 bg-gray-200 rounded"></div>
-      </div>
-    );
-  }
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const result = await uploadProfilePicture(formData);
+      
+      if (result.error) {
+        toast.error(result.error);
+        setPreviewUrl(null);
+      } else {
+        toast.success('Profile picture updated successfully!');
+        setPreviewUrl(null);
+        // Reload profile to get new avatar URL
+        await loadProfile();
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload profile picture');
+      setPreviewUrl(null);
+    } finally {
+      setUploading(false);
+      // Clear file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleCancelPreview = () => {
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemovePicture = async () => {
+    setUploading(true);
+    try {
+      const result = await removeProfilePicture();
+      
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success('Profile picture removed successfully!');
+        // Reload profile to update UI
+        await loadProfile();
+      }
+    } catch (error) {
+      console.error('Remove error:', error);
+      toast.error('Failed to remove profile picture');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -157,12 +218,67 @@ function ProfileForm() {
       <div className="space-y-2">
         <Label>Profile Picture</Label>
         <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={profile?.avatar_url || undefined} />
-            <AvatarFallback>{profile?.full_name ? getInitials(profile.full_name) : 'CU'}</AvatarFallback>
+          <Avatar className="h-20 w-20">
+            <AvatarImage src={previewUrl || profile?.avatar_url || undefined} />
+            <AvatarFallback className="text-lg">{profile?.full_name ? getInitials(profile.full_name) : 'CU'}</AvatarFallback>
           </Avatar>
-          <Button variant="outline" className="cursor-pointer">Upload Image</Button>
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            {previewUrl ? (
+              <>
+                <Button 
+                  variant="default" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="cursor-pointer bg-green-500 hover:bg-green-600"
+                >
+                  {uploading ? 'Uploading...' : 'Confirm Upload'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleCancelPreview}
+                  disabled={uploading}
+                  className="cursor-pointer"
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="cursor-pointer"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </Button>
+                {profile?.avatar_url && (
+                  <Button 
+                    variant="outline" 
+                    onClick={handleRemovePicture}
+                    disabled={uploading}
+                    className="cursor-pointer text-red-600 hover:text-red-700 border-red-200"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remove
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
+        <p className="text-xs text-gray-500 mt-2">Upload a JPEG, PNG, or WebP image. Max size: 5MB</p>
+        {previewUrl && (
+          <p className="text-xs text-amber-600 mt-1">Preview: Click &quot;Confirm Upload&quot; to save this image</p>
+        )}
       </div>
       <div className="space-y-2">
         <Label>Account Info</Label>

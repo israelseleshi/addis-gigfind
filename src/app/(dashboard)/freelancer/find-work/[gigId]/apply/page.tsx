@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge"
 import { Shield, AlertCircle, ArrowLeft, Send } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { Label } from "@/components/ui/label"
+import { applyForGig } from "@/lib/actions/applications"
 
 interface Gig {
   id: string
@@ -28,7 +30,7 @@ interface Gig {
 export default function ApplyPage() {
   const router = useRouter()
   const params = useParams()
-  const gigId = params.id as string
+  const gigId = params.gigId as string
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [gig, setGig] = useState<Gig | null>(null)
@@ -94,38 +96,18 @@ export default function ApplyPage() {
 
     setSubmitting(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const result = await applyForGig({
+        gigId,
+        coverNote: coverLetter,
+      })
 
-      // Check if already applied
-      const { data: existingApplication } = await supabase
-        .from('applications')
-        .select('*')
-        .eq('gig_id', gigId)
-        .eq('freelancer_id', user.id)
-        .single()
-
-      if (existingApplication) {
-        toast.error("You have already applied for this gig")
+      if (result.error) {
+        toast.error(result.error)
         return
       }
 
-      // Create application
-      const { error } = await supabase
-        .from('applications')
-        .insert({
-          gig_id: gigId,
-          freelancer_id: user.id,
-          cover_letter: coverLetter,
-          status: 'pending'
-        })
-
-      if (error) {
-        toast.error("Failed to submit application")
-      } else {
-        toast.success("Application submitted successfully!")
-        router.push("/freelancer/my-applications")
-      }
+      toast.success("Application submitted successfully!")
+      router.push("/freelancer/my-applications")
     } catch (error) {
       console.error('Error:', error)
       toast.error("Something went wrong")
@@ -247,11 +229,10 @@ export default function ApplyPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Cover Letter *
-                    </label>
+                  <div className="space-y-2">
+                    <Label htmlFor="coverLetter">Cover Letter *</Label>
                     <Textarea
+                      id="coverLetter"
                       placeholder="Introduce yourself, explain your relevant experience, and why you're interested in this gig..."
                       value={coverLetter}
                       onChange={(e) => setCoverLetter(e.target.value)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { uploadProfilePicture, removeProfilePicture } from '@/lib/actions/profile-picture';
+import { Camera, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -44,7 +46,10 @@ interface Profile {
 function ProfileForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [userEmail, setUserEmail] = useState('');
   const supabase = createClient();
 
@@ -74,11 +79,78 @@ function ProfileForm() {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const result = await uploadProfilePicture(formData);
+      
+      if (result.error) {
+        toast.error(result.error);
+        setPreviewUrl(null);
+      } else {
+        toast.success('Profile picture updated successfully!');
+        setPreviewUrl(null);
+        // Reload profile to get new avatar URL
+        await loadProfile();
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload profile picture');
+      setPreviewUrl(null);
+    } finally {
+      setUploading(false);
+      // Clear file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleCancelPreview = () => {
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemovePicture = async () => {
+    setUploading(true);
+    try {
+      const result = await removeProfilePicture();
+      
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success('Profile picture removed successfully!');
+        // Reload profile to update UI
+        await loadProfile();
+      }
+    } catch (error) {
+      console.error('Remove error:', error);
+      toast.error('Failed to remove profile picture');
+    } finally {
+      setUploading(false);
+    }
+  };
 
 
   const handleSave = async () => {
@@ -155,12 +227,67 @@ function ProfileForm() {
       <div className="space-y-2">
         <Label>Profile Picture</Label>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={profile?.avatar_url || ''} />
-            <AvatarFallback>{profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
+          <Avatar className="h-20 w-20">
+            <AvatarImage src={previewUrl || profile?.avatar_url || ''} />
+            <AvatarFallback className="text-lg">{profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
           </Avatar>
-          <Button variant="outline" className="cursor-pointer">Upload Image</Button>
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            {previewUrl ? (
+              <>
+                <Button 
+                  variant="default" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="cursor-pointer bg-green-500 hover:bg-green-600"
+                >
+                  {uploading ? 'Uploading...' : 'Confirm Upload'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleCancelPreview}
+                  disabled={uploading}
+                  className="cursor-pointer"
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="cursor-pointer"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </Button>
+                {profile?.avatar_url && (
+                  <Button 
+                    variant="outline" 
+                    onClick={handleRemovePicture}
+                    disabled={uploading}
+                    className="cursor-pointer text-red-600 hover:text-red-700 border-red-200"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remove
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
+        <p className="text-xs text-zinc-500 mt-2">Upload a JPEG, PNG, or WebP image. Max size: 5MB</p>
+        {previewUrl && (
+          <p className="text-xs text-amber-600 mt-1">Preview: Click &quot;Confirm Upload&quot; to save this image</p>
+        )}
       </div>
       <Button onClick={handleSave} disabled={saving} className="cursor-pointer w-full sm:w-auto">
         {saving ? 'Saving...' : 'Update Profile'}

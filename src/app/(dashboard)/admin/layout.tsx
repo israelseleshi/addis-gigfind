@@ -103,7 +103,7 @@ export default function AdminLayout({
           <div className="p-4 border-t border-gray-200">
             <button
               onClick={handleLogout}
-              className={`w-full flex items-center justify-center p-2 rounded-lg hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors ${isSidebarCollapsed ? 'px-2' : 'px-4'}`}
+              className={`w-full flex items-center justify-center p-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors ${isSidebarCollapsed ? 'px-2' : 'px-4'}`}
             >
               <LogOut className={`h-5 w-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
               {!isSidebarCollapsed && <span>Logout</span>}

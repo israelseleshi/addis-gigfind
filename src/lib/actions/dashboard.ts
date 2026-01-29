@@ -147,17 +147,24 @@ export async function getClientDashboardStats(userId: string) {
       .in('status', ['open', 'assigned', 'in_progress'])
 
     // Get total hires count (accepted applications)
+    const { data: gigsData } = await supabase
+      .from('gigs')
+      .select('id')
+      .eq('client_id', userId)
+    
+    const gigIds = gigsData?.map(g => g.id) || []
+    
     const { count: totalHires, error: hiresError } = await supabase
       .from('applications')
       .select('*', { count: 'exact', head: true })
-      .eq('gigs.client_id', userId)
+      .in('gig_id', gigIds)
       .eq('status', 'accepted')
 
     // Get pending applications count
     const { count: pendingApplications, error: pendingError } = await supabase
       .from('applications')
       .select('*', { count: 'exact', head: true })
-      .eq('gigs.client_id', userId)
+      .in('gig_id', gigIds)
       .eq('status', 'pending')
 
     // Get completed jobs count

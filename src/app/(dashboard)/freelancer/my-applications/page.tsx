@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { FileText, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -99,6 +100,40 @@ export default function MyApplicationsPage() {
         </div>
       </div>
 
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-xl sm:text-2xl font-bold">{applications.length}</div>
+            <p className="text-xs sm:text-sm text-gray-500">Total Applications</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-xl sm:text-2xl font-bold text-amber-500">
+              {applications.filter(app => app.status === 'pending' || app.status === 'in_review').length}
+            </div>
+            <p className="text-xs sm:text-sm text-gray-500">Pending</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-xl sm:text-2xl font-bold text-green-500">
+              {applications.filter(app => app.status === 'accepted').length}
+            </div>
+            <p className="text-xs sm:text-sm text-gray-500">Accepted</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-xl sm:text-2xl font-bold text-red-500">
+              {applications.filter(app => app.status === 'rejected').length}
+            </div>
+            <p className="text-xs sm:text-sm text-gray-500">Rejected</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="grid w-full grid-cols-4 max-w-[400px]">
           <TabsTrigger value="all">All</TabsTrigger>
@@ -117,10 +152,20 @@ export default function MyApplicationsPage() {
                   <CardHeader className="pb-3">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                       <div className="flex-1">
-                        <CardTitle className="text-base sm:text-lg">{app.gig?.title || 'Unknown Gig'}</CardTitle>
-                        <CardDescription className="text-xs sm:text-sm">
-                          {app.gig?.client?.full_name || 'Unknown Client'} · {app.gig?.category || 'Uncategorized'}
-                        </CardDescription>
+                        <div className="flex items-center gap-3 mb-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={app.gig?.client?.avatar_url || ''} />
+                            <AvatarFallback className="text-xs">
+                              {app.gig?.client?.full_name?.charAt(0)?.toUpperCase() || 'C'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <CardTitle className="text-base sm:text-lg">{app.gig?.title || 'Unknown Gig'}</CardTitle>
+                            <CardDescription className="text-xs sm:text-sm">
+                              {app.gig?.client?.full_name || 'Unknown Client'} · {app.gig?.category || 'Uncategorized'}
+                            </CardDescription>
+                          </div>
+                        </div>
                       </div>
                       <Badge className={`${config.color} w-fit`}>
                         <Icon className="w-3 h-3 mr-1" />
@@ -182,10 +227,20 @@ export default function MyApplicationsPage() {
                   <CardHeader className="pb-3">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                       <div className="flex-1">
-                        <CardTitle className="text-base sm:text-lg">{app.gig?.title || 'Unknown Gig'}</CardTitle>
-                        <CardDescription className="text-xs sm:text-sm">
-                          {app.gig?.client?.full_name || 'Unknown Client'} · {app.gig?.category || 'Uncategorized'}
-                        </CardDescription>
+                        <div className="flex items-center gap-3 mb-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={app.gig?.client?.avatar_url || ''} />
+                            <AvatarFallback className="text-xs">
+                              {app.gig?.client?.full_name?.charAt(0)?.toUpperCase() || 'C'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <CardTitle className="text-base sm:text-lg">{app.gig?.title || 'Unknown Gig'}</CardTitle>
+                            <CardDescription className="text-xs sm:text-sm">
+                              {app.gig?.client?.full_name || 'Unknown Client'} · {app.gig?.category || 'Uncategorized'}
+                            </CardDescription>
+                          </div>
+                        </div>
                       </div>
                       <Badge className={`${config.color} w-fit`}>
                         <Icon className="w-3 h-3 mr-1" />
@@ -235,10 +290,20 @@ export default function MyApplicationsPage() {
                   <CardHeader className="pb-3">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                       <div className="flex-1">
-                        <CardTitle className="text-base sm:text-lg">{app.gig?.title || 'Unknown Gig'}</CardTitle>
-                        <CardDescription className="text-xs sm:text-sm">
-                          {app.gig?.client?.full_name || 'Unknown Client'} · {app.gig?.category || 'Uncategorized'}
-                        </CardDescription>
+                        <div className="flex items-center gap-3 mb-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={app.gig?.client?.avatar_url || ''} />
+                            <AvatarFallback className="text-xs">
+                              {app.gig?.client?.full_name?.charAt(0)?.toUpperCase() || 'C'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <CardTitle className="text-base sm:text-lg">{app.gig?.title || 'Unknown Gig'}</CardTitle>
+                            <CardDescription className="text-xs sm:text-sm">
+                              {app.gig?.client?.full_name || 'Unknown Client'} · {app.gig?.category || 'Uncategorized'}
+                            </CardDescription>
+                          </div>
+                        </div>
                       </div>
                       <Badge className={`${config.color} w-fit`}>
                         <Icon className="w-3 h-3 mr-1" />
@@ -293,10 +358,20 @@ export default function MyApplicationsPage() {
                   <CardHeader className="pb-3">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                       <div className="flex-1">
-                        <CardTitle className="text-base sm:text-lg">{app.gig?.title || 'Unknown Gig'}</CardTitle>
-                        <CardDescription className="text-xs sm:text-sm">
-                          {app.gig?.client?.full_name || 'Unknown Client'} · {app.gig?.category || 'Uncategorized'}
-                        </CardDescription>
+                        <div className="flex items-center gap-3 mb-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={app.gig?.client?.avatar_url || ''} />
+                            <AvatarFallback className="text-xs">
+                              {app.gig?.client?.full_name?.charAt(0)?.toUpperCase() || 'C'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <CardTitle className="text-base sm:text-lg">{app.gig?.title || 'Unknown Gig'}</CardTitle>
+                            <CardDescription className="text-xs sm:text-sm">
+                              {app.gig?.client?.full_name || 'Unknown Client'} · {app.gig?.category || 'Uncategorized'}
+                            </CardDescription>
+                          </div>
+                        </div>
                       </div>
                       <Badge className={`${config.color} w-fit`}>
                         <Icon className="w-3 h-3 mr-1" />

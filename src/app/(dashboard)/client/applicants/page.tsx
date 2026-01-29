@@ -20,7 +20,6 @@ interface Applicant {
   id: string;
   status: string;
   gig_id: string;
-  bid_amount: number;
   cover_note: string;
   gig: {
     id: string;
@@ -265,9 +264,6 @@ export default function ApplicantsPage() {
                     
                     <div className="flex justify-between sm:flex-col sm:items-end items-center gap-2">
                       {getStatusBadge(app.status)}
-                      <div className="text-green-600 font-medium text-sm sm:text-base">
-                        {app.bid_amount?.toLocaleString()} ETB
-                      </div>
                     </div>
                   </div>
                   
@@ -328,9 +324,6 @@ export default function ApplicantsPage() {
                     </div>
                     <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2">
                       {getStatusBadge(app.status)}
-                      <div className="text-green-600 font-medium text-sm sm:text-base">
-                        {app.bid_amount?.toLocaleString()} ETB
-                      </div>
                     </div>
                   </div>
                 </CardContent>

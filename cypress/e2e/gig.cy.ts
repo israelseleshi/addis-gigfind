@@ -9,15 +9,15 @@ describe('Gig Management', () => {
 
     // Post a new gig
     cy.visit('/client/gigs/create');
-    const gigTitle = 'Konso Traditional Attire Photoshoot';
-    const gigDescription = 'We are looking for a skilled photographer to capture our new line of Konso traditional clothing. The photoshoot will take place outdoors to highlight the vibrant colors and intricate designs of the garments.';
+    const gigTitle = 'Habesha Wedding Photography Service';
+    const gigDescription = 'Professional photographer needed for traditional Ethiopian wedding ceremony. Must capture key moments including the coffee ceremony, traditional dances, and cultural attire. Experience with Habesha wedding traditions preferred.';
     cy.get('input[name="title"]').type(gigTitle);
     cy.get('button[role="combobox"]').first().click();
     cy.get('div[role="option"]').contains('Design').click();
     cy.get('textarea[name="description"]').type(gigDescription);
-    cy.get('input[type="number"][placeholder="e.g., 5000"]').type('15000');
+    cy.get('input[type="number"][placeholder="e.g., 5000"]').type('25000');
     cy.get('button[role="combobox"]').last().click();
-    cy.get('div[role="option"]').contains('Bole').click();
+    cy.get('div[role="option"]').contains('Kazanchis').click();
     cy.get('button[type="submit"]').contains('Post Gig').click();
 
     // Verify on client's 'My Gigs' page

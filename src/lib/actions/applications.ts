@@ -7,10 +7,9 @@ import { revalidatePath } from 'next/cache'
 const applicationSchema = z.object({
   gigId: z.string().uuid(),
   coverNote: z.string().min(20, 'Cover note must be at least 20 characters.'),
-  bidAmount: z.coerce.number().positive('Bid amount must be a positive number.'),
 })
 
-export async function applyForGig(data: { gigId: string; coverNote: string; bidAmount: number }) {
+export async function applyForGig(data: { gigId: string; coverNote: string }) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -23,7 +22,39 @@ export async function applyForGig(data: { gigId: string; coverNote: string; bidA
     return { error: 'Invalid form data.' }
   }
 
-  const { gigId, coverNote, bidAmount } = validated.data
+  const { gigId, coverNote } = validated.data
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role, verification_status')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError || !profile) {
+    return { error: profileError?.message ?? 'Unable to verify account status.' }
+  }
+
+  if (profile.role !== 'freelancer') {
+    return { error: 'Only freelancers can apply for gigs.' }
+  }
+
+  if (profile.verification_status !== 'verified') {
+    return { error: 'You must be verified to apply for gigs.' }
+  }
+
+  const { data: gig, error: gigError } = await supabase
+    .from('gigs')
+    .select('status')
+    .eq('id', gigId)
+    .single()
+
+  if (gigError || !gig) {
+    return { error: gigError?.message ?? 'Gig not found.' }
+  }
+
+  if (gig.status !== 'open') {
+    return { error: 'This gig is no longer accepting applications.' }
+  }
 
   // Security Check 1: Check if already applied
   const { data: existingApplication } = await supabase
@@ -53,7 +84,6 @@ export async function applyForGig(data: { gigId: string; coverNote: string; bidA
     gig_id: gigId,
     freelancer_id: user.id,
     cover_note: coverNote,
-    bid_amount: bidAmount,
     status: 'pending',
   })
 

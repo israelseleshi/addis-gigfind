@@ -229,18 +229,16 @@ export default function FindWorkPage() {
                     
                     {/* Action buttons */}
                     <div className="flex gap-2 pt-2">
-                      <Button 
+                      <Button
                         className="flex-1 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm"
-                        onClick={() => {
-                          // Handle apply action
-                        }}
+                        asChild
                       >
-                        Apply Now
+                        <Link href={`/freelancer/find-work/${gig.id}/apply`}>Apply Now</Link>
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        asChild 
-                        className="flex-1 border-2 border-orange-200 hover:border-orange-400 hover:bg-orange-50 transition-all duration-300 text-sm"
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-orange-200 text-orange-600 hover:bg-orange-50 text-sm"
+                        asChild
                       >
                         <Link href={`/freelancer/find-work/${gig.id}`}>View</Link>
                       </Button>
