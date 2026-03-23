@@ -1,3 +1,5 @@
+import type { TelegramBrowseGig } from '@/lib/actions/telegram/gigs'
+
 export function buildRoleMenu(role: string) {
   if (role === 'client') {
     return [
@@ -84,4 +86,74 @@ export function buildUnrecognizedInputMessage() {
     'Use the Telegram buttons below to continue.',
     'Role-specific workflows are being added step by step.',
   ].join('\n')
+}
+
+function formatRelativeTelegramTime(value: string | null) {
+  if (!value) {
+    return 'Recently'
+  }
+
+  const createdAt = new Date(value).getTime()
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - createdAt) / 1000))
+
+  if (diffSeconds < 60) {
+    return 'Just now'
+  }
+
+  if (diffSeconds < 3600) {
+    return `${Math.floor(diffSeconds / 60)}m ago`
+  }
+
+  if (diffSeconds < 86400) {
+    return `${Math.floor(diffSeconds / 3600)}h ago`
+  }
+
+  return `${Math.floor(diffSeconds / 86400)}d ago`
+}
+
+export function buildGigBrowseIntro(page: number, total: number) {
+  return [
+    'Open gigs for freelancers',
+    '',
+    `Showing page ${page + 1}`,
+    `${total} open gig${total === 1 ? '' : 's'} available`,
+    '',
+    'Tap a gig below to view details.',
+  ].join('\n')
+}
+
+export function buildGigBrowseEmptyState() {
+  return [
+    'No open gigs are available right now.',
+    'Check back later or use the website to browse again.',
+  ].join('\n')
+}
+
+export function buildGigSummaryLines(gig: TelegramBrowseGig) {
+  return [
+    `- ${gig.title}`,
+    `  ${gig.category} | ${gig.location} | ETB ${gig.budget.toLocaleString()}`,
+    `  Client: ${gig.client?.full_name ?? 'Unknown client'} | Posted ${formatRelativeTelegramTime(gig.created_at)}`,
+  ].join('\n')
+}
+
+export function buildGigListMessage(gigs: TelegramBrowseGig[]) {
+  return gigs.map(buildGigSummaryLines).join('\n\n')
+}
+
+export function buildGigDetailMessage(gig: TelegramBrowseGig) {
+  const rating = gig.client?.average_rating ? ` | Rating ${gig.client.average_rating}` : ''
+
+  return [
+    `<b>${gig.title}</b>`,
+    `${gig.category} | ${gig.location}`,
+    `Budget: <b>ETB ${gig.budget.toLocaleString()}</b>`,
+    `Client: ${gig.client?.full_name ?? 'Unknown client'}${rating}`,
+    '',
+    gig.description,
+  ].join('\n')
+}
+
+export function buildGigNotFoundMessage() {
+  return 'That gig is no longer available.'
 }

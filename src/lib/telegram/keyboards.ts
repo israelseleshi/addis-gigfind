@@ -1,5 +1,6 @@
 import { InlineKeyboard } from 'grammy'
 
+import type { TelegramBrowseGig } from '@/lib/actions/telegram/gigs'
 import type { TelegramUserRole } from '@/lib/telegram/types'
 
 export function buildFreelancerHomeKeyboard() {
@@ -36,4 +37,40 @@ export function buildLinkedHomeKeyboard(role: TelegramUserRole) {
   }
 
   return buildFreelancerHomeKeyboard()
+}
+
+export function buildGigListKeyboard(
+  gigs: TelegramBrowseGig[],
+  page: number,
+  hasPreviousPage: boolean,
+  hasNextPage: boolean
+) {
+  const keyboard = new InlineKeyboard()
+
+  for (const gig of gigs) {
+    keyboard.text(`View: ${gig.title.slice(0, 24)}`, `freelancer:view_gig:${gig.id}`).row()
+  }
+
+  if (hasPreviousPage) {
+    keyboard.text('Previous', `freelancer:browse_gigs:${page - 1}`)
+  }
+
+  if (hasNextPage) {
+    keyboard.text('Next', `freelancer:browse_gigs:${page + 1}`)
+  }
+
+  if (hasPreviousPage || hasNextPage) {
+    keyboard.row()
+  }
+
+  keyboard.text('Back to menu', 'freelancer:home')
+  return keyboard
+}
+
+export function buildGigDetailKeyboard(gigId: string) {
+  return new InlineKeyboard()
+    .text('Apply to this gig', `freelancer:apply_gig:${gigId}`)
+    .row()
+    .text('Browse more gigs', 'freelancer:browse_gigs:0')
+    .text('Back to menu', 'freelancer:home')
 }
