@@ -43,89 +43,118 @@ function buildLinkInstructions() {
   ].join('\n')
 }
 
+function buildTemporaryUnavailableMessage() {
+  return [
+    'The bot is online, but account linking is not ready yet.',
+    'Please finish the Addis GigFind backend setup and try again.',
+  ].join('\n')
+}
+
 function registerHandlers(bot: Bot) {
   bot.command('start', async (ctx) => {
-    const telegramUserId = String(ctx.from?.id ?? '')
-    if (!telegramUserId) {
-      await ctx.reply('Could not identify your Telegram account.')
-      return
+    try {
+      await ctx.reply(
+        [
+          'Addis GigFind bot is online.',
+          'Checking your account link status...',
+        ].join('\n')
+      )
+
+      const telegramUserId = String(ctx.from?.id ?? '')
+      if (!telegramUserId) {
+        await ctx.reply('Could not identify your Telegram account.')
+        return
+      }
+
+      const account = await getTelegramAccountByTelegramUserId(telegramUserId)
+      if (!account) {
+        await ctx.reply(buildLinkInstructions(), { parse_mode: 'HTML' })
+        return
+      }
+
+      await touchTelegramAccount(telegramUserId)
+      const profile = Array.isArray(account.profiles) ? account.profiles[0] : account.profiles
+      const name = profile?.full_name ?? 'there'
+      const role = profile?.role ?? 'freelancer'
+
+      await ctx.reply(
+        [`Welcome back, ${name}.`, '', `Role: ${role}`, buildRoleMenu(role)].join('\n'),
+        { parse_mode: 'HTML' }
+      )
+    } catch (error) {
+      telegramLogger.error({ error }, 'Telegram /start handler failed')
+      await ctx.reply(buildTemporaryUnavailableMessage())
     }
-
-    const account = await getTelegramAccountByTelegramUserId(telegramUserId)
-    if (!account) {
-      await ctx.reply(buildLinkInstructions(), { parse_mode: 'HTML' })
-      return
-    }
-
-    await touchTelegramAccount(telegramUserId)
-    const profile = Array.isArray(account.profiles) ? account.profiles[0] : account.profiles
-    const name = profile?.full_name ?? 'there'
-    const role = profile?.role ?? 'freelancer'
-
-    await ctx.reply(
-      [`Welcome back, ${name}.`, '', `Role: ${role}`, buildRoleMenu(role)].join('\n'),
-      { parse_mode: 'HTML' }
-    )
   })
 
   bot.command('link', async (ctx) => {
-    const from = ctx.from
-    if (!from) {
-      await ctx.reply('Could not identify your Telegram account.')
-      return
+    try {
+      const from = ctx.from
+      if (!from) {
+        await ctx.reply('Could not identify your Telegram account.')
+        return
+      }
+
+      const text = ctx.message?.text ?? ''
+      const code = text.replace('/link', '').trim()
+
+      if (!code) {
+        await ctx.reply('Usage: /link YOURCODE')
+        return
+      }
+
+      const result = await consumeTelegramLinkCode({
+        code,
+        telegramUserId: String(from.id),
+        telegramChatId: String(ctx.chat.id),
+        username: from.username,
+        firstName: from.first_name,
+        lastName: from.last_name,
+      })
+
+      if (!result.ok) {
+        await ctx.reply(result.error)
+        return
+      }
+
+      await ctx.reply(
+        [
+          `Linked successfully to ${result.fullName}.`,
+          '',
+          `Role: ${result.role}`,
+          buildRoleMenu(result.role),
+        ].join('\n')
+      )
+    } catch (error) {
+      telegramLogger.error({ error }, 'Telegram /link handler failed')
+      await ctx.reply(buildTemporaryUnavailableMessage())
     }
-
-    const text = ctx.message?.text ?? ''
-    const code = text.replace('/link', '').trim()
-
-    if (!code) {
-      await ctx.reply('Usage: /link YOURCODE')
-      return
-    }
-
-    const result = await consumeTelegramLinkCode({
-      code,
-      telegramUserId: String(from.id),
-      telegramChatId: String(ctx.chat.id),
-      username: from.username,
-      firstName: from.first_name,
-      lastName: from.last_name,
-    })
-
-    if (!result.ok) {
-      await ctx.reply(result.error)
-      return
-    }
-
-    await ctx.reply(
-      [
-        `Linked successfully to ${result.fullName}.`,
-        '',
-        `Role: ${result.role}`,
-        buildRoleMenu(result.role),
-      ].join('\n')
-    )
   })
 
   bot.on('message:text', async (ctx) => {
-    const input = ctx.message.text.trim()
-    if (input.startsWith('/')) {
-      return
-    }
+    try {
+      const input = ctx.message.text.trim()
+      if (input.startsWith('/')) {
+        return
+      }
 
-    const account = await getTelegramAccountByTelegramUserId(String(ctx.from.id))
-    if (!account) {
-      await ctx.reply(buildLinkInstructions(), { parse_mode: 'HTML' })
-      return
-    }
+      const account = await getTelegramAccountByTelegramUserId(String(ctx.from.id))
+      if (!account) {
+        await ctx.reply(buildLinkInstructions(), { parse_mode: 'HTML' })
+        return
+      }
 
-    await touchTelegramAccount(String(ctx.from.id))
-    await ctx.reply(
-      [
-        'Core bot scaffolding is live.',
-        'Next implementation step is role-specific gig and review flows.',
-      ].join('\n')
-    )
+      await touchTelegramAccount(String(ctx.from.id))
+      await ctx.reply(
+        [
+          'Core bot scaffolding is live.',
+          'Next implementation step is role-specific gig and review flows.',
+        ].join('\n')
+      )
+    } catch (error) {
+      telegramLogger.error({ error }, 'Telegram text handler failed')
+      await ctx.reply(buildTemporaryUnavailableMessage())
+    }
   })
 }
 

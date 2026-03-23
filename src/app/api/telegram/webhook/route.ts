@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
     await bot.handleUpdate(update)
   } catch (err) {
     telegramLogger.error({ err }, 'Telegram update handling error')
+    return NextResponse.json({ error: 'Telegram update handling error.' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })
