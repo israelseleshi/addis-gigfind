@@ -226,8 +226,12 @@ export async function handleClientAcceptApplicant(
 
     const result = await acceptTelegramGigApplication(resolved.profile.id, gigId, applicationId)
     await safeAnswerCallbackQuery(ctx, {
-      text: result.error ? 'Unable to accept applicant' : 'Applicant accepted',
-      show_alert: Boolean(result.error),
+      text: result.error
+        ? 'Unable to accept applicant'
+        : result.alreadyHandled
+          ? 'Applicant was already accepted'
+          : 'Applicant accepted',
+      show_alert: Boolean(result.error) && !result.alreadyHandled,
     })
 
     if (result.error) {
@@ -238,10 +242,12 @@ export async function handleClientAcceptApplicant(
     }
 
     await ctx.reply(
-      buildClientApplicationAcceptedMessage(
-        result.freelancerName ?? 'Selected freelancer',
-        result.gigTitle ?? 'this gig'
-      ),
+      result.alreadyHandled
+        ? `${result.freelancerName ?? 'This freelancer'} was already accepted for "${result.gigTitle ?? 'this gig'}".`
+        : buildClientApplicationAcceptedMessage(
+            result.freelancerName ?? 'Selected freelancer',
+            result.gigTitle ?? 'this gig'
+          ),
       {
         reply_markup: buildClientGigDetailKeyboard(gigId),
       }
@@ -266,8 +272,12 @@ export async function handleClientRejectApplicant(
 
     const result = await rejectTelegramGigApplication(resolved.profile.id, gigId, applicationId)
     await safeAnswerCallbackQuery(ctx, {
-      text: result.error ? 'Unable to reject applicant' : 'Applicant rejected',
-      show_alert: Boolean(result.error),
+      text: result.error
+        ? 'Unable to reject applicant'
+        : result.alreadyHandled
+          ? 'Applicant was already rejected'
+          : 'Applicant rejected',
+      show_alert: Boolean(result.error) && !result.alreadyHandled,
     })
 
     if (result.error) {
@@ -278,10 +288,12 @@ export async function handleClientRejectApplicant(
     }
 
     await ctx.reply(
-      buildClientApplicationRejectedMessage(
-        result.freelancerName ?? 'That freelancer',
-        result.gigTitle ?? 'this gig'
-      ),
+      result.alreadyHandled
+        ? `${result.freelancerName ?? 'That freelancer'} was already rejected for "${result.gigTitle ?? 'this gig'}".`
+        : buildClientApplicationRejectedMessage(
+            result.freelancerName ?? 'That freelancer',
+            result.gigTitle ?? 'this gig'
+          ),
       {
         reply_markup: buildClientApplicantsListKeyboard(gigId, []),
       }

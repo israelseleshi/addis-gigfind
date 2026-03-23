@@ -397,8 +397,12 @@ export async function handleMarkActiveJobInProgress(
 
     const result = await markTelegramActiveJobInProgress(resolved.profile.id, applicationId)
     await safeAnswerCallbackQuery(ctx, {
-      text: result.error ? 'Unable to update job' : 'Job updated',
-      show_alert: Boolean(result.error),
+      text: result.error
+        ? 'Unable to update job'
+        : result.alreadyHandled
+          ? 'Job already in progress'
+          : 'Job updated',
+      show_alert: Boolean(result.error) && !result.alreadyHandled,
     })
 
     if (result.error) {
@@ -408,9 +412,14 @@ export async function handleMarkActiveJobInProgress(
       return
     }
 
-    await ctx.reply(buildActiveJobMarkedInProgressMessage(result.gigTitle ?? 'This job'), {
-      reply_markup: buildLinkedHomeKeyboard('freelancer'),
-    })
+    await ctx.reply(
+      result.alreadyHandled
+        ? `"${result.gigTitle ?? 'This job'}" was already marked as in progress.`
+        : buildActiveJobMarkedInProgressMessage(result.gigTitle ?? 'This job'),
+      {
+        reply_markup: buildLinkedHomeKeyboard('freelancer'),
+      }
+    )
   } catch (error) {
     telegramLogger.error({ error }, 'Telegram freelancer start job handler failed')
     await ctx.reply(buildTemporaryUnavailableMessage())

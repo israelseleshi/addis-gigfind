@@ -142,8 +142,12 @@ export async function handleApproveVerification(
 
     const result = await approveTelegramVerification(documentId)
     await safeAnswerCallbackQuery(ctx, {
-      text: result.error ? 'Unable to approve' : 'Verification approved',
-      show_alert: Boolean(result.error),
+      text: result.error
+        ? 'Unable to approve'
+        : result.alreadyHandled
+          ? 'Already approved'
+          : 'Verification approved',
+      show_alert: Boolean(result.error) && !result.alreadyHandled,
     })
 
     if (result.error) {
@@ -153,9 +157,14 @@ export async function handleApproveVerification(
       return
     }
 
-    await ctx.reply(buildAdminVerificationApprovedMessage(result.fullName ?? 'This user'), {
-      reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
-    })
+    await ctx.reply(
+      result.alreadyHandled
+        ? `${result.fullName ?? 'This user'} was already verified.`
+        : buildAdminVerificationApprovedMessage(result.fullName ?? 'This user'),
+      {
+        reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+      }
+    )
   } catch (error) {
     telegramLogger.error({ error }, 'Telegram admin approve verification handler failed')
     await ctx.reply(buildTemporaryUnavailableMessage())
@@ -233,9 +242,14 @@ export async function handleRejectVerificationReply(ctx: TelegramBotContext) {
       return true
     }
 
-    await ctx.reply(buildAdminVerificationRejectedMessage(result.fullName ?? 'This user'), {
-      reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
-    })
+    await ctx.reply(
+      result.alreadyHandled
+        ? `${result.fullName ?? 'This user'} was already rejected.`
+        : buildAdminVerificationRejectedMessage(result.fullName ?? 'This user'),
+      {
+        reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+      }
+    )
     return true
   } catch (error) {
     telegramLogger.error({ error }, 'Telegram admin reject reply handler failed')

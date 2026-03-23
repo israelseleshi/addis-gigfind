@@ -371,15 +371,15 @@ export async function markTelegramActiveJobInProgress(
 ) {
   const job = await getTelegramActiveJobDetails(freelancerId, applicationId)
   if (!job || !job.gig) {
-    return { error: 'That active job could not be found.', gigTitle: null }
+    return { error: 'That active job could not be found.', gigTitle: null, alreadyHandled: false }
   }
 
   if (job.gig.status === 'in_progress') {
-    return { error: 'This job is already marked as in progress.', gigTitle: null }
+    return { error: null, gigTitle: job.gig.title, alreadyHandled: true }
   }
 
   if (job.gig.status !== 'assigned') {
-    return { error: 'Only assigned jobs can be moved to in progress.', gigTitle: null }
+    return { error: 'Only assigned jobs can be moved to in progress.', gigTitle: null, alreadyHandled: false }
   }
 
   const supabase = await createServiceRoleClient()
@@ -390,7 +390,7 @@ export async function markTelegramActiveJobInProgress(
     .eq('status', 'assigned')
 
   if (error) {
-    return { error: error.message, gigTitle: null }
+    return { error: error.message, gigTitle: null, alreadyHandled: false }
   }
 
   void notifyUserOfGigStatusChanged({
@@ -415,7 +415,7 @@ export async function markTelegramActiveJobInProgress(
     )
   })
 
-  return { error: null, gigTitle: job.gig.title }
+  return { error: null, gigTitle: job.gig.title, alreadyHandled: false }
 }
 
 export async function listTelegramGigApplicants(clientId: string, gigId: string) {
@@ -499,7 +499,7 @@ export async function acceptTelegramGigApplication(
     .single()
 
   if (gigError || !gig) {
-    return { error: 'Gig not found.', gigTitle: null, freelancerName: null }
+    return { error: 'Gig not found.', gigTitle: null, freelancerName: null, alreadyHandled: false }
   }
 
   const { data: application, error: applicationError } = await supabase
@@ -519,7 +519,20 @@ export async function acceptTelegramGigApplication(
     .single()
 
   if (applicationError || !application) {
-    return { error: 'Application not found.', gigTitle: null, freelancerName: null }
+    return { error: 'Application not found.', gigTitle: null, freelancerName: null, alreadyHandled: false }
+  }
+
+  const selectedFreelancer = Array.isArray(application.freelancer)
+    ? application.freelancer[0]
+    : application.freelancer
+
+  if (application.status === 'accepted') {
+    return {
+      error: null,
+      gigTitle: gig.title,
+      freelancerName: selectedFreelancer?.full_name ?? 'Selected freelancer',
+      alreadyHandled: true,
+    }
   }
 
   if (application.status !== 'pending') {
@@ -527,6 +540,16 @@ export async function acceptTelegramGigApplication(
       error: 'Only pending applications can be accepted.',
       gigTitle: null,
       freelancerName: null,
+      alreadyHandled: false,
+    }
+  }
+
+  if (gig.status === 'assigned' || gig.status === 'in_progress' || gig.status === 'completed') {
+    return {
+      error: 'This gig has already been assigned.',
+      gigTitle: null,
+      freelancerName: null,
+      alreadyHandled: false,
     }
   }
 
@@ -535,6 +558,7 @@ export async function acceptTelegramGigApplication(
       error: 'This gig is no longer open for applicant selection.',
       gigTitle: null,
       freelancerName: null,
+      alreadyHandled: false,
     }
   }
 
@@ -544,7 +568,7 @@ export async function acceptTelegramGigApplication(
     .eq('id', applicationId)
 
   if (acceptError) {
-    return { error: acceptError.message, gigTitle: null, freelancerName: null }
+    return { error: acceptError.message, gigTitle: null, freelancerName: null, alreadyHandled: false }
   }
 
   const { error: gigUpdateError } = await supabase
@@ -553,7 +577,7 @@ export async function acceptTelegramGigApplication(
     .eq('id', gigId)
 
   if (gigUpdateError) {
-    return { error: gigUpdateError.message, gigTitle: null, freelancerName: null }
+    return { error: gigUpdateError.message, gigTitle: null, freelancerName: null, alreadyHandled: false }
   }
 
   const { error: rejectOthersError } = await supabase
@@ -563,12 +587,8 @@ export async function acceptTelegramGigApplication(
     .neq('id', applicationId)
 
   if (rejectOthersError) {
-    return { error: rejectOthersError.message, gigTitle: null, freelancerName: null }
+    return { error: rejectOthersError.message, gigTitle: null, freelancerName: null, alreadyHandled: false }
   }
-
-  const selectedFreelancer = Array.isArray(application.freelancer)
-    ? application.freelancer[0]
-    : application.freelancer
 
   if (selectedFreelancer?.id) {
     void notifyFreelancerOfApplicationAccepted({
@@ -597,6 +617,7 @@ export async function acceptTelegramGigApplication(
     error: null,
     gigTitle: gig.title,
     freelancerName: selectedFreelancer?.full_name ?? 'Selected freelancer',
+    alreadyHandled: false,
   }
 }
 
@@ -607,7 +628,16 @@ export async function rejectTelegramGigApplication(
 ) {
   const details = await getTelegramGigApplicantDetails(clientId, gigId, applicationId)
   if (!details) {
-    return { error: 'Application not found.', gigTitle: null, freelancerName: null }
+    return { error: 'Application not found.', gigTitle: null, freelancerName: null, alreadyHandled: false }
+  }
+
+  if (details.applicant.status === 'rejected') {
+    return {
+      error: null,
+      gigTitle: details.gig.title,
+      freelancerName: details.applicant.freelancer?.full_name ?? 'That freelancer',
+      alreadyHandled: true,
+    }
   }
 
   if (details.applicant.status !== 'pending') {
@@ -615,6 +645,7 @@ export async function rejectTelegramGigApplication(
       error: 'Only pending applications can be rejected.',
       gigTitle: null,
       freelancerName: null,
+      alreadyHandled: false,
     }
   }
 
@@ -625,7 +656,7 @@ export async function rejectTelegramGigApplication(
     .eq('id', applicationId)
 
   if (error) {
-    return { error: error.message, gigTitle: null, freelancerName: null }
+    return { error: error.message, gigTitle: null, freelancerName: null, alreadyHandled: false }
   }
 
   if (details.applicant.freelancer?.id) {
@@ -644,5 +675,6 @@ export async function rejectTelegramGigApplication(
     error: null,
     gigTitle: details.gig.title,
     freelancerName: details.applicant.freelancer?.full_name ?? 'That freelancer',
+    alreadyHandled: false,
   }
 }
