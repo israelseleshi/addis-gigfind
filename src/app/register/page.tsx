@@ -1,6 +1,5 @@
 import { ClientSignUpForm } from "@/components/auth/client-signup-form";
 import { FreelancerSignUpForm } from "@/components/auth/freelancer-signup-form";
-import { AdminSignUpForm } from "@/components/auth/admin-signup-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Footer } from '@/components/footer';
 
