@@ -293,6 +293,88 @@ export type Database = {
           },
         ]
       }
+      telegram_accounts: {
+        Row: {
+          id: string
+          is_active: boolean
+          last_seen_at: string
+          linked_at: string
+          telegram_chat_id: string
+          telegram_first_name: string | null
+          telegram_last_name: string | null
+          telegram_user_id: string
+          telegram_username: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string
+          linked_at?: string
+          telegram_chat_id: string
+          telegram_first_name?: string | null
+          telegram_last_name?: string | null
+          telegram_user_id: string
+          telegram_username?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string
+          linked_at?: string
+          telegram_chat_id?: string
+          telegram_first_name?: string | null
+          telegram_last_name?: string | null
+          telegram_user_id?: string
+          telegram_username?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telegram_link_codes: {
+        Row: {
+          code: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_link_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       verification_documents: {
         Row: {
           admin_notes: string | null
