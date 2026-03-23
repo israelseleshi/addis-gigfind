@@ -5,6 +5,7 @@ import type {
 } from '@/lib/actions/telegram/applications'
 import type { TelegramBrowseGig, TelegramClientGigSummary } from '@/lib/actions/telegram/gigs'
 import type { TelegramVerificationSnapshot } from '@/lib/actions/telegram/verifications'
+import type { TelegramPendingVerificationSummary } from '@/lib/actions/telegram/verifications'
 
 export function buildRoleMenu(role: string) {
   if (role === 'client') {
@@ -445,6 +446,64 @@ export function buildClientGigDetailMessage(gig: TelegramClientGigSummary) {
 
 export function buildClientGigNotFoundMessage() {
   return 'That client gig could not be found.'
+}
+
+export function buildAdminPendingVerificationsIntro(count: number) {
+  return [
+    'Pending verifications',
+    '',
+    `${count} verification request${count === 1 ? '' : 's'} waiting for review`,
+    'Tap a request below to inspect it.',
+  ].join('\n')
+}
+
+export function buildAdminPendingVerificationsEmptyState() {
+  return [
+    'There are no pending verifications right now.',
+    'You are caught up on verification review.',
+  ].join('\n')
+}
+
+export function buildAdminPendingVerificationSummaryLines(
+  document: TelegramPendingVerificationSummary
+) {
+  return [
+    `- ${document.profiles?.full_name ?? 'Unknown user'}`,
+    `  ${formatDocumentType(document.document_type)} | ID ${document.id_number}`,
+    `  Submitted ${formatRelativeTelegramTime(document.submitted_at)}`,
+  ].join('\n')
+}
+
+export function buildAdminPendingVerificationsListMessage(
+  documents: TelegramPendingVerificationSummary[]
+) {
+  return documents.map(buildAdminPendingVerificationSummaryLines).join('\n\n')
+}
+
+export function buildAdminVerificationDetailMessage(
+  document: TelegramPendingVerificationSummary
+) {
+  const lines = [
+    `<b>${document.profiles?.full_name ?? 'Unknown user'}</b>`,
+    `Status: <b>Pending</b>`,
+    `Document type: ${formatDocumentType(document.document_type)}`,
+    `ID number: ${document.id_number}`,
+    `User ID: ${document.user_id}`,
+  ]
+
+  if (document.submitted_at) {
+    lines.push(`Submitted: ${new Date(document.submitted_at).toLocaleDateString('en-US')}`)
+  }
+
+  if (document.description) {
+    lines.push('', '<b>Description</b>', document.description)
+  }
+
+  return lines.join('\n')
+}
+
+export function buildAdminVerificationNotFoundMessage() {
+  return 'That verification request could not be found.'
 }
 
 export function buildClientApplicantsIntro(gigTitle: string, applicantCount: number) {

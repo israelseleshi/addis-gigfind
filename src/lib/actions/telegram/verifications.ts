@@ -16,6 +16,22 @@ export type TelegramVerificationSnapshot = {
   } | null
 }
 
+export type TelegramPendingVerificationSummary = {
+  id: string
+  user_id: string
+  document_type: string
+  id_number: string
+  description: string | null
+  status: string
+  admin_notes: string | null
+  submitted_at: string | null
+  profiles: {
+    id: string
+    full_name: string | null
+    avatar_url: string | null
+  } | null
+}
+
 export async function getTelegramVerificationStatus(
   userId: string
 ): Promise<TelegramVerificationSnapshot> {
@@ -45,4 +61,67 @@ export async function getTelegramVerificationStatus(
     status: (profile?.verification_status ?? 'unverified') as TelegramVerificationStatus,
     document: document ?? null,
   }
+}
+
+export async function listTelegramPendingVerifications() {
+  const supabase = await createServiceRoleClient()
+  const { data, error } = await supabase
+    .from('verification_documents')
+    .select(
+      `
+        id,
+        user_id,
+        document_type,
+        id_number,
+        description,
+        status,
+        admin_notes,
+        submitted_at,
+        profiles (
+          id,
+          full_name,
+          avatar_url
+        )
+      `
+    )
+    .eq('status', 'pending')
+    .order('submitted_at', { ascending: false })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return (data ?? []) as TelegramPendingVerificationSummary[]
+}
+
+export async function getTelegramPendingVerificationDetails(documentId: string) {
+  const supabase = await createServiceRoleClient()
+  const { data, error } = await supabase
+    .from('verification_documents')
+    .select(
+      `
+        id,
+        user_id,
+        document_type,
+        id_number,
+        description,
+        status,
+        admin_notes,
+        submitted_at,
+        profiles (
+          id,
+          full_name,
+          avatar_url
+        )
+      `
+    )
+    .eq('id', documentId)
+    .eq('status', 'pending')
+    .single()
+
+  if (error || !data) {
+    return null
+  }
+
+  return data as TelegramPendingVerificationSummary
 }

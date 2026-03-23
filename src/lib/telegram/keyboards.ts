@@ -6,6 +6,7 @@ import type {
   TelegramGigApplicantSummary,
 } from '@/lib/actions/telegram/applications'
 import type { TelegramBrowseGig, TelegramClientGigSummary } from '@/lib/actions/telegram/gigs'
+import type { TelegramPendingVerificationSummary } from '@/lib/actions/telegram/verifications'
 import type { TelegramUserRole } from '@/lib/telegram/types'
 
 export function buildFreelancerHomeKeyboard() {
@@ -167,6 +168,30 @@ export function buildVerificationStatusKeyboard() {
     .text('Refresh status', 'freelancer:verification_status')
     .row()
     .text('Back to menu', 'freelancer:home')
+}
+
+export function buildAdminPendingVerificationsKeyboard(
+  documents: TelegramPendingVerificationSummary[]
+) {
+  const keyboard = new InlineKeyboard()
+
+  for (const document of documents) {
+    const name = document.profiles?.full_name ?? 'Unknown user'
+    keyboard
+      .text(`Review: ${name.slice(0, 20)}`, `admin:view_verification:${document.id}`)
+      .row()
+  }
+
+  keyboard.text('Back to menu', 'admin:home')
+  return keyboard
+}
+
+export function buildAdminVerificationDetailKeyboard(documentId: string) {
+  return new InlineKeyboard()
+    .text('Refresh verification', `admin:view_verification:${documentId}`)
+    .row()
+    .text('Pending verifications', 'admin:pending_verifications')
+    .text('Back to menu', 'admin:home')
 }
 
 export function buildClientGigsListKeyboard(

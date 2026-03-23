@@ -1,5 +1,10 @@
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import {
+  handleAdminHome,
+  handlePendingVerificationDetails,
+  handlePendingVerifications,
+} from '@/lib/telegram/handlers/admin'
+import {
   handleClientAcceptApplicant,
   handleClientHome,
   handleClientMyGigs,
@@ -27,6 +32,22 @@ import { telegramLogger } from '@/lib/telegram/logger'
 export async function handleCallbackQuery(ctx: TelegramBotContext) {
   try {
     const callbackData = ctx.callbackQuery.data
+
+    if (callbackData === 'admin:home') {
+      await handleAdminHome(ctx)
+      return
+    }
+
+    if (callbackData === 'admin:pending_verifications') {
+      await handlePendingVerifications(ctx)
+      return
+    }
+
+    if (callbackData.startsWith('admin:view_verification:')) {
+      const documentId = callbackData.split(':')[2]
+      await handlePendingVerificationDetails(ctx, documentId)
+      return
+    }
 
     if (callbackData === 'client:home') {
       await handleClientHome(ctx)
