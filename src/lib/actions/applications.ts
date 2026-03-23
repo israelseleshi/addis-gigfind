@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
+import { notifyClientOfNewApplication } from '@/lib/actions/telegram/notifications'
+import { telegramLogger } from '@/lib/telegram/logger'
 
 const applicationSchema = z.object({
   gigId: z.string().uuid(),
@@ -90,6 +92,17 @@ export async function applyForGig(data: { gigId: string; coverNote: string }) {
   if (error) {
     return { error: error.message }
   }
+
+  void notifyClientOfNewApplication({
+    gigId,
+    freelancerId: user.id,
+    coverNote,
+  }).catch((notificationError) => {
+    telegramLogger.error(
+      { error: notificationError, gigId, freelancerId: user.id },
+      'Telegram application notification dispatch failed'
+    )
+  })
 
   revalidatePath(`/client/applicants`)
   return { success: true }

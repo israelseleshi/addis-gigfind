@@ -1,6 +1,11 @@
 'use server'
 
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import {
+  notifyUserOfVerificationApproved,
+  notifyUserOfVerificationRejected,
+} from '@/lib/actions/telegram/notifications'
+import { telegramLogger } from '@/lib/telegram/logger'
 
 export type TelegramVerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected'
 
@@ -167,6 +172,12 @@ export async function approveTelegramVerification(documentId: string) {
   }
 
   const profile = Array.isArray(document.profiles) ? document.profiles[0] : document.profiles
+  void notifyUserOfVerificationApproved(document.user_id).catch((notificationError) => {
+    telegramLogger.error(
+      { error: notificationError, userId: document.user_id },
+      'Telegram verification approved notification dispatch failed from bot flow'
+    )
+  })
   return { error: null, fullName: profile?.full_name ?? 'This user' }
 }
 
@@ -219,5 +230,13 @@ export async function rejectTelegramVerification(documentId: string, reason: str
   }
 
   const profile = Array.isArray(document.profiles) ? document.profiles[0] : document.profiles
+  void notifyUserOfVerificationRejected(document.user_id, trimmedReason).catch(
+    (notificationError) => {
+      telegramLogger.error(
+        { error: notificationError, userId: document.user_id },
+        'Telegram verification rejected notification dispatch failed from bot flow'
+      )
+    }
+  )
   return { error: null, fullName: profile?.full_name ?? 'This user' }
 }

@@ -3,6 +3,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import {
+  notifyUserOfVerificationApproved,
+  notifyUserOfVerificationRejected,
+} from '@/lib/actions/telegram/notifications'
+import { telegramLogger } from '@/lib/telegram/logger'
 
 const verificationSchema = z.object({
   documentType: z.enum(['kebele', 'passport', 'driver_license']),
@@ -216,6 +221,12 @@ export async function adminApproveVerification(documentId: string) {
   }
   
   revalidatePath('/admin/verifications')
+  void notifyUserOfVerificationApproved(document.user_id).catch((notificationError) => {
+    telegramLogger.error(
+      { error: notificationError, userId: document.user_id },
+      'Telegram verification approved notification dispatch failed'
+    )
+  })
   return { success: true }
 }
 
@@ -270,6 +281,12 @@ export async function adminRejectVerification(documentId: string, reason: string
   }
   
   revalidatePath('/admin/verifications')
+  void notifyUserOfVerificationRejected(document.user_id, reason).catch((notificationError) => {
+    telegramLogger.error(
+      { error: notificationError, userId: document.user_id },
+      'Telegram verification rejected notification dispatch failed'
+    )
+  })
   return { success: true }
 }
 

@@ -2,7 +2,9 @@
 
 import { z } from 'zod'
 
+import { notifyClientOfNewApplication } from '@/lib/actions/telegram/notifications'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { telegramLogger } from '@/lib/telegram/logger'
 
 const TELEGRAM_APPLICATION_PAGE_SIZE = 5
 
@@ -148,6 +150,17 @@ export async function applyForGigFromTelegram(data: {
   if (error) {
     return { error: error.message }
   }
+
+  void notifyClientOfNewApplication({
+    gigId,
+    freelancerId,
+    coverNote,
+  }).catch((notificationError) => {
+    telegramLogger.error(
+      { error: notificationError, gigId, freelancerId },
+      'Telegram application notification dispatch failed from bot flow'
+    )
+  })
 
   return { success: true as const }
 }
