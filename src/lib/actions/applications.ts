@@ -304,7 +304,7 @@ export async function markGigInProgress(gigId: string) {
 
   const { data: gig, error: gigError } = await supabase
     .from('gigs')
-    .select('id, status')
+    .select('id, status, client_id')
     .eq('id', gigId)
     .single()
 
@@ -338,6 +338,17 @@ export async function markGigInProgress(gigId: string) {
     telegramLogger.error(
       { error: notificationError, gigId, userId: user.id, status: 'in_progress' },
       'Telegram gig status notification dispatch failed'
+    )
+  })
+
+  void notifyUserOfGigStatusChanged({
+    gigId,
+    userId: gig.client_id,
+    status: 'in_progress',
+  }).catch((notificationError) => {
+    telegramLogger.error(
+      { error: notificationError, gigId, userId: gig.client_id, status: 'in_progress' },
+      'Telegram client gig status notification dispatch failed'
     )
   })
 

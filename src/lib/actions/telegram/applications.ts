@@ -404,6 +404,17 @@ export async function markTelegramActiveJobInProgress(
     )
   })
 
+  void notifyUserOfGigStatusChanged({
+    gigId: job.gig.id,
+    userId: job.gig.client_id,
+    status: 'in_progress',
+  }).catch((notificationError) => {
+    telegramLogger.error(
+      { error: notificationError, gigId: job.gig?.id, userId: job.gig?.client_id, status: 'in_progress' },
+      'Telegram client gig status notification dispatch failed from bot flow'
+    )
+  })
+
   return { error: null, gigTitle: job.gig.title }
 }
 
