@@ -11,7 +11,7 @@ import PageTransition from '@/components/page-transition';
 export default function ClientLayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const hideHeaderPaths = ['/client', '/freelancer', '/admin'];
-  const showHeader = !hideHeaderPaths.some(path => pathname?.startsWith(path));
+  const showHeader = !hideHeaderPaths.some(path => pathname.startsWith(path));
 
   return (
     <>

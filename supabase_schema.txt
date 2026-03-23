@@ -1,0 +1,238 @@
+SUPABASE DATABASE SCHEMA DOCUMENTATION
+Generated: 2026-01-24T11:46:39.632Z
+Source: Migration files
+============================================================
+
+============================================================
+MIGRATION FILES
+============================================================
+
+
+--- 20260124_create_types_and_trigger.sql ---
+-- Migration: Create ENUM types and profile trigger
+-- Created: 2026-01-24
+
+-- Create ENUM types (use IF NOT EXISTS to avoid errors on reapply)
+DO $$ BEGIN
+  CREATE TYPE public.user_role AS ENUM ('client', 'freelancer', 'admin', 'regulator');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE public.application_status AS ENUM ('pending', 'accepted', 'rejected', 'withdrawn');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE public.gig_status AS ENUM ('open', 'assigned', 'in_progress', 'completed', 'cancelled');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE public.verification_status AS ENUM ('unverified', 'pending', 'verified', 'rejected');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+-- Create function to auto-create profiles on user signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name, role)
+  VALUES (
+    new.id,
+    COALESCE(new.raw_user_meta_data->>'full_name', ''),
+    COALESCE((new.raw_user_meta_data->>'role')::public.user_role, 'client'),
+    COALESCE(new.raw_user_meta_data->>'phone', null),
+    COALESCE(new.raw_user_meta_data->>'location', null),
+    COALESCE(new.raw_user_meta_data->>'bio', null),
+    COALESCE(new.raw_user_meta_data->>'skills', null),
+    COALESCE(new.raw_user_meta_data->>'experience', null)
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+
+--- 20260125_otp_verification.sql ---
+-- OTP Verification Table for tracking OTP codes
+create table if not exists otp_verifications (
+  id uuid default gen_random_uuid() primary key,
+  email text not null,
+  otp_code text not null,
+  purpose text not null check (purpose in ('signup', 'reset_password', 'email_change')),
+  expires_at timestamptz not null,
+  verified boolean default false,
+  created_at timestamptz default now()
+);
+
+-- Enable RLS on otp_verifications table
+alter table otp_verifications enable row level security;
+
+-- Policy: Users can only create and verify their own OTPs
+create policy "Users can insert their own OTP" on otp_verifications
+  for insert with check (auth.uid()::text = email or true);
+
+-- Policy: Allow read for verification
+create policy "Allow OTP verification reads" on otp_verifications
+  for select using (true);
+
+-- Policy: Allow update for verification
+create policy "Allow OTP verification updates" on otp_verifications
+  for update using (true);
+
+-- Index for faster lookups
+create index if not exists idx_otp_verifications_email on otp_verifications(email);
+create index if not exists idx_otp_verifications_expires_at on otp_verifications(expires_at);
+
+-- Function to clean up expired OTPs (can be called periodically)
+create or replace function cleanup_expired_otps()
+returns void as $$
+begin
+  delete from otp_verifications where expires_at < now();
+end;
+$$ language plpgsql security definer;
+
+
+--- 20260126_create_storage_bucket.sql ---
+-- Create storage bucket for verification documents
+-- Run this in Supabase Dashboard → Storage → Create new bucket
+
+-- Or use SQL:
+insert into storage.buckets (id, name, public) values ('verification-docs', 'verification-docs', false);
+
+-- Set up storage policies
+create policy "Allow authenticated users to upload verification docs"
+on storage.objects for insert
+with check (
+  bucket_id = 'verification-docs' and
+  auth.role() = 'authenticated'
+);
+
+create policy "Allow users to view their own verification docs"
+on storage.objects for select
+using (
+  bucket_id = 'verification-docs' and
+  (storage.foldername(name))[1] = auth.uid()
+);
+
+
+--- 20260128_demo_users.sql ---
+-- Demo Admin Credentials for Addis GigFind
+-- Run this SQL in Supabase SQL Editor to create admin users
+
+-- Create admin user profile (user must sign up first with this email)
+INSERT INTO public.profiles (id, full_name, role, verification_status, is_banned)
+VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  'System Administrator',
+  'admin',
+  'verified',
+  false
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Create regulator user profile (user must sign up first with this email)
+INSERT INTO public.profiles (id, full_name, role, verification_status, is_banned)
+VALUES (
+  'b0000000-0000-0000-0000-000000000002',
+  'Government Regulator',
+  'regulator',
+  'verified',
+  false
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Create demo client profile (user must sign up first with this email)
+INSERT INTO public.profiles (id, full_name, role, verification_status, is_banned)
+VALUES (
+  'c0000000-0000-0000-0000-000000000001',
+  'Demo Client',
+  'client',
+  'verified',
+  false
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Create demo freelancer profile (user must sign up first with this email)
+INSERT INTO public.profiles (id, full_name, role, verification_status, is_banned, bio, skills)
+VALUES (
+  'f0000000-0000-0000-0000-000000000001',
+  'Demo Freelancer',
+  'freelancer',
+  'verified',
+  false,
+  'Experienced web developer with 5+ years of experience.',
+  'React, Node.js, TypeScript, PostgreSQL'
+)
+ON CONFLICT (id) DO NOTHING;
+
+SELECT 'Demo profiles created successfully!' as status;
+
+
+============================================================
+SCHEMA SUMMARY
+============================================================
+
+ENUM Types:
+  CREATE TYPE public.user_role AS ENUM ('client', 'freelancer', 'admin', 'regulator')
+  CREATE TYPE public.application_status AS ENUM ('pending', 'accepted', 'rejected', 'withdrawn')
+  CREATE TYPE public.gig_status AS ENUM ('open', 'assigned', 'in_progress', 'completed', 'cancelled')
+  CREATE TYPE public.verification_status AS ENUM ('unverified', 'pending', 'verified', 'rejected')
+
+Tables:
+  create table if not exists otp_verifications (
+  id uuid default gen_random_uuid() primary key,
+  email text not null,
+  otp_code text not null,
+  purpose text not null check (purpose in ('signup', 'reset_password', 'email_change')),
+  expires_at timestamptz not null,
+  verified boolean default false,
+  created_at timestamptz default now()
+)
+
+Functions:
+  to...
+  cleanup_expired_otps...
+
+Triggers:
+  Create trigger
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users
+  CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user()
+
+RLS Policies:
+  create policy "Users can insert their own OTP" on otp_verifications
+  for insert with check (auth.uid()::text = email or true)
+  create policy "Allow OTP verification reads" on otp_verifications
+  for select using (true)
+  create policy "Allow OTP verification updates" on otp_verifications
+  for update using (true)
+  create policy "Allow authenticated users to upload verification docs"
+on storage.objects for insert
+with check (
+  bucket_id = 'verification-docs' and
+  auth.role() = 'authenticated'
+)
+  create policy "Allow users to view their own verification docs"
+on storage.objects for select
+using (
+  bucket_id = 'verification-docs' and
+  (storage.foldername(name))[1] = auth.uid()
+)
+
+Storage Buckets:
+  insert into storage.buckets (id, name, public) values ('verification-docs', 'verification-docs', false)
+
+RPC Functions:
+  (None found in migrations)

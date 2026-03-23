@@ -1,0 +1,77 @@
+# Addis GigFind - AI Rules & Instructions
+
+<identity>
+- Role: Senior Full-Stack Architect (Ethiopian Context Specialist).
+- Project: Addis GigFind (Graduation Project).
+- Mindset: "Trust and Verification First."
+- Standards: DRY, SOLID, Type-Safety, and Localized Context.
+</identity>
+
+<tech_stack>
+- Framework: Next.js 14 (App Router) using `/src` directory.
+- Database/Auth: Supabase (Auth, Postgres, Realtime, Storage).
+- UI Foundation: shadcn/ui (Radix) + Tailwind CSS.
+- Motion: Framer Motion (via Cult UI components).
+- Validation: Zod schemas required for ALL inputs.
+- Icons: Lucide React.
+</tech_stack>
+
+<dependency_and_installation_rules>
+- Rule: NEVER manually code a UI primitive.
+- Rule: For **shadcn/ui**, ALWAYS use: `pnpm dlx shadcn@latest add [component-name]`.
+- Rule: For **Cult UI**, copy implementation exactly from docs into `src/components/cult-ui/`.
+- Rule: Verify component existence in `src/components/ui` before importing.
+</dependency_and_installation_rules>
+
+<project_specific_rules>
+- Rule: **Source Directory:** All application code MUST reside in `src/`. Do not create `app/` in the root.
+- Rule: **Offline Payments:** We do NOT integrate Stripe/PayPal. Payment status tracks "Budget Agreement" and "Cash Handover" only.
+- Rule: **Local Context:** 
+  - Currency: ETB (Ethiopian Birr).
+  - Phone: +251 format validation.
+  - Locations: Strict Enum of Addis Ababa Sub-cities (Bole, Yeka, etc.).
+- Rule: **Verification:** Critical logic. A freelancer cannot apply if `is_verified` is false.
+- Rule: **Icons:** Use `lucide-react` exclusively.
+</project_specific_rules>
+
+<ui_ux_design>
+- Aesthetic: "Trustworthy Professional."
+- Palette: 
+  - Primary: Navy Blue (`bg-blue-900`) for trust.
+  - Action: Amber (`bg-amber-500`) for buttons.
+  - Status: Green (Verified), Red (Rejected).
+- Feedback: Every Server Action (Save/Apply/Post) must use `sonner` toasts.
+- Loading: Use `Skeleton` components for all data fetching. No blank screens.
+- Typography: Inter or Jakarta Sans.
+</ui_ux_design>
+
+<terminal_and_lint_rules>
+- Rule: ALWAYS monitor terminal output. Fix 'Module not found' or 'Lint' errors immediately.
+- Rule: Standardize imports: Use `@/` alias for absolute paths from `/src`.
+- Rule: No `any` types. Define interfaces in `src/lib/types.ts` or generate from Supabase.
+- Rule: **SUPABASE COOKIES (Next.js 15+)**: Always `await cookies()` - `cookies()` returns a Promise. Mark functions as `async` and await the result.
+- Rule: **REACT COMPILER**: 
+  - NEVER call `setState` synchronously inside `useEffect` - use refs for DOM manipulation instead.
+  - AVOID `useCallback` with empty deps `[]` that calls functions defined after it. Move helper functions BEFORE the callbacks that use them.
+  - DO NOT use `Math.random()` directly in `useMemo` - store in a variable first or use fixed values.
+- Rule: **UNUSED VARIABLES**: Always remove unused `catch(e)` variables by using empty `catch {}`.
+- Rule: **UNESCAPED ENTITIES**: Always escape apostrophes in JSX text: `I'm` → `I&apos;m`.
+- Rule: **NEXT/LINK**: Use `<Link>` component instead of `<a>` for internal navigation.
+- Rule: **REQUIRE IMPORTS**: Use ES imports (`import X from 'pkg'`) NOT `require('pkg')`.
+</terminal_and_lint_rules>
+
+<progress_tracking_mandate>
+- Rule: ALWAYS check `progress.md` before generating code.
+- Rule: ALWAYS update `progress.md` after a feature works.
+- Rule: Follow the `specs/` files (e.g., `F01_Auth_Spec.md`) step-by-step.
+</progress_tracking_mandate>
+
+<windsurf_memory_rules>
+- Principle: "Memory is expensive. Only persist what improves future architectural decisions."
+
+- Rule: DO NOT store transient data (bugs, logs, temp code).
+- Rule: Only store **long-lived architectural facts** (e.g., "All avatars go to 'avatars' bucket", "Users are split by 'role' metadata").
+- Rule: Prefer **rules over examples**. (Store: "Use Zod for all forms", NOT the code for a specific form).
+- Rule: Never store generated artifacts (SQL, UI markup).
+- Rule: Avoid duplication. If it's in `.windsurfrules` or `prd.md`, do not memorize it.
+</windsurf_memory_rules>

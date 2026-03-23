@@ -7,6 +7,7 @@ import { getAppUrl } from '@/lib/app-url'
 import {
   clientSignUpSchema,
   freelancerSignUpSchema,
+  adminSignUpSchema,
   loginSchema,
   forgotPasswordSchema,
 } from '@/lib/validations/auth'
@@ -132,6 +133,48 @@ export async function registerFreelancer(values: z.infer<typeof freelancerSignUp
     return { success: true, userId: signUpData.user?.id }
   } catch (e) {
     console.error('Caught exception in registerFreelancer:', e)
+    const errorMessage = e instanceof Error ? e.message : 'An unknown server error occurred.'
+    return { error: errorMessage }
+  }
+}
+
+export async function registerAdmin(values: z.infer<typeof adminSignUpSchema>) {
+  try {
+    console.log('[registerAdmin] Starting admin signup...')
+    const supabase = await createClient()
+
+    const validated = adminSignUpSchema.safeParse(values)
+    if (!validated.success) {
+      console.error('Validation failed:', validated.error.flatten().fieldErrors)
+      return { error: 'Invalid form data. Please check your inputs.' }
+    }
+
+    const { fullName, email, password } = validated.data
+
+    // Sign up admin WITHOUT email confirmation - direct creation
+    const { data: signUpData, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: undefined, // Disable Supabase email confirmation
+        data: {
+          full_name: fullName,
+          role: 'admin',
+        },
+      },
+    })
+
+    if (error) {
+      console.error('Admin sign up error:', error)
+      return { error: error.message }
+    }
+
+    console.log('[registerAdmin] Admin user created:', signUpData.user?.id)
+    // Profile is created automatically by the trigger with admin role
+
+    return { success: true, userId: signUpData.user?.id }
+  } catch (e) {
+    console.error('Caught exception in registerAdmin:', e)
     const errorMessage = e instanceof Error ? e.message : 'An unknown server error occurred.'
     return { error: errorMessage }
   }
