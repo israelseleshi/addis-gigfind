@@ -6,6 +6,7 @@ import {
   handleFreelancerHome,
   handleMarkActiveJobInProgress,
   handleMyApplications,
+  handleVerificationStatus,
   handleViewActiveJobDetails,
   handleViewApplicationDetails,
   handleViewGigDetails,
@@ -50,6 +51,11 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
     if (callbackData.startsWith('freelancer:start_job:')) {
       const applicationId = callbackData.split(':')[2]
       await handleMarkActiveJobInProgress(ctx, applicationId)
+      return
+    }
+
+    if (callbackData === 'freelancer:verification_status') {
+      await handleVerificationStatus(ctx)
       return
     }
 

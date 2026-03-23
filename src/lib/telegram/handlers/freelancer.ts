@@ -7,6 +7,7 @@ import {
   markTelegramActiveJobInProgress,
 } from '@/lib/actions/telegram/applications'
 import { getTelegramGigDetails, listTelegramOpenGigs } from '@/lib/actions/telegram/gigs'
+import { getTelegramVerificationStatus } from '@/lib/actions/telegram/verifications'
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import { requireTelegramRole } from '@/lib/telegram/guards'
 import {
@@ -17,6 +18,7 @@ import {
   buildGigDetailKeyboard,
   buildGigListKeyboard,
   buildLinkedHomeKeyboard,
+  buildVerificationStatusKeyboard,
 } from '@/lib/telegram/keyboards'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
@@ -41,6 +43,7 @@ import {
   buildMyApplicationsEmptyState,
   buildMyApplicationsIntro,
   buildTemporaryUnavailableMessage,
+  buildVerificationStatusMessage,
 } from '@/lib/telegram/messages'
 
 const FREELANCER_ONLY_MESSAGE = 'This action is only available to freelancer accounts.'
@@ -395,6 +398,28 @@ export async function handleMarkActiveJobInProgress(
     })
   } catch (error) {
     telegramLogger.error({ error }, 'Telegram freelancer start job handler failed')
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+export async function handleVerificationStatus(ctx: TelegramBotContext) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      await ctx.answerCallbackQuery()
+      return
+    }
+
+    const snapshot = await getTelegramVerificationStatus(resolved.profile.id)
+    await ctx.answerCallbackQuery({
+      text: `Status: ${snapshot.status}`,
+    })
+
+    await ctx.reply(buildVerificationStatusMessage(snapshot), {
+      reply_markup: buildVerificationStatusKeyboard(),
+    })
+  } catch (error) {
+    telegramLogger.error({ error }, 'Telegram freelancer verification status handler failed')
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }

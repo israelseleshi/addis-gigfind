@@ -160,3 +160,10 @@ export function buildActiveJobDetailKeyboard(applicationId: string, canMarkInPro
     .text('Active jobs', 'freelancer:active_jobs:0')
     .text('Back to menu', 'freelancer:home')
 }
+
+export function buildVerificationStatusKeyboard() {
+  return new InlineKeyboard()
+    .text('Refresh status', 'freelancer:verification_status')
+    .row()
+    .text('Back to menu', 'freelancer:home')
+}

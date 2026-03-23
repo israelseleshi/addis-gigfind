@@ -3,6 +3,7 @@ import type {
   TelegramApplicationSummary,
 } from '@/lib/actions/telegram/applications'
 import type { TelegramBrowseGig } from '@/lib/actions/telegram/gigs'
+import type { TelegramVerificationSnapshot } from '@/lib/actions/telegram/verifications'
 
 export function buildRoleMenu(role: string) {
   if (role === 'client') {
@@ -320,4 +321,73 @@ export function buildActiveJobMarkedInProgressMessage(title: string) {
     `"${title}" is now marked as in progress.`,
     'The job status is updated in the main platform as well.',
   ].join('\n')
+}
+
+function formatVerificationStatus(status: TelegramVerificationSnapshot['status']) {
+  switch (status) {
+    case 'verified':
+      return 'Verified'
+    case 'pending':
+      return 'Pending review'
+    case 'rejected':
+      return 'Rejected'
+    default:
+      return 'Not verified'
+  }
+}
+
+function formatDocumentType(documentType: string | undefined) {
+  if (!documentType) {
+    return 'Unknown'
+  }
+
+  return documentType.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
+export function buildVerificationStatusMessage(snapshot: TelegramVerificationSnapshot) {
+  const lines = [
+    'Your verification status',
+    '',
+    `Status: ${formatVerificationStatus(snapshot.status)}`,
+  ]
+
+  if (!snapshot.document) {
+    lines.push('', 'No verification document is on file yet.', 'Submit your documents on the website to unlock applications and hiring workflows.')
+    return lines.join('\n')
+  }
+
+  lines.push(
+    '',
+    `Document type: ${formatDocumentType(snapshot.document.document_type)}`,
+    `ID number: ${snapshot.document.id_number}`,
+    `Document status: ${formatVerificationStatus(
+      (snapshot.document.status as TelegramVerificationSnapshot['status']) ?? snapshot.status
+    )}`
+  )
+
+  if (snapshot.document.submitted_at) {
+    lines.push(`Submitted: ${new Date(snapshot.document.submitted_at).toLocaleDateString('en-US')}`)
+  }
+
+  if (snapshot.status === 'pending') {
+    lines.push('', 'Your verification is under review. This usually takes 1-2 business days.')
+  }
+
+  if (snapshot.status === 'verified') {
+    lines.push('', 'Your account is verified. You can apply to gigs from Telegram and the website.')
+  }
+
+  if (snapshot.status === 'rejected') {
+    lines.push('', 'Your latest verification was rejected.')
+    if (snapshot.document.admin_notes) {
+      lines.push(`Reason: ${snapshot.document.admin_notes}`)
+    }
+    lines.push('Resubmit your documents on the website when ready.')
+  }
+
+  if (snapshot.status === 'unverified') {
+    lines.push('', 'Submit your verification documents on the website to start applying for gigs.')
+  }
+
+  return lines.join('\n')
 }
