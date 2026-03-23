@@ -1,6 +1,7 @@
 import { touchTelegramAccount } from '@/lib/telegram/account-link'
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import { resolveLinkedTelegramAccount } from '@/lib/telegram/guards'
+import { buildLinkedHomeKeyboard } from '@/lib/telegram/keyboards'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
   buildLinkInstructions,
@@ -29,7 +30,10 @@ export async function handleStartCommand(ctx: TelegramBotContext) {
     const name = resolved.profile.full_name ?? 'there'
     const role = resolved.role ?? 'freelancer'
 
-    await ctx.reply(buildLinkedWelcomeMessage(name, role), { parse_mode: 'HTML' })
+    await ctx.reply(buildLinkedWelcomeMessage(name, role), {
+      parse_mode: 'HTML',
+      reply_markup: buildLinkedHomeKeyboard(role),
+    })
   } catch (error) {
     telegramLogger.error({ error }, 'Telegram /start handler failed')
     await ctx.reply(buildTemporaryUnavailableMessage())

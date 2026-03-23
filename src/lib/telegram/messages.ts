@@ -26,6 +26,18 @@ export function buildRoleMenu(role: string) {
   ].join('\n')
 }
 
+export function buildRoleHomePrompt(role: string) {
+  if (role === 'client') {
+    return 'Choose a client action below.'
+  }
+
+  if (role === 'admin' || role === 'regulator') {
+    return 'Choose an admin action below.'
+  }
+
+  return 'Choose a freelancer action below.'
+}
+
 export function buildLinkInstructions() {
   return [
     'Your Telegram account is not linked yet.',
@@ -50,12 +62,26 @@ export function buildStartupStatusMessage() {
 }
 
 export function buildLinkedWelcomeMessage(name: string, role: string) {
-  return [`Welcome back, ${name}.`, '', `Role: ${role}`, buildRoleMenu(role)].join('\n')
+  return [
+    `Welcome back, ${name}.`,
+    '',
+    `Role: ${role}`,
+    buildRoleMenu(role),
+    '',
+    buildRoleHomePrompt(role),
+  ].join('\n')
 }
 
 export function buildScaffoldingPlaceholderMessage() {
   return [
     'Core bot scaffolding is live.',
     'Next implementation step is role-specific gig and review flows.',
+  ].join('\n')
+}
+
+export function buildUnrecognizedInputMessage() {
+  return [
+    'Use the Telegram buttons below to continue.',
+    'Role-specific workflows are being added step by step.',
   ].join('\n')
 }

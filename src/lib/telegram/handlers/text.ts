@@ -3,9 +3,10 @@ import type { TelegramBotContext } from '@/lib/telegram/context'
 import { requireLinkedTelegramAccount } from '@/lib/telegram/guards'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
-  buildScaffoldingPlaceholderMessage,
+  buildUnrecognizedInputMessage,
   buildTemporaryUnavailableMessage,
 } from '@/lib/telegram/messages'
+import { buildLinkedHomeKeyboard } from '@/lib/telegram/keyboards'
 
 export async function handleTextMessage(ctx: TelegramBotContext) {
   try {
@@ -20,7 +21,9 @@ export async function handleTextMessage(ctx: TelegramBotContext) {
     }
 
     await touchTelegramAccount(resolved.telegramUserId)
-    await ctx.reply(buildScaffoldingPlaceholderMessage())
+    await ctx.reply(buildUnrecognizedInputMessage(), {
+      reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'freelancer'),
+    })
   } catch (error) {
     telegramLogger.error({ error }, 'Telegram text handler failed')
     await ctx.reply(buildTemporaryUnavailableMessage())
