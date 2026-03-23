@@ -1,7 +1,11 @@
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import {
+  handleClientAcceptApplicant,
   handleClientHome,
   handleClientMyGigs,
+  handleClientRejectApplicant,
+  handleClientViewApplicantDetails,
+  handleClientViewApplicants,
   handleClientViewGigDetails,
 } from '@/lib/telegram/handlers/client'
 import {
@@ -35,9 +39,38 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
       return
     }
 
+    if (callbackData === 'client:review_applicants') {
+      await handleClientMyGigs(ctx, 0)
+      return
+    }
+
     if (callbackData.startsWith('client:view_gig:')) {
       const gigId = callbackData.split(':')[2]
       await handleClientViewGigDetails(ctx, gigId)
+      return
+    }
+
+    if (callbackData.startsWith('client:view_applicants:')) {
+      const gigId = callbackData.split(':')[2]
+      await handleClientViewApplicants(ctx, gigId)
+      return
+    }
+
+    if (callbackData.startsWith('client:view_applicant:')) {
+      const [, , gigId, applicationId] = callbackData.split(':')
+      await handleClientViewApplicantDetails(ctx, gigId, applicationId)
+      return
+    }
+
+    if (callbackData.startsWith('client:accept_applicant:')) {
+      const [, , gigId, applicationId] = callbackData.split(':')
+      await handleClientAcceptApplicant(ctx, gigId, applicationId)
+      return
+    }
+
+    if (callbackData.startsWith('client:reject_applicant:')) {
+      const [, , gigId, applicationId] = callbackData.split(':')
+      await handleClientRejectApplicant(ctx, gigId, applicationId)
       return
     }
 

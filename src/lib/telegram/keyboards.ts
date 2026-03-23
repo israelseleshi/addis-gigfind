@@ -3,6 +3,7 @@ import { InlineKeyboard } from 'grammy'
 import type {
   TelegramActiveJobSummary,
   TelegramApplicationSummary,
+  TelegramGigApplicantSummary,
 } from '@/lib/actions/telegram/applications'
 import type { TelegramBrowseGig, TelegramClientGigSummary } from '@/lib/actions/telegram/gigs'
 import type { TelegramUserRole } from '@/lib/telegram/types'
@@ -198,8 +199,47 @@ export function buildClientGigsListKeyboard(
 
 export function buildClientGigDetailKeyboard(gigId: string) {
   return new InlineKeyboard()
+    .text('Review applicants', `client:view_applicants:${gigId}`)
+    .row()
     .text('Refresh gig', `client:view_gig:${gigId}`)
     .row()
     .text('My gigs', 'client:my_gigs:0')
+    .text('Back to menu', 'client:home')
+}
+
+export function buildClientApplicantsListKeyboard(
+  gigId: string,
+  applicants: TelegramGigApplicantSummary[]
+) {
+  const keyboard = new InlineKeyboard()
+
+  for (const applicant of applicants) {
+    const name = applicant.freelancer?.full_name ?? 'Unknown freelancer'
+    keyboard.text(`View: ${name.slice(0, 24)}`, `client:view_applicant:${gigId}:${applicant.id}`).row()
+  }
+
+  keyboard.text('Back to gig', `client:view_gig:${gigId}`).row()
+  keyboard.text('My gigs', 'client:my_gigs:0').text('Back to menu', 'client:home')
+  return keyboard
+}
+
+export function buildClientApplicantDetailKeyboard(
+  gigId: string,
+  applicationId: string,
+  isPending: boolean
+) {
+  const keyboard = new InlineKeyboard()
+
+  if (isPending) {
+    keyboard
+      .text('Accept applicant', `client:accept_applicant:${gigId}:${applicationId}`)
+      .text('Reject applicant', `client:reject_applicant:${gigId}:${applicationId}`)
+      .row()
+  }
+
+  return keyboard
+    .text('Back to applicants', `client:view_applicants:${gigId}`)
+    .row()
+    .text('Back to gig', `client:view_gig:${gigId}`)
     .text('Back to menu', 'client:home')
 }

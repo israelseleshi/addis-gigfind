@@ -53,6 +53,21 @@ export type TelegramActiveJobSummary = {
   } | null
 }
 
+export type TelegramGigApplicantSummary = {
+  id: string
+  status: string | null
+  cover_note: string | null
+  bid_amount: number | null
+  created_at: string | null
+  freelancer: {
+    id: string
+    full_name: string | null
+    average_rating: number | null
+    reviews_count: number | null
+    phone_number: string | null
+  } | null
+}
+
 export async function applyForGigFromTelegram(data: {
   gigId: string
   freelancerId: string
@@ -361,4 +376,194 @@ export async function markTelegramActiveJobInProgress(
   }
 
   return { error: null, gigTitle: job.gig.title }
+}
+
+export async function listTelegramGigApplicants(clientId: string, gigId: string) {
+  const supabase = await createServiceRoleClient()
+
+  const { data: gig, error: gigError } = await supabase
+    .from('gigs')
+    .select('id, title, budget, status')
+    .eq('id', gigId)
+    .eq('client_id', clientId)
+    .single()
+
+  if (gigError || !gig) {
+    return null
+  }
+
+  const { data: applicants, error: applicantsError } = await supabase
+    .from('applications')
+    .select(
+      `
+        id,
+        status,
+        cover_note,
+        bid_amount,
+        created_at,
+        freelancer:profiles!applications_freelancer_id_fkey (
+          id,
+          full_name,
+          average_rating,
+          reviews_count,
+          phone_number
+        )
+      `
+    )
+    .eq('gig_id', gigId)
+    .order('created_at', { ascending: false })
+
+  if (applicantsError) {
+    throw new Error(applicantsError.message)
+  }
+
+  return {
+    gig,
+    applicants: (applicants ?? []) as TelegramGigApplicantSummary[],
+  }
+}
+
+export async function getTelegramGigApplicantDetails(
+  clientId: string,
+  gigId: string,
+  applicationId: string
+) {
+  const result = await listTelegramGigApplicants(clientId, gigId)
+  if (!result) {
+    return null
+  }
+
+  const applicant = result.applicants.find((item) => item.id === applicationId) ?? null
+  if (!applicant) {
+    return null
+  }
+
+  return {
+    gig: result.gig,
+    applicant,
+  }
+}
+
+export async function acceptTelegramGigApplication(
+  clientId: string,
+  gigId: string,
+  applicationId: string
+) {
+  const supabase = await createServiceRoleClient()
+
+  const { data: gig, error: gigError } = await supabase
+    .from('gigs')
+    .select('id, title, status')
+    .eq('id', gigId)
+    .eq('client_id', clientId)
+    .single()
+
+  if (gigError || !gig) {
+    return { error: 'Gig not found.', gigTitle: null, freelancerName: null }
+  }
+
+  const { data: application, error: applicationError } = await supabase
+    .from('applications')
+    .select(
+      `
+        id,
+        status,
+        freelancer:profiles!applications_freelancer_id_fkey (
+          id,
+          full_name
+        )
+      `
+    )
+    .eq('id', applicationId)
+    .eq('gig_id', gigId)
+    .single()
+
+  if (applicationError || !application) {
+    return { error: 'Application not found.', gigTitle: null, freelancerName: null }
+  }
+
+  if (application.status !== 'pending') {
+    return {
+      error: 'Only pending applications can be accepted.',
+      gigTitle: null,
+      freelancerName: null,
+    }
+  }
+
+  if (gig.status !== 'open') {
+    return {
+      error: 'This gig is no longer open for applicant selection.',
+      gigTitle: null,
+      freelancerName: null,
+    }
+  }
+
+  const { error: acceptError } = await supabase
+    .from('applications')
+    .update({ status: 'accepted' })
+    .eq('id', applicationId)
+
+  if (acceptError) {
+    return { error: acceptError.message, gigTitle: null, freelancerName: null }
+  }
+
+  const { error: gigUpdateError } = await supabase
+    .from('gigs')
+    .update({ status: 'assigned' })
+    .eq('id', gigId)
+
+  if (gigUpdateError) {
+    return { error: gigUpdateError.message, gigTitle: null, freelancerName: null }
+  }
+
+  const { error: rejectOthersError } = await supabase
+    .from('applications')
+    .update({ status: 'rejected' })
+    .eq('gig_id', gigId)
+    .neq('id', applicationId)
+
+  if (rejectOthersError) {
+    return { error: rejectOthersError.message, gigTitle: null, freelancerName: null }
+  }
+
+  return {
+    error: null,
+    gigTitle: gig.title,
+    freelancerName: application.freelancer?.full_name ?? 'Selected freelancer',
+  }
+}
+
+export async function rejectTelegramGigApplication(
+  clientId: string,
+  gigId: string,
+  applicationId: string
+) {
+  const details = await getTelegramGigApplicantDetails(clientId, gigId, applicationId)
+  if (!details) {
+    return { error: 'Application not found.', gigTitle: null, freelancerName: null }
+  }
+
+  if (details.applicant.status !== 'pending') {
+    return {
+      error: 'Only pending applications can be rejected.',
+      gigTitle: null,
+      freelancerName: null,
+    }
+  }
+
+  const supabase = await createServiceRoleClient()
+  const { error } = await supabase
+    .from('applications')
+    .update({ status: 'rejected' })
+    .eq('id', applicationId)
+
+  if (error) {
+    return { error: error.message, gigTitle: null, freelancerName: null }
+  }
+
+  return {
+    error: null,
+    gigTitle: details.gig.title,
+    freelancerName: details.applicant.freelancer?.full_name ?? 'That freelancer',
+  }
 }

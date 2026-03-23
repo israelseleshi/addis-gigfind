@@ -1,6 +1,7 @@
 import type {
   TelegramActiveJobSummary,
   TelegramApplicationSummary,
+  TelegramGigApplicantSummary,
 } from '@/lib/actions/telegram/applications'
 import type { TelegramBrowseGig, TelegramClientGigSummary } from '@/lib/actions/telegram/gigs'
 import type { TelegramVerificationSnapshot } from '@/lib/actions/telegram/verifications'
@@ -444,4 +445,89 @@ export function buildClientGigDetailMessage(gig: TelegramClientGigSummary) {
 
 export function buildClientGigNotFoundMessage() {
   return 'That client gig could not be found.'
+}
+
+export function buildClientApplicantsIntro(gigTitle: string, applicantCount: number) {
+  return [
+    `Applicants for ${gigTitle}`,
+    '',
+    `${applicantCount} application${applicantCount === 1 ? '' : 's'} found`,
+    'Tap an applicant below to inspect the submission.',
+  ].join('\n')
+}
+
+export function buildClientApplicantsEmptyState(gigTitle: string) {
+  return [
+    `No applicants yet for ${gigTitle}.`,
+    'Applications will appear here when freelancers start applying.',
+  ].join('\n')
+}
+
+export function buildClientApplicantSummaryLines(applicant: TelegramGigApplicantSummary) {
+  const rating =
+    typeof applicant.freelancer?.average_rating === 'number'
+      ? ` | Rating ${applicant.freelancer.average_rating.toFixed(1)}`
+      : ''
+
+  return [
+    `- ${applicant.freelancer?.full_name ?? 'Unknown freelancer'}`,
+    `  Status: ${formatApplicationStatus(applicant.status)}`,
+    `  Applied ${formatRelativeTelegramTime(applicant.created_at)}${rating}`,
+  ].join('\n')
+}
+
+export function buildClientApplicantsListMessage(applicants: TelegramGigApplicantSummary[]) {
+  return applicants.map(buildClientApplicantSummaryLines).join('\n\n')
+}
+
+export function buildClientApplicantDetailMessage(
+  gigTitle: string,
+  applicant: TelegramGigApplicantSummary
+) {
+  const lines = [
+    `<b>${applicant.freelancer?.full_name ?? 'Unknown freelancer'}</b>`,
+    `Gig: ${gigTitle}`,
+    `Status: <b>${formatApplicationStatus(applicant.status)}</b>`,
+  ]
+
+  if (typeof applicant.freelancer?.average_rating === 'number') {
+    lines.push(
+      `Rating: ${applicant.freelancer.average_rating.toFixed(1)} (${applicant.freelancer.reviews_count ?? 0} reviews)`
+    )
+  }
+
+  if (applicant.freelancer?.phone_number) {
+    lines.push(`Phone: ${applicant.freelancer.phone_number}`)
+  }
+
+  if (typeof applicant.bid_amount === 'number') {
+    lines.push(`Bid amount: ETB ${applicant.bid_amount.toLocaleString()}`)
+  }
+
+  lines.push('', '<b>Cover note</b>', applicant.cover_note ?? 'No cover note provided.')
+  return lines.join('\n')
+}
+
+export function buildClientApplicantNotFoundMessage() {
+  return 'That applicant submission could not be found.'
+}
+
+export function buildClientApplicationAcceptedMessage(
+  freelancerName: string,
+  gigTitle: string
+) {
+  return [
+    `${freelancerName} has been accepted for "${gigTitle}".`,
+    'The gig is now assigned and the other applications were rejected.',
+  ].join('\n')
+}
+
+export function buildClientApplicationRejectedMessage(
+  freelancerName: string,
+  gigTitle: string
+) {
+  return [
+    `${freelancerName} was rejected for "${gigTitle}".`,
+    'You can continue reviewing the remaining applicants.',
+  ].join('\n')
 }
