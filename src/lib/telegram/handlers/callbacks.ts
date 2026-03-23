@@ -1,9 +1,12 @@
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import {
+  handleActiveJobs,
   handleApplyGigPlaceholder,
   handleBrowseGigs,
   handleFreelancerHome,
+  handleMarkActiveJobInProgress,
   handleMyApplications,
+  handleViewActiveJobDetails,
   handleViewApplicationDetails,
   handleViewGigDetails,
 } from '@/lib/telegram/handlers/freelancer'
@@ -29,6 +32,24 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
     if (callbackData.startsWith('freelancer:view_gig:')) {
       const gigId = callbackData.split(':')[2]
       await handleViewGigDetails(ctx, gigId)
+      return
+    }
+
+    if (callbackData.startsWith('freelancer:active_jobs')) {
+      const page = Number(callbackData.split(':')[2] ?? '0')
+      await handleActiveJobs(ctx, Number.isNaN(page) ? 0 : page)
+      return
+    }
+
+    if (callbackData.startsWith('freelancer:view_active_job:')) {
+      const applicationId = callbackData.split(':')[2]
+      await handleViewActiveJobDetails(ctx, applicationId)
+      return
+    }
+
+    if (callbackData.startsWith('freelancer:start_job:')) {
+      const applicationId = callbackData.split(':')[2]
+      await handleMarkActiveJobInProgress(ctx, applicationId)
       return
     }
 

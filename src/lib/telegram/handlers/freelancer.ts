@@ -1,12 +1,17 @@
 import {
   applyForGigFromTelegram,
+  getTelegramActiveJobDetails,
   getTelegramApplicationDetails,
   listTelegramApplicationsForFreelancer,
+  listTelegramActiveJobsForFreelancer,
+  markTelegramActiveJobInProgress,
 } from '@/lib/actions/telegram/applications'
 import { getTelegramGigDetails, listTelegramOpenGigs } from '@/lib/actions/telegram/gigs'
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import { requireTelegramRole } from '@/lib/telegram/guards'
 import {
+  buildActiveJobDetailKeyboard,
+  buildActiveJobsListKeyboard,
   buildApplicationDetailKeyboard,
   buildApplicationsListKeyboard,
   buildGigDetailKeyboard,
@@ -15,6 +20,12 @@ import {
 } from '@/lib/telegram/keyboards'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
+  buildActiveJobDetailMessage,
+  buildActiveJobMarkedInProgressMessage,
+  buildActiveJobNotFoundMessage,
+  buildActiveJobsEmptyState,
+  buildActiveJobsIntro,
+  buildActiveJobsListMessage,
   buildApplicationDetailMessage,
   buildApplicationNotFoundMessage,
   buildApplicationsListMessage,
@@ -278,6 +289,112 @@ export async function handleViewApplicationDetails(
     })
   } catch (error) {
     telegramLogger.error({ error }, 'Telegram freelancer application detail handler failed')
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+export async function handleActiveJobs(ctx: TelegramBotContext, page: number = 0) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      await ctx.answerCallbackQuery()
+      return
+    }
+
+    const result = await listTelegramActiveJobsForFreelancer(resolved.profile.id, page)
+    await ctx.answerCallbackQuery({
+      text: result.jobs.length > 0 ? `Loaded page ${result.page + 1}` : 'No active jobs found',
+    })
+
+    if (result.jobs.length === 0) {
+      await ctx.reply(buildActiveJobsEmptyState(), {
+        reply_markup: buildLinkedHomeKeyboard('freelancer'),
+      })
+      return
+    }
+
+    await ctx.reply(
+      [buildActiveJobsIntro(result.page, result.total), '', buildActiveJobsListMessage(result.jobs)].join(
+        '\n'
+      ),
+      {
+        reply_markup: buildActiveJobsListKeyboard(
+          result.jobs,
+          result.page,
+          result.hasPreviousPage,
+          result.hasNextPage
+        ),
+      }
+    )
+  } catch (error) {
+    telegramLogger.error({ error }, 'Telegram freelancer active jobs handler failed')
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+export async function handleViewActiveJobDetails(
+  ctx: TelegramBotContext,
+  applicationId: string
+) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      await ctx.answerCallbackQuery()
+      return
+    }
+
+    const job = await getTelegramActiveJobDetails(resolved.profile.id, applicationId)
+    await ctx.answerCallbackQuery()
+
+    if (!job || !job.gig) {
+      await ctx.reply(buildActiveJobNotFoundMessage(), {
+        reply_markup: buildLinkedHomeKeyboard('freelancer'),
+      })
+      return
+    }
+
+    await ctx.reply(buildActiveJobDetailMessage(job), {
+      parse_mode: 'HTML',
+      reply_markup: buildActiveJobDetailKeyboard(
+        job.id,
+        job.gig.status === 'assigned'
+      ),
+    })
+  } catch (error) {
+    telegramLogger.error({ error }, 'Telegram freelancer active job detail handler failed')
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+export async function handleMarkActiveJobInProgress(
+  ctx: TelegramBotContext,
+  applicationId: string
+) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      await ctx.answerCallbackQuery()
+      return
+    }
+
+    const result = await markTelegramActiveJobInProgress(resolved.profile.id, applicationId)
+    await ctx.answerCallbackQuery({
+      text: result.error ? 'Unable to update job' : 'Job updated',
+      show_alert: Boolean(result.error),
+    })
+
+    if (result.error) {
+      await ctx.reply(result.error, {
+        reply_markup: buildLinkedHomeKeyboard('freelancer'),
+      })
+      return
+    }
+
+    await ctx.reply(buildActiveJobMarkedInProgressMessage(result.gigTitle ?? 'This job'), {
+      reply_markup: buildLinkedHomeKeyboard('freelancer'),
+    })
+  } catch (error) {
+    telegramLogger.error({ error }, 'Telegram freelancer start job handler failed')
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }

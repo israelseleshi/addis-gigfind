@@ -1,4 +1,7 @@
-import type { TelegramApplicationSummary } from '@/lib/actions/telegram/applications'
+import type {
+  TelegramActiveJobSummary,
+  TelegramApplicationSummary,
+} from '@/lib/actions/telegram/applications'
 import type { TelegramBrowseGig } from '@/lib/actions/telegram/gigs'
 
 export function buildRoleMenu(role: string) {
@@ -125,6 +128,21 @@ function formatApplicationStatus(status: string | null) {
   }
 }
 
+function formatGigStatus(status: string | null) {
+  switch (status) {
+    case 'assigned':
+      return 'Assigned'
+    case 'in_progress':
+      return 'In Progress'
+    case 'completed':
+      return 'Completed'
+    case 'cancelled':
+      return 'Cancelled'
+    default:
+      return 'Unknown'
+  }
+}
+
 export function buildGigBrowseIntro(page: number, total: number) {
   return [
     'Open gigs for freelancers',
@@ -248,4 +266,58 @@ export function buildApplicationDetailMessage(
 
 export function buildApplicationNotFoundMessage() {
   return 'That application could not be found.'
+}
+
+export function buildActiveJobsIntro(page: number, total: number) {
+  return [
+    'Your active jobs',
+    '',
+    `Showing page ${page + 1}`,
+    `${total} active job${total === 1 ? '' : 's'} found`,
+    '',
+    'Tap a job below to inspect it.',
+  ].join('\n')
+}
+
+export function buildActiveJobsEmptyState() {
+  return [
+    'You do not have any active jobs right now.',
+    'Accepted applications with assigned or in-progress gigs will appear here.',
+  ].join('\n')
+}
+
+export function buildActiveJobSummaryLines(job: TelegramActiveJobSummary) {
+  return [
+    `- ${job.gig?.title ?? 'Unknown gig'}`,
+    `  Status: ${formatGigStatus(job.gig?.status ?? null)}`,
+    `  ${job.gig?.category ?? 'Uncategorized'} | ${job.gig?.location ?? 'Unknown location'}`,
+    `  Budget: ETB ${job.gig?.budget?.toLocaleString() ?? '0'}`,
+  ].join('\n')
+}
+
+export function buildActiveJobsListMessage(jobs: TelegramActiveJobSummary[]) {
+  return jobs.map(buildActiveJobSummaryLines).join('\n\n')
+}
+
+export function buildActiveJobDetailMessage(job: TelegramActiveJobSummary) {
+  return [
+    `<b>${job.gig?.title ?? 'Unknown gig'}</b>`,
+    `Job status: <b>${formatGigStatus(job.gig?.status ?? null)}</b>`,
+    `${job.gig?.category ?? 'Uncategorized'} | ${job.gig?.location ?? 'Unknown location'}`,
+    `Budget: ETB ${job.gig?.budget?.toLocaleString() ?? '0'}`,
+    `Client: ${job.gig?.client?.full_name ?? 'Unknown client'}`,
+    '',
+    job.gig?.description ?? 'No description available.',
+  ].join('\n')
+}
+
+export function buildActiveJobNotFoundMessage() {
+  return 'That active job could not be found.'
+}
+
+export function buildActiveJobMarkedInProgressMessage(title: string) {
+  return [
+    `"${title}" is now marked as in progress.`,
+    'The job status is updated in the main platform as well.',
+  ].join('\n')
 }

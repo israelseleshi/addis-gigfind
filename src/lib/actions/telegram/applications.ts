@@ -32,6 +32,27 @@ export type TelegramApplicationSummary = {
   } | null
 }
 
+export type TelegramActiveJobSummary = {
+  id: string
+  status: string | null
+  created_at: string | null
+  gig: {
+    id: string
+    title: string
+    description: string
+    budget: number
+    location: string
+    category: string
+    status: string | null
+    client_id: string
+    client: {
+      id: string
+      full_name: string | null
+      average_rating: number | null
+    } | null
+  } | null
+}
+
 export async function applyForGigFromTelegram(data: {
   gigId: string
   freelancerId: string
@@ -208,4 +229,136 @@ export async function getTelegramApplicationDetails(
       description: string
     }
   }
+}
+
+export async function listTelegramActiveJobsForFreelancer(
+  freelancerId: string,
+  page: number = 0
+) {
+  const safePage = Math.max(0, page)
+
+  const supabase = await createServiceRoleClient()
+  const { data, error } = await supabase
+    .from('applications')
+    .select(
+      `
+        id,
+        status,
+        created_at,
+        gig:gigs (
+          id,
+          title,
+          description,
+          budget,
+          location,
+          category,
+          status,
+          client_id,
+          client:profiles!gigs_client_id_fkey (
+            id,
+            full_name,
+            average_rating
+          )
+        )
+      `
+    )
+    .eq('freelancer_id', freelancerId)
+    .eq('status', 'accepted')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const activeJobs = ((data ?? []) as TelegramActiveJobSummary[]).filter((job) =>
+    ['assigned', 'in_progress'].includes(job.gig?.status ?? '')
+  )
+  const total = activeJobs.length
+  const from = safePage * TELEGRAM_APPLICATION_PAGE_SIZE
+  const to = from + TELEGRAM_APPLICATION_PAGE_SIZE
+
+  return {
+    jobs: activeJobs.slice(from, to),
+    page: safePage,
+    total,
+    hasNextPage: to < total,
+    hasPreviousPage: safePage > 0,
+  }
+}
+
+export async function getTelegramActiveJobDetails(
+  freelancerId: string,
+  applicationId: string
+) {
+  const supabase = await createServiceRoleClient()
+  const { data, error } = await supabase
+    .from('applications')
+    .select(
+      `
+        id,
+        status,
+        created_at,
+        gig:gigs (
+          id,
+          title,
+          description,
+          budget,
+          location,
+          category,
+          status,
+          client_id,
+          client:profiles!gigs_client_id_fkey (
+            id,
+            full_name,
+            average_rating
+          )
+        )
+      `
+    )
+    .eq('id', applicationId)
+    .eq('freelancer_id', freelancerId)
+    .eq('status', 'accepted')
+    .single()
+
+  if (error || !data) {
+    return null
+  }
+
+  const job = data as TelegramActiveJobSummary
+  if (!job.gig || !['assigned', 'in_progress'].includes(job.gig.status ?? '')) {
+    return null
+  }
+
+  return job
+}
+
+export async function markTelegramActiveJobInProgress(
+  freelancerId: string,
+  applicationId: string
+) {
+  const job = await getTelegramActiveJobDetails(freelancerId, applicationId)
+  if (!job || !job.gig) {
+    return { error: 'That active job could not be found.', gigTitle: null }
+  }
+
+  if (job.gig.status === 'in_progress') {
+    return { error: 'This job is already marked as in progress.', gigTitle: null }
+  }
+
+  if (job.gig.status !== 'assigned') {
+    return { error: 'Only assigned jobs can be moved to in progress.', gigTitle: null }
+  }
+
+  const supabase = await createServiceRoleClient()
+  const { error } = await supabase
+    .from('gigs')
+    .update({ status: 'in_progress' })
+    .eq('id', job.gig.id)
+    .eq('status', 'assigned')
+
+  if (error) {
+    return { error: error.message, gigTitle: null }
+  }
+
+  return { error: null, gigTitle: job.gig.title }
 }

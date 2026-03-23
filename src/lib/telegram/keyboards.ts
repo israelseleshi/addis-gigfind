@@ -1,6 +1,9 @@
 import { InlineKeyboard } from 'grammy'
 
-import type { TelegramApplicationSummary } from '@/lib/actions/telegram/applications'
+import type {
+  TelegramActiveJobSummary,
+  TelegramApplicationSummary,
+} from '@/lib/actions/telegram/applications'
 import type { TelegramBrowseGig } from '@/lib/actions/telegram/gigs'
 import type { TelegramUserRole } from '@/lib/telegram/types'
 
@@ -112,5 +115,48 @@ export function buildApplicationDetailKeyboard(applicationId: string) {
     .text('Refresh application', `freelancer:view_application:${applicationId}`)
     .row()
     .text('My applications', 'freelancer:my_applications:0')
+    .text('Back to menu', 'freelancer:home')
+}
+
+export function buildActiveJobsListKeyboard(
+  jobs: TelegramActiveJobSummary[],
+  page: number,
+  hasPreviousPage: boolean,
+  hasNextPage: boolean
+) {
+  const keyboard = new InlineKeyboard()
+
+  for (const job of jobs) {
+    const title = job.gig?.title ?? 'Unknown gig'
+    keyboard.text(`View: ${title.slice(0, 24)}`, `freelancer:view_active_job:${job.id}`).row()
+  }
+
+  if (hasPreviousPage) {
+    keyboard.text('Previous', `freelancer:active_jobs:${page - 1}`)
+  }
+
+  if (hasNextPage) {
+    keyboard.text('Next', `freelancer:active_jobs:${page + 1}`)
+  }
+
+  if (hasPreviousPage || hasNextPage) {
+    keyboard.row()
+  }
+
+  keyboard.text('Back to menu', 'freelancer:home')
+  return keyboard
+}
+
+export function buildActiveJobDetailKeyboard(applicationId: string, canMarkInProgress: boolean) {
+  const keyboard = new InlineKeyboard()
+
+  if (canMarkInProgress) {
+    keyboard.text('Mark as in progress', `freelancer:start_job:${applicationId}`).row()
+  }
+
+  return keyboard
+    .text('Refresh job', `freelancer:view_active_job:${applicationId}`)
+    .row()
+    .text('Active jobs', 'freelancer:active_jobs:0')
     .text('Back to menu', 'freelancer:home')
 }
