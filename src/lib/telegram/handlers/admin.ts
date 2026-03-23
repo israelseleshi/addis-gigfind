@@ -1,4 +1,4 @@
-add admin verification approve and reject flowsimport {
+import {
   approveTelegramVerification,
   getTelegramPendingVerificationDetails,
   listTelegramPendingVerifications,
@@ -28,17 +28,28 @@ import {
 
 const ADMIN_ONLY_MESSAGE = 'This action is only available to admin and regulator accounts.'
 
+async function safeAnswerCallbackQuery(
+  ctx: TelegramBotContext,
+  options?: Parameters<TelegramBotContext['answerCallbackQuery']>[0]
+) {
+  if (!ctx.callbackQuery) {
+    return
+  }
+
+  await ctx.answerCallbackQuery(options)
+}
+
 export async function handleAdminHome(ctx: TelegramBotContext) {
   try {
     const resolved = await requireTelegramRole(ctx, ['admin', 'regulator'], ADMIN_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const name = resolved.profile.full_name ?? 'there'
     const role = resolved.role ?? 'admin'
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
     await ctx.reply(buildLinkedWelcomeMessage(name, role), {
       parse_mode: 'HTML',
       reply_markup: buildLinkedHomeKeyboard(role),
@@ -53,12 +64,12 @@ export async function handlePendingVerifications(ctx: TelegramBotContext) {
   try {
     const resolved = await requireTelegramRole(ctx, ['admin', 'regulator'], ADMIN_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const documents = await listTelegramPendingVerifications()
-    await ctx.answerCallbackQuery({
+    await safeAnswerCallbackQuery(ctx, {
       text: documents.length > 0 ? `${documents.length} pending` : 'No pending verifications',
     })
 
@@ -92,12 +103,12 @@ export async function handlePendingVerificationDetails(
   try {
     const resolved = await requireTelegramRole(ctx, ['admin', 'regulator'], ADMIN_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const document = await getTelegramPendingVerificationDetails(documentId)
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
 
     if (!document) {
       await ctx.reply(buildAdminVerificationNotFoundMessage(), {
@@ -123,12 +134,12 @@ export async function handleApproveVerification(
   try {
     const resolved = await requireTelegramRole(ctx, ['admin', 'regulator'], ADMIN_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const result = await approveTelegramVerification(documentId)
-    await ctx.answerCallbackQuery({
+    await safeAnswerCallbackQuery(ctx, {
       text: result.error ? 'Unable to approve' : 'Verification approved',
       show_alert: Boolean(result.error),
     })
@@ -156,12 +167,12 @@ export async function handleRejectVerificationPrompt(
   try {
     const resolved = await requireTelegramRole(ctx, ['admin', 'regulator'], ADMIN_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const document = await getTelegramPendingVerificationDetails(documentId)
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
 
     if (!document) {
       await ctx.reply(buildAdminVerificationNotFoundMessage(), {

@@ -91,7 +91,28 @@ export function buildScaffoldingPlaceholderMessage() {
 export function buildUnrecognizedInputMessage() {
   return [
     'Use the Telegram buttons below to continue.',
-    'Role-specific workflows are being added step by step.',
+    'You can also type "menu" or "home" at any time.',
+  ].join('\n')
+}
+
+export function buildQuickActionHintMessage(role: string) {
+  if (role === 'client') {
+    return [
+      'Quick text shortcuts:',
+      '"menu", "home", "my gigs", "applicants"',
+    ].join('\n')
+  }
+
+  if (role === 'admin' || role === 'regulator') {
+    return [
+      'Quick text shortcuts:',
+      '"menu", "home", "pending verifications"',
+    ].join('\n')
+  }
+
+  return [
+    'Quick text shortcuts:',
+    '"menu", "home", "browse gigs", "my applications", "active jobs", "verification"',
   ].join('\n')
 }
 

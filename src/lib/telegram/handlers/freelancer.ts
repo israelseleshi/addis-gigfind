@@ -48,16 +48,27 @@ import {
 
 const FREELANCER_ONLY_MESSAGE = 'This action is only available to freelancer accounts.'
 
+async function safeAnswerCallbackQuery(
+  ctx: TelegramBotContext,
+  options?: Parameters<TelegramBotContext['answerCallbackQuery']>[0]
+) {
+  if (!ctx.callbackQuery) {
+    return
+  }
+
+  await ctx.answerCallbackQuery(options)
+}
+
 export async function handleFreelancerHome(ctx: TelegramBotContext) {
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const name = resolved.profile.full_name ?? 'there'
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
     await ctx.reply(buildLinkedWelcomeMessage(name, 'freelancer'), {
       parse_mode: 'HTML',
       reply_markup: buildLinkedHomeKeyboard('freelancer'),
@@ -72,13 +83,13 @@ export async function handleBrowseGigs(ctx: TelegramBotContext, page: number = 0
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const result = await listTelegramOpenGigs(page)
 
-    await ctx.answerCallbackQuery({
+    await safeAnswerCallbackQuery(ctx, {
       text: result.gigs.length > 0 ? `Loaded page ${result.page + 1}` : 'No gigs found',
     })
 
@@ -110,12 +121,12 @@ export async function handleViewGigDetails(ctx: TelegramBotContext, gigId: strin
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const gig = await getTelegramGigDetails(gigId)
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
 
     if (!gig) {
       await ctx.reply(buildGigNotFoundMessage(), {
@@ -138,12 +149,12 @@ export async function handleApplyGigPlaceholder(ctx: TelegramBotContext, gigId: 
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const gig = await getTelegramGigDetails(gigId)
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
 
     if (!gig) {
       await ctx.reply(buildGigNotFoundMessage(), {
@@ -225,12 +236,12 @@ export async function handleMyApplications(ctx: TelegramBotContext, page: number
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const result = await listTelegramApplicationsForFreelancer(resolved.profile.id, page)
-    await ctx.answerCallbackQuery({
+    await safeAnswerCallbackQuery(ctx, {
       text: result.applications.length > 0 ? `Loaded page ${result.page + 1}` : 'No applications found',
     })
 
@@ -269,7 +280,7 @@ export async function handleViewApplicationDetails(
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
@@ -277,7 +288,7 @@ export async function handleViewApplicationDetails(
       resolved.profile.id,
       applicationId
     )
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
 
     if (!application || !application.gig) {
       await ctx.reply(buildApplicationNotFoundMessage(), {
@@ -300,12 +311,12 @@ export async function handleActiveJobs(ctx: TelegramBotContext, page: number = 0
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const result = await listTelegramActiveJobsForFreelancer(resolved.profile.id, page)
-    await ctx.answerCallbackQuery({
+    await safeAnswerCallbackQuery(ctx, {
       text: result.jobs.length > 0 ? `Loaded page ${result.page + 1}` : 'No active jobs found',
     })
 
@@ -342,12 +353,12 @@ export async function handleViewActiveJobDetails(
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const job = await getTelegramActiveJobDetails(resolved.profile.id, applicationId)
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
 
     if (!job || !job.gig) {
       await ctx.reply(buildActiveJobNotFoundMessage(), {
@@ -376,12 +387,12 @@ export async function handleMarkActiveJobInProgress(
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const result = await markTelegramActiveJobInProgress(resolved.profile.id, applicationId)
-    await ctx.answerCallbackQuery({
+    await safeAnswerCallbackQuery(ctx, {
       text: result.error ? 'Unable to update job' : 'Job updated',
       show_alert: Boolean(result.error),
     })
@@ -406,12 +417,12 @@ export async function handleVerificationStatus(ctx: TelegramBotContext) {
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const snapshot = await getTelegramVerificationStatus(resolved.profile.id)
-    await ctx.answerCallbackQuery({
+    await safeAnswerCallbackQuery(ctx, {
       text: `Status: ${snapshot.status}`,
     })
 

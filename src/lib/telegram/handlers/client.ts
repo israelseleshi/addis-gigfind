@@ -34,16 +34,27 @@ import {
 
 const CLIENT_ONLY_MESSAGE = 'This action is only available to client accounts.'
 
+async function safeAnswerCallbackQuery(
+  ctx: TelegramBotContext,
+  options?: Parameters<TelegramBotContext['answerCallbackQuery']>[0]
+) {
+  if (!ctx.callbackQuery) {
+    return
+  }
+
+  await ctx.answerCallbackQuery(options)
+}
+
 export async function handleClientHome(ctx: TelegramBotContext) {
   try {
     const resolved = await requireTelegramRole(ctx, ['client'], CLIENT_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const name = resolved.profile.full_name ?? 'there'
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
     await ctx.reply(buildLinkedWelcomeMessage(name, 'client'), {
       parse_mode: 'HTML',
       reply_markup: buildLinkedHomeKeyboard('client'),
@@ -58,12 +69,12 @@ export async function handleClientMyGigs(ctx: TelegramBotContext, page: number =
   try {
     const resolved = await requireTelegramRole(ctx, ['client'], CLIENT_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const result = await listTelegramClientGigs(resolved.profile.id, page)
-    await ctx.answerCallbackQuery({
+    await safeAnswerCallbackQuery(ctx, {
       text: result.gigs.length > 0 ? `Loaded page ${result.page + 1}` : 'No gigs found',
     })
 
@@ -97,12 +108,12 @@ export async function handleClientViewGigDetails(ctx: TelegramBotContext, gigId:
   try {
     const resolved = await requireTelegramRole(ctx, ['client'], CLIENT_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const gig = await getTelegramClientGigDetails(resolved.profile.id, gigId)
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
 
     if (!gig) {
       await ctx.reply(buildClientGigNotFoundMessage(), {
@@ -125,12 +136,12 @@ export async function handleClientViewApplicants(ctx: TelegramBotContext, gigId:
   try {
     const resolved = await requireTelegramRole(ctx, ['client'], CLIENT_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const result = await listTelegramGigApplicants(resolved.profile.id, gigId)
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
 
     if (!result) {
       await ctx.reply(buildClientGigNotFoundMessage(), {
@@ -170,12 +181,12 @@ export async function handleClientViewApplicantDetails(
   try {
     const resolved = await requireTelegramRole(ctx, ['client'], CLIENT_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const details = await getTelegramGigApplicantDetails(resolved.profile.id, gigId, applicationId)
-    await ctx.answerCallbackQuery()
+    await safeAnswerCallbackQuery(ctx)
 
     if (!details) {
       await ctx.reply(buildClientApplicantNotFoundMessage(), {
@@ -206,12 +217,12 @@ export async function handleClientAcceptApplicant(
   try {
     const resolved = await requireTelegramRole(ctx, ['client'], CLIENT_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const result = await acceptTelegramGigApplication(resolved.profile.id, gigId, applicationId)
-    await ctx.answerCallbackQuery({
+    await safeAnswerCallbackQuery(ctx, {
       text: result.error ? 'Unable to accept applicant' : 'Applicant accepted',
       show_alert: Boolean(result.error),
     })
@@ -246,12 +257,12 @@ export async function handleClientRejectApplicant(
   try {
     const resolved = await requireTelegramRole(ctx, ['client'], CLIENT_ONLY_MESSAGE)
     if (!resolved) {
-      await ctx.answerCallbackQuery()
+      await safeAnswerCallbackQuery(ctx)
       return
     }
 
     const result = await rejectTelegramGigApplication(resolved.profile.id, gigId, applicationId)
-    await ctx.answerCallbackQuery({
+    await safeAnswerCallbackQuery(ctx, {
       text: result.error ? 'Unable to reject applicant' : 'Applicant rejected',
       show_alert: Boolean(result.error),
     })
