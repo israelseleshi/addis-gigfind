@@ -1,5 +1,6 @@
 import { JetBrains_Mono, Public_Sans } from "next/font/google";
 import ClientLayoutWrapper from '@/components/client-layout-wrapper';
+import { getAppUrl } from '@/lib/app-url';
 import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(getAppUrl()),
   openGraph: {
     type: "website",
     locale: "en_US",

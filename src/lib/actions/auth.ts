@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getAppUrl } from '@/lib/app-url'
 import {
   clientSignUpSchema,
   freelancerSignUpSchema,
@@ -256,7 +257,7 @@ export async function recoverPassword(values: z.infer<typeof forgotPasswordSchem
   const { email } = validated.data
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/update-password`,
+    redirectTo: `${getAppUrl()}/update-password`,
   })
 
   if (error) {

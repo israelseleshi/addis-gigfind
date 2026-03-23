@@ -1,3 +1,4 @@
+import { getAppUrl } from './app-url'
 import { createClient } from './supabase/server'
 
 export type OTPurpose = 'signup' | 'reset_password' | 'email_change'
@@ -11,7 +12,7 @@ export async function sendOTPEmail(email: string, otp: string, purpose: OTPurpos
     const supabase = await createClient()
 
     // Use the correct redirect URL based on the environment
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const baseUrl = getAppUrl()
     const redirectTo = purpose === 'reset_password' 
       ? `${baseUrl}/update-password`
       : `${baseUrl}/auth/callback?type=${purpose}`
