@@ -1,5 +1,6 @@
 import { touchTelegramAccount } from '@/lib/telegram/account-link'
 import type { TelegramBotContext } from '@/lib/telegram/context'
+import { handleRejectVerificationReply } from '@/lib/telegram/handlers/admin'
 import { handleApplyReply } from '@/lib/telegram/handlers/freelancer'
 import { requireLinkedTelegramAccount } from '@/lib/telegram/guards'
 import { telegramLogger } from '@/lib/telegram/logger'
@@ -18,6 +19,11 @@ export async function handleTextMessage(ctx: TelegramBotContext) {
 
     const applyHandled = await handleApplyReply(ctx)
     if (applyHandled) {
+      return
+    }
+
+    const rejectVerificationHandled = await handleRejectVerificationReply(ctx)
+    if (rejectVerificationHandled) {
       return
     }
 

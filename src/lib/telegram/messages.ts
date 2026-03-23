@@ -506,6 +506,37 @@ export function buildAdminVerificationNotFoundMessage() {
   return 'That verification request could not be found.'
 }
 
+export function buildAdminVerificationApprovedMessage(fullName: string) {
+  return [
+    `${fullName} has been verified.`,
+    'The user profile and verification record were updated.',
+  ].join('\n')
+}
+
+export function buildAdminVerificationRejectPromptMessage(documentId: string, fullName: string) {
+  return [
+    `Reject verification prompt for document ${documentId}`,
+    '',
+    `User: ${fullName}`,
+    'Reply to this exact message with the rejection reason.',
+    'Minimum length: 5 characters.',
+  ].join('\n')
+}
+
+export function buildAdminVerificationRejectedMessage(fullName: string) {
+  return [
+    `${fullName} was rejected.`,
+    'The rejection reason was saved to the verification record.',
+  ].join('\n')
+}
+
+export function buildAdminVerificationRejectInstructionMessage() {
+  return [
+    'Please reply directly to the rejection prompt message with the rejection reason.',
+    'That lets the bot know which verification request to reject.',
+  ].join('\n')
+}
+
 export function buildClientApplicantsIntro(gigTitle: string, applicantCount: number) {
   return [
     `Applicants for ${gigTitle}`,

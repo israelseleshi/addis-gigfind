@@ -1,8 +1,10 @@
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import {
+  handleApproveVerification,
   handleAdminHome,
   handlePendingVerificationDetails,
   handlePendingVerifications,
+  handleRejectVerificationPrompt,
 } from '@/lib/telegram/handlers/admin'
 import {
   handleClientAcceptApplicant,
@@ -46,6 +48,18 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
     if (callbackData.startsWith('admin:view_verification:')) {
       const documentId = callbackData.split(':')[2]
       await handlePendingVerificationDetails(ctx, documentId)
+      return
+    }
+
+    if (callbackData.startsWith('admin:approve_verification:')) {
+      const documentId = callbackData.split(':')[3]
+      await handleApproveVerification(ctx, documentId)
+      return
+    }
+
+    if (callbackData.startsWith('admin:reject_verification:')) {
+      const documentId = callbackData.split(':')[3]
+      await handleRejectVerificationPrompt(ctx, documentId)
       return
     }
 

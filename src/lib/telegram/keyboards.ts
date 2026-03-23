@@ -188,6 +188,9 @@ export function buildAdminPendingVerificationsKeyboard(
 
 export function buildAdminVerificationDetailKeyboard(documentId: string) {
   return new InlineKeyboard()
+    .text('Approve', `admin:approve_verification:${documentId}`)
+    .text('Reject', `admin:reject_verification:${documentId}`)
+    .row()
     .text('Refresh verification', `admin:view_verification:${documentId}`)
     .row()
     .text('Pending verifications', 'admin:pending_verifications')

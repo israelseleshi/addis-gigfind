@@ -1,6 +1,8 @@
 import {
+  approveTelegramVerification,
   getTelegramPendingVerificationDetails,
   listTelegramPendingVerifications,
+  rejectTelegramVerification,
 } from '@/lib/actions/telegram/verifications'
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import { requireTelegramRole } from '@/lib/telegram/guards'
@@ -16,6 +18,10 @@ import {
   buildAdminPendingVerificationsListMessage,
   buildAdminVerificationDetailMessage,
   buildAdminVerificationNotFoundMessage,
+  buildAdminVerificationApprovedMessage,
+  buildAdminVerificationRejectInstructionMessage,
+  buildAdminVerificationRejectedMessage,
+  buildAdminVerificationRejectPromptMessage,
   buildLinkedWelcomeMessage,
   buildTemporaryUnavailableMessage,
 } from '@/lib/telegram/messages'
@@ -107,5 +113,120 @@ export async function handlePendingVerificationDetails(
   } catch (error) {
     telegramLogger.error({ error }, 'Telegram admin verification detail handler failed')
     await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+export async function handleApproveVerification(
+  ctx: TelegramBotContext,
+  documentId: string
+) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['admin', 'regulator'], ADMIN_ONLY_MESSAGE)
+    if (!resolved) {
+      await ctx.answerCallbackQuery()
+      return
+    }
+
+    const result = await approveTelegramVerification(documentId)
+    await ctx.answerCallbackQuery({
+      text: result.error ? 'Unable to approve' : 'Verification approved',
+      show_alert: Boolean(result.error),
+    })
+
+    if (result.error) {
+      await ctx.reply(result.error, {
+        reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+      })
+      return
+    }
+
+    await ctx.reply(buildAdminVerificationApprovedMessage(result.fullName ?? 'This user'), {
+      reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+    })
+  } catch (error) {
+    telegramLogger.error({ error }, 'Telegram admin approve verification handler failed')
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+export async function handleRejectVerificationPrompt(
+  ctx: TelegramBotContext,
+  documentId: string
+) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['admin', 'regulator'], ADMIN_ONLY_MESSAGE)
+    if (!resolved) {
+      await ctx.answerCallbackQuery()
+      return
+    }
+
+    const document = await getTelegramPendingVerificationDetails(documentId)
+    await ctx.answerCallbackQuery()
+
+    if (!document) {
+      await ctx.reply(buildAdminVerificationNotFoundMessage(), {
+        reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+      })
+      return
+    }
+
+    await ctx.reply(
+      buildAdminVerificationRejectPromptMessage(
+        document.id,
+        document.profiles?.full_name ?? 'Unknown user'
+      ),
+      {
+        reply_markup: buildAdminVerificationDetailKeyboard(document.id),
+      }
+    )
+  } catch (error) {
+    telegramLogger.error({ error }, 'Telegram admin reject prompt handler failed')
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+function extractDocumentIdFromRejectPrompt(messageText: string | undefined) {
+  if (!messageText) {
+    return null
+  }
+
+  const match = messageText.match(/^Reject verification prompt for document ([0-9a-f-]{36})$/m)
+  return match?.[1] ?? null
+}
+
+export async function handleRejectVerificationReply(ctx: TelegramBotContext) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['admin', 'regulator'], ADMIN_ONLY_MESSAGE)
+    if (!resolved) {
+      return false
+    }
+
+    const documentId = extractDocumentIdFromRejectPrompt(ctx.message?.reply_to_message?.text)
+    if (!documentId) {
+      return false
+    }
+
+    const reason = ctx.message?.text?.trim() ?? ''
+    if (!reason) {
+      await ctx.reply(buildAdminVerificationRejectInstructionMessage())
+      return true
+    }
+
+    const result = await rejectTelegramVerification(documentId, reason)
+    if (result.error) {
+      await ctx.reply(result.error, {
+        reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+      })
+      return true
+    }
+
+    await ctx.reply(buildAdminVerificationRejectedMessage(result.fullName ?? 'This user'), {
+      reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+    })
+    return true
+  } catch (error) {
+    telegramLogger.error({ error }, 'Telegram admin reject reply handler failed')
+    await ctx.reply(buildTemporaryUnavailableMessage())
+    return true
   }
 }

@@ -125,3 +125,99 @@ export async function getTelegramPendingVerificationDetails(documentId: string) 
 
   return data as TelegramPendingVerificationSummary
 }
+
+export async function approveTelegramVerification(documentId: string) {
+  const supabase = await createServiceRoleClient()
+
+  const { data: document, error: documentError } = await supabase
+    .from('verification_documents')
+    .select(
+      `
+        id,
+        user_id,
+        profiles (
+          full_name
+        )
+      `
+    )
+    .eq('id', documentId)
+    .eq('status', 'pending')
+    .single()
+
+  if (documentError || !document) {
+    return { error: 'Verification request not found.', fullName: null }
+  }
+
+  const { error: verificationError } = await supabase
+    .from('verification_documents')
+    .update({ status: 'verified' })
+    .eq('id', documentId)
+
+  if (verificationError) {
+    return { error: verificationError.message, fullName: null }
+  }
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({ verification_status: 'verified' })
+    .eq('id', document.user_id)
+
+  if (profileError) {
+    return { error: profileError.message, fullName: null }
+  }
+
+  const profile = Array.isArray(document.profiles) ? document.profiles[0] : document.profiles
+  return { error: null, fullName: profile?.full_name ?? 'This user' }
+}
+
+export async function rejectTelegramVerification(documentId: string, reason: string) {
+  const trimmedReason = reason.trim()
+  if (trimmedReason.length < 5) {
+    return { error: 'Rejection reason must be at least 5 characters.', fullName: null }
+  }
+
+  const supabase = await createServiceRoleClient()
+
+  const { data: document, error: documentError } = await supabase
+    .from('verification_documents')
+    .select(
+      `
+        id,
+        user_id,
+        profiles (
+          full_name
+        )
+      `
+    )
+    .eq('id', documentId)
+    .eq('status', 'pending')
+    .single()
+
+  if (documentError || !document) {
+    return { error: 'Verification request not found.', fullName: null }
+  }
+
+  const { error: verificationError } = await supabase
+    .from('verification_documents')
+    .update({
+      status: 'rejected',
+      admin_notes: trimmedReason,
+    })
+    .eq('id', documentId)
+
+  if (verificationError) {
+    return { error: verificationError.message, fullName: null }
+  }
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({ verification_status: 'rejected' })
+    .eq('id', document.user_id)
+
+  if (profileError) {
+    return { error: profileError.message, fullName: null }
+  }
+
+  const profile = Array.isArray(document.profiles) ? document.profiles[0] : document.profiles
+  return { error: null, fullName: profile?.full_name ?? 'This user' }
+}
