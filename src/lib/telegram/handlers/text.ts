@@ -1,5 +1,6 @@
 import { touchTelegramAccount } from '@/lib/telegram/account-link'
 import type { TelegramBotContext } from '@/lib/telegram/context'
+import { handleApplyReply } from '@/lib/telegram/handlers/freelancer'
 import { requireLinkedTelegramAccount } from '@/lib/telegram/guards'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
@@ -12,6 +13,11 @@ export async function handleTextMessage(ctx: TelegramBotContext) {
   try {
     const input = ctx.message.text.trim()
     if (input.startsWith('/')) {
+      return
+    }
+
+    const applyHandled = await handleApplyReply(ctx)
+    if (applyHandled) {
       return
     }
 

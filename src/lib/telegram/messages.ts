@@ -157,3 +157,29 @@ export function buildGigDetailMessage(gig: TelegramBrowseGig) {
 export function buildGigNotFoundMessage() {
   return 'That gig is no longer available.'
 }
+
+export function buildGigApplyPromptMessage(gig: TelegramBrowseGig) {
+  return [
+    `Apply prompt for gig ${gig.id}`,
+    '',
+    `<b>${gig.title}</b>`,
+    `Budget: ETB ${gig.budget.toLocaleString()}`,
+    '',
+    'Reply to this exact message with your cover note.',
+    'Minimum length: 20 characters.',
+  ].join('\n')
+}
+
+export function buildGigApplySuccessMessage(title: string) {
+  return [
+    `Application submitted for "${title}".`,
+    'You can review its status later in My applications.',
+  ].join('\n')
+}
+
+export function buildGigApplyInstructionMessage() {
+  return [
+    'Please reply directly to the apply prompt message with your cover note.',
+    'That lets the bot know which gig you are applying to.',
+  ].join('\n')
+}

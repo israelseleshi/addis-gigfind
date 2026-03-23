@@ -1,9 +1,13 @@
+import { applyForGigFromTelegram } from '@/lib/actions/telegram/applications'
 import { getTelegramGigDetails, listTelegramOpenGigs } from '@/lib/actions/telegram/gigs'
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import { requireTelegramRole } from '@/lib/telegram/guards'
 import { buildGigDetailKeyboard, buildGigListKeyboard, buildLinkedHomeKeyboard } from '@/lib/telegram/keyboards'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
+  buildGigApplyInstructionMessage,
+  buildGigApplyPromptMessage,
+  buildGigApplySuccessMessage,
   buildGigBrowseEmptyState,
   buildGigBrowseIntro,
   buildGigDetailMessage,
@@ -109,20 +113,81 @@ export async function handleApplyGigPlaceholder(ctx: TelegramBotContext, gigId: 
       return
     }
 
-    await ctx.answerCallbackQuery({
-      text: 'Apply flow is next.',
+    const gig = await getTelegramGigDetails(gigId)
+    await ctx.answerCallbackQuery()
+
+    if (!gig) {
+      await ctx.reply(buildGigNotFoundMessage(), {
+        reply_markup: buildLinkedHomeKeyboard('freelancer'),
+      })
+      return
+    }
+
+    await ctx.reply(buildGigApplyPromptMessage(gig), {
+      parse_mode: 'HTML',
+      reply_markup: buildGigDetailKeyboard(gigId),
     })
-    await ctx.reply(
-      [
-        `Gig ${gigId} selected for application.`,
-        'The full Telegram apply flow is the next Phase 1 task.',
-      ].join('\n'),
-      {
-        reply_markup: buildGigDetailKeyboard(gigId),
-      }
-    )
   } catch (error) {
     telegramLogger.error({ error }, 'Telegram freelancer apply placeholder handler failed')
     await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+function extractGigIdFromApplyPrompt(messageText: string | undefined) {
+  if (!messageText) {
+    return null
+  }
+
+  const match = messageText.match(/^Apply prompt for gig ([0-9a-f-]{36})$/m)
+  return match?.[1] ?? null
+}
+
+export async function handleApplyReply(ctx: TelegramBotContext) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      return false
+    }
+
+    const gigId = extractGigIdFromApplyPrompt(ctx.message?.reply_to_message?.text)
+    if (!gigId) {
+      return false
+    }
+
+    const coverNote = ctx.message?.text?.trim() ?? ''
+    if (!coverNote) {
+      await ctx.reply(buildGigApplyInstructionMessage())
+      return true
+    }
+
+    const gig = await getTelegramGigDetails(gigId)
+    if (!gig) {
+      await ctx.reply(buildGigNotFoundMessage(), {
+        reply_markup: buildLinkedHomeKeyboard('freelancer'),
+      })
+      return true
+    }
+
+    const result = await applyForGigFromTelegram({
+      gigId,
+      freelancerId: resolved.profile.id,
+      coverNote,
+    })
+
+    if (result.error) {
+      await ctx.reply(result.error, {
+        reply_markup: buildGigDetailKeyboard(gigId),
+      })
+      return true
+    }
+
+    await ctx.reply(buildGigApplySuccessMessage(gig.title), {
+      reply_markup: buildLinkedHomeKeyboard('freelancer'),
+    })
+    return true
+  } catch (error) {
+    telegramLogger.error({ error }, 'Telegram freelancer apply reply handler failed')
+    await ctx.reply(buildTemporaryUnavailableMessage())
+    return true
   }
 }
