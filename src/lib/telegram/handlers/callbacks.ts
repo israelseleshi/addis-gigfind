@@ -3,6 +3,8 @@ import {
   handleApplyGigPlaceholder,
   handleBrowseGigs,
   handleFreelancerHome,
+  handleMyApplications,
+  handleViewApplicationDetails,
   handleViewGigDetails,
 } from '@/lib/telegram/handlers/freelancer'
 import { requireLinkedTelegramAccount } from '@/lib/telegram/guards'
@@ -27,6 +29,18 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
     if (callbackData.startsWith('freelancer:view_gig:')) {
       const gigId = callbackData.split(':')[2]
       await handleViewGigDetails(ctx, gigId)
+      return
+    }
+
+    if (callbackData.startsWith('freelancer:my_applications')) {
+      const page = Number(callbackData.split(':')[2] ?? '0')
+      await handleMyApplications(ctx, Number.isNaN(page) ? 0 : page)
+      return
+    }
+
+    if (callbackData.startsWith('freelancer:view_application:')) {
+      const applicationId = callbackData.split(':')[2]
+      await handleViewApplicationDetails(ctx, applicationId)
       return
     }
 

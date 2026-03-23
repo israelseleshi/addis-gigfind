@@ -1,3 +1,4 @@
+import type { TelegramApplicationSummary } from '@/lib/actions/telegram/applications'
 import type { TelegramBrowseGig } from '@/lib/actions/telegram/gigs'
 
 export function buildRoleMenu(role: string) {
@@ -111,6 +112,19 @@ function formatRelativeTelegramTime(value: string | null) {
   return `${Math.floor(diffSeconds / 86400)}d ago`
 }
 
+function formatApplicationStatus(status: string | null) {
+  switch (status) {
+    case 'accepted':
+      return 'Accepted'
+    case 'rejected':
+      return 'Rejected'
+    case 'withdrawn':
+      return 'Withdrawn'
+    default:
+      return 'Pending'
+  }
+}
+
 export function buildGigBrowseIntro(page: number, total: number) {
   return [
     'Open gigs for freelancers',
@@ -182,4 +196,56 @@ export function buildGigApplyInstructionMessage() {
     'Please reply directly to the apply prompt message with your cover note.',
     'That lets the bot know which gig you are applying to.',
   ].join('\n')
+}
+
+export function buildMyApplicationsIntro(page: number, total: number) {
+  return [
+    'Your applications',
+    '',
+    `Showing page ${page + 1}`,
+    `${total} application${total === 1 ? '' : 's'} found`,
+    '',
+    'Tap an application below to inspect it.',
+  ].join('\n')
+}
+
+export function buildMyApplicationsEmptyState() {
+  return [
+    'You have not submitted any applications yet.',
+    'Browse gigs and apply to one to get started.',
+  ].join('\n')
+}
+
+export function buildApplicationSummaryLines(application: TelegramApplicationSummary) {
+  return [
+    `- ${application.gig?.title ?? 'Unknown gig'}`,
+    `  Status: ${formatApplicationStatus(application.status)}`,
+    `  ${application.gig?.category ?? 'Uncategorized'} | ${application.gig?.location ?? 'Unknown location'}`,
+    `  Applied ${formatRelativeTelegramTime(application.created_at)}`,
+  ].join('\n')
+}
+
+export function buildApplicationsListMessage(applications: TelegramApplicationSummary[]) {
+  return applications.map(buildApplicationSummaryLines).join('\n\n')
+}
+
+export function buildApplicationDetailMessage(
+  application: TelegramApplicationSummary & {
+    gig: TelegramApplicationSummary['gig'] & { description: string }
+  }
+) {
+  return [
+    `<b>${application.gig?.title ?? 'Unknown gig'}</b>`,
+    `Status: <b>${formatApplicationStatus(application.status)}</b>`,
+    `${application.gig?.category ?? 'Uncategorized'} | ${application.gig?.location ?? 'Unknown location'}`,
+    `Budget: ETB ${application.gig?.budget?.toLocaleString() ?? '0'}`,
+    `Client: ${application.gig?.client?.full_name ?? 'Unknown client'}`,
+    '',
+    `<b>Your cover note</b>`,
+    application.cover_note ?? 'No cover note provided.',
+  ].join('\n')
+}
+
+export function buildApplicationNotFoundMessage() {
+  return 'That application could not be found.'
 }

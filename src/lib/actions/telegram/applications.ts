@@ -4,11 +4,33 @@ import { z } from 'zod'
 
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 
+const TELEGRAM_APPLICATION_PAGE_SIZE = 5
+
 const telegramApplicationSchema = z.object({
   gigId: z.string().uuid(),
   freelancerId: z.string().uuid(),
   coverNote: z.string().min(20, 'Cover note must be at least 20 characters.'),
 })
+
+export type TelegramApplicationSummary = {
+  id: string
+  status: string | null
+  cover_note: string | null
+  created_at: string | null
+  gig: {
+    id: string
+    title: string
+    budget: number
+    location: string
+    category: string
+    status: string | null
+    client: {
+      id: string
+      full_name: string | null
+      average_rating: number | null
+    } | null
+  } | null
+}
 
 export async function applyForGigFromTelegram(data: {
   gigId: string
@@ -92,4 +114,98 @@ export async function applyForGigFromTelegram(data: {
   }
 
   return { success: true as const }
+}
+
+export async function listTelegramApplicationsForFreelancer(
+  freelancerId: string,
+  page: number = 0
+) {
+  const safePage = Math.max(0, page)
+  const from = safePage * TELEGRAM_APPLICATION_PAGE_SIZE
+  const to = from + TELEGRAM_APPLICATION_PAGE_SIZE - 1
+
+  const supabase = await createServiceRoleClient()
+  const { data, error, count } = await supabase
+    .from('applications')
+    .select(
+      `
+        id,
+        status,
+        cover_note,
+        created_at,
+        gig:gigs (
+          id,
+          title,
+          budget,
+          location,
+          category,
+          status,
+          client:profiles!gigs_client_id_fkey (
+            id,
+            full_name,
+            average_rating
+          )
+        )
+      `,
+      { count: 'exact' }
+    )
+    .eq('freelancer_id', freelancerId)
+    .order('created_at', { ascending: false })
+    .range(from, to)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return {
+    applications: (data ?? []) as TelegramApplicationSummary[],
+    page: safePage,
+    total: count ?? 0,
+    hasNextPage: typeof count === 'number' ? to + 1 < count : false,
+    hasPreviousPage: safePage > 0,
+  }
+}
+
+export async function getTelegramApplicationDetails(
+  freelancerId: string,
+  applicationId: string
+) {
+  const supabase = await createServiceRoleClient()
+  const { data, error } = await supabase
+    .from('applications')
+    .select(
+      `
+        id,
+        status,
+        cover_note,
+        created_at,
+        gig:gigs (
+          id,
+          title,
+          description,
+          budget,
+          location,
+          category,
+          status,
+          client:profiles!gigs_client_id_fkey (
+            id,
+            full_name,
+            average_rating
+          )
+        )
+      `
+    )
+    .eq('id', applicationId)
+    .eq('freelancer_id', freelancerId)
+    .single()
+
+  if (error || !data) {
+    return null
+  }
+
+  return data as TelegramApplicationSummary & {
+    gig: TelegramApplicationSummary['gig'] & {
+      description: string
+    }
+  }
 }

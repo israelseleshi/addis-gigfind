@@ -1,10 +1,23 @@
-import { applyForGigFromTelegram } from '@/lib/actions/telegram/applications'
+import {
+  applyForGigFromTelegram,
+  getTelegramApplicationDetails,
+  listTelegramApplicationsForFreelancer,
+} from '@/lib/actions/telegram/applications'
 import { getTelegramGigDetails, listTelegramOpenGigs } from '@/lib/actions/telegram/gigs'
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import { requireTelegramRole } from '@/lib/telegram/guards'
-import { buildGigDetailKeyboard, buildGigListKeyboard, buildLinkedHomeKeyboard } from '@/lib/telegram/keyboards'
+import {
+  buildApplicationDetailKeyboard,
+  buildApplicationsListKeyboard,
+  buildGigDetailKeyboard,
+  buildGigListKeyboard,
+  buildLinkedHomeKeyboard,
+} from '@/lib/telegram/keyboards'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
+  buildApplicationDetailMessage,
+  buildApplicationNotFoundMessage,
+  buildApplicationsListMessage,
   buildGigApplyInstructionMessage,
   buildGigApplyPromptMessage,
   buildGigApplySuccessMessage,
@@ -14,6 +27,8 @@ import {
   buildGigListMessage,
   buildGigNotFoundMessage,
   buildLinkedWelcomeMessage,
+  buildMyApplicationsEmptyState,
+  buildMyApplicationsIntro,
   buildTemporaryUnavailableMessage,
 } from '@/lib/telegram/messages'
 
@@ -189,5 +204,80 @@ export async function handleApplyReply(ctx: TelegramBotContext) {
     telegramLogger.error({ error }, 'Telegram freelancer apply reply handler failed')
     await ctx.reply(buildTemporaryUnavailableMessage())
     return true
+  }
+}
+
+export async function handleMyApplications(ctx: TelegramBotContext, page: number = 0) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      await ctx.answerCallbackQuery()
+      return
+    }
+
+    const result = await listTelegramApplicationsForFreelancer(resolved.profile.id, page)
+    await ctx.answerCallbackQuery({
+      text: result.applications.length > 0 ? `Loaded page ${result.page + 1}` : 'No applications found',
+    })
+
+    if (result.applications.length === 0) {
+      await ctx.reply(buildMyApplicationsEmptyState(), {
+        reply_markup: buildLinkedHomeKeyboard('freelancer'),
+      })
+      return
+    }
+
+    await ctx.reply(
+      [
+        buildMyApplicationsIntro(result.page, result.total),
+        '',
+        buildApplicationsListMessage(result.applications),
+      ].join('\n'),
+      {
+        reply_markup: buildApplicationsListKeyboard(
+          result.applications,
+          result.page,
+          result.hasPreviousPage,
+          result.hasNextPage
+        ),
+      }
+    )
+  } catch (error) {
+    telegramLogger.error({ error }, 'Telegram freelancer my applications handler failed')
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+export async function handleViewApplicationDetails(
+  ctx: TelegramBotContext,
+  applicationId: string
+) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      await ctx.answerCallbackQuery()
+      return
+    }
+
+    const application = await getTelegramApplicationDetails(
+      resolved.profile.id,
+      applicationId
+    )
+    await ctx.answerCallbackQuery()
+
+    if (!application || !application.gig) {
+      await ctx.reply(buildApplicationNotFoundMessage(), {
+        reply_markup: buildLinkedHomeKeyboard('freelancer'),
+      })
+      return
+    }
+
+    await ctx.reply(buildApplicationDetailMessage(application), {
+      parse_mode: 'HTML',
+      reply_markup: buildApplicationDetailKeyboard(application.id),
+    })
+  } catch (error) {
+    telegramLogger.error({ error }, 'Telegram freelancer application detail handler failed')
+    await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
