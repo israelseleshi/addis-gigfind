@@ -44,6 +44,33 @@ function buildVerificationRejectedMessage(reason?: string | null) {
   return lines.join('\n')
 }
 
+function buildApplicationAcceptedMessage(params: { gigTitle: string }) {
+  return [
+    '<b>Application accepted</b>',
+    '',
+    `Your application for "${params.gigTitle}" was accepted.`,
+    'The gig has been assigned to you.',
+  ].join('\n')
+}
+
+function buildApplicationRejectedMessage(params: { gigTitle: string }) {
+  return [
+    '<b>Application rejected</b>',
+    '',
+    `Your application for "${params.gigTitle}" was rejected.`,
+    'You can keep browsing and apply to other gigs.',
+  ].join('\n')
+}
+
+function buildGigStatusChangedMessage(params: { gigTitle: string; status: string }) {
+  return [
+    '<b>Gig status updated</b>',
+    '',
+    `Gig: ${params.gigTitle}`,
+    `New status: ${params.status.replace(/_/g, ' ')}`,
+  ].join('\n')
+}
+
 export async function notifyClientOfNewApplication(params: {
   gigId: string
   freelancerId: string
@@ -94,6 +121,100 @@ export async function notifyUserOfVerificationRejected(userId: string, reason?: 
     return await sendTelegramMessageToUser(userId, buildVerificationRejectedMessage(reason))
   } catch (error) {
     telegramLogger.error({ error, userId }, 'Telegram verification rejected notification failed')
+    return { success: false as const, reason: 'send_failed' as const }
+  }
+}
+
+export async function notifyFreelancerOfApplicationAccepted(params: {
+  gigId: string
+  freelancerId: string
+}) {
+  try {
+    const supabase = await createServiceRoleClient()
+    const { data: gig, error } = await supabase
+      .from('gigs')
+      .select('title')
+      .eq('id', params.gigId)
+      .single()
+
+    if (error || !gig) {
+      telegramLogger.warn(
+        { error, gigId: params.gigId, freelancerId: params.freelancerId },
+        'Telegram application accepted notification lookup failed'
+      )
+      return { success: false as const, reason: 'lookup_failed' as const }
+    }
+
+    return await sendTelegramMessageToUser(
+      params.freelancerId,
+      buildApplicationAcceptedMessage({ gigTitle: gig.title })
+    )
+  } catch (error) {
+    telegramLogger.error({ error, params }, 'Telegram application accepted notification failed')
+    return { success: false as const, reason: 'send_failed' as const }
+  }
+}
+
+export async function notifyFreelancerOfApplicationRejected(params: {
+  gigId: string
+  freelancerId: string
+}) {
+  try {
+    const supabase = await createServiceRoleClient()
+    const { data: gig, error } = await supabase
+      .from('gigs')
+      .select('title')
+      .eq('id', params.gigId)
+      .single()
+
+    if (error || !gig) {
+      telegramLogger.warn(
+        { error, gigId: params.gigId, freelancerId: params.freelancerId },
+        'Telegram application rejected notification lookup failed'
+      )
+      return { success: false as const, reason: 'lookup_failed' as const }
+    }
+
+    return await sendTelegramMessageToUser(
+      params.freelancerId,
+      buildApplicationRejectedMessage({ gigTitle: gig.title })
+    )
+  } catch (error) {
+    telegramLogger.error({ error, params }, 'Telegram application rejected notification failed')
+    return { success: false as const, reason: 'send_failed' as const }
+  }
+}
+
+export async function notifyUserOfGigStatusChanged(params: {
+  gigId: string
+  userId: string
+  status: string
+}) {
+  try {
+    const supabase = await createServiceRoleClient()
+    const { data: gig, error } = await supabase
+      .from('gigs')
+      .select('title')
+      .eq('id', params.gigId)
+      .single()
+
+    if (error || !gig) {
+      telegramLogger.warn(
+        { error, gigId: params.gigId, userId: params.userId, status: params.status },
+        'Telegram gig status notification lookup failed'
+      )
+      return { success: false as const, reason: 'lookup_failed' as const }
+    }
+
+    return await sendTelegramMessageToUser(
+      params.userId,
+      buildGigStatusChangedMessage({
+        gigTitle: gig.title,
+        status: params.status,
+      })
+    )
+  } catch (error) {
+    telegramLogger.error({ error, params }, 'Telegram gig status notification failed')
     return { success: false as const, reason: 'send_failed' as const }
   }
 }

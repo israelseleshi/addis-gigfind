@@ -2,7 +2,12 @@
 
 import { z } from 'zod'
 
-import { notifyClientOfNewApplication } from '@/lib/actions/telegram/notifications'
+import {
+  notifyClientOfNewApplication,
+  notifyFreelancerOfApplicationAccepted,
+  notifyFreelancerOfApplicationRejected,
+  notifyUserOfGigStatusChanged,
+} from '@/lib/actions/telegram/notifications'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { telegramLogger } from '@/lib/telegram/logger'
 
@@ -388,6 +393,17 @@ export async function markTelegramActiveJobInProgress(
     return { error: error.message, gigTitle: null }
   }
 
+  void notifyUserOfGigStatusChanged({
+    gigId: job.gig.id,
+    userId: freelancerId,
+    status: 'in_progress',
+  }).catch((notificationError) => {
+    telegramLogger.error(
+      { error: notificationError, gigId: job.gig?.id, userId: freelancerId, status: 'in_progress' },
+      'Telegram gig status notification dispatch failed from bot flow'
+    )
+  })
+
   return { error: null, gigTitle: job.gig.title }
 }
 
@@ -539,10 +555,37 @@ export async function acceptTelegramGigApplication(
     return { error: rejectOthersError.message, gigTitle: null, freelancerName: null }
   }
 
+  const selectedFreelancer = Array.isArray(application.freelancer)
+    ? application.freelancer[0]
+    : application.freelancer
+
+  if (selectedFreelancer?.id) {
+    void notifyFreelancerOfApplicationAccepted({
+      gigId,
+      freelancerId: selectedFreelancer.id,
+    }).catch((notificationError) => {
+      telegramLogger.error(
+        { error: notificationError, gigId, freelancerId: selectedFreelancer.id },
+        'Telegram application accepted notification dispatch failed from bot flow'
+      )
+    })
+
+    void notifyUserOfGigStatusChanged({
+      gigId,
+      userId: selectedFreelancer.id,
+      status: 'assigned',
+    }).catch((notificationError) => {
+      telegramLogger.error(
+        { error: notificationError, gigId, userId: selectedFreelancer.id, status: 'assigned' },
+        'Telegram gig status notification dispatch failed from bot flow'
+      )
+    })
+  }
+
   return {
     error: null,
     gigTitle: gig.title,
-    freelancerName: application.freelancer?.full_name ?? 'Selected freelancer',
+    freelancerName: selectedFreelancer?.full_name ?? 'Selected freelancer',
   }
 }
 
@@ -572,6 +615,18 @@ export async function rejectTelegramGigApplication(
 
   if (error) {
     return { error: error.message, gigTitle: null, freelancerName: null }
+  }
+
+  if (details.applicant.freelancer?.id) {
+    void notifyFreelancerOfApplicationRejected({
+      gigId,
+      freelancerId: details.applicant.freelancer.id,
+    }).catch((notificationError) => {
+      telegramLogger.error(
+        { error: notificationError, gigId, freelancerId: details.applicant.freelancer?.id },
+        'Telegram application rejected notification dispatch failed from bot flow'
+      )
+    })
   }
 
   return {
