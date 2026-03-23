@@ -1,5 +1,10 @@
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import {
+  handleClientHome,
+  handleClientMyGigs,
+  handleClientViewGigDetails,
+} from '@/lib/telegram/handlers/client'
+import {
   handleActiveJobs,
   handleApplyGigPlaceholder,
   handleBrowseGigs,
@@ -18,6 +23,23 @@ import { telegramLogger } from '@/lib/telegram/logger'
 export async function handleCallbackQuery(ctx: TelegramBotContext) {
   try {
     const callbackData = ctx.callbackQuery.data
+
+    if (callbackData === 'client:home') {
+      await handleClientHome(ctx)
+      return
+    }
+
+    if (callbackData.startsWith('client:my_gigs')) {
+      const page = Number(callbackData.split(':')[2] ?? '0')
+      await handleClientMyGigs(ctx, Number.isNaN(page) ? 0 : page)
+      return
+    }
+
+    if (callbackData.startsWith('client:view_gig:')) {
+      const gigId = callbackData.split(':')[2]
+      await handleClientViewGigDetails(ctx, gigId)
+      return
+    }
 
     if (callbackData === 'freelancer:home') {
       await handleFreelancerHome(ctx)

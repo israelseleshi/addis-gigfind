@@ -2,7 +2,7 @@ import type {
   TelegramActiveJobSummary,
   TelegramApplicationSummary,
 } from '@/lib/actions/telegram/applications'
-import type { TelegramBrowseGig } from '@/lib/actions/telegram/gigs'
+import type { TelegramBrowseGig, TelegramClientGigSummary } from '@/lib/actions/telegram/gigs'
 import type { TelegramVerificationSnapshot } from '@/lib/actions/telegram/verifications'
 
 export function buildRoleMenu(role: string) {
@@ -142,6 +142,10 @@ function formatGigStatus(status: string | null) {
     default:
       return 'Unknown'
   }
+}
+
+function formatGigStatusLower(status: string | null) {
+  return formatGigStatus(status)
 }
 
 export function buildGigBrowseIntro(page: number, total: number) {
@@ -390,4 +394,54 @@ export function buildVerificationStatusMessage(snapshot: TelegramVerificationSna
   }
 
   return lines.join('\n')
+}
+
+export function buildClientGigsIntro(page: number, total: number) {
+  return [
+    'Your gigs',
+    '',
+    `Showing page ${page + 1}`,
+    `${total} gig${total === 1 ? '' : 's'} found`,
+    '',
+    'Tap a gig below to inspect it.',
+  ].join('\n')
+}
+
+export function buildClientGigsEmptyState() {
+  return [
+    'You have not posted any gigs yet.',
+    'Use the website for now to post your first gig while the Telegram posting flow is being added.',
+  ].join('\n')
+}
+
+export function buildClientGigSummaryLines(gig: TelegramClientGigSummary) {
+  const applicants = gig.applications?.[0]?.count ?? 0
+
+  return [
+    `- ${gig.title}`,
+    `  ${formatGigStatusLower(gig.status)} | ${gig.category} | ${gig.location}`,
+    `  ETB ${gig.budget.toLocaleString()} | ${applicants} applicant${applicants === 1 ? '' : 's'}`,
+  ].join('\n')
+}
+
+export function buildClientGigsListMessage(gigs: TelegramClientGigSummary[]) {
+  return gigs.map(buildClientGigSummaryLines).join('\n\n')
+}
+
+export function buildClientGigDetailMessage(gig: TelegramClientGigSummary) {
+  const applicants = gig.applications?.[0]?.count ?? 0
+
+  return [
+    `<b>${gig.title}</b>`,
+    `Status: <b>${formatGigStatusLower(gig.status)}</b>`,
+    `${gig.category} | ${gig.location}`,
+    `Budget: ETB ${gig.budget.toLocaleString()}`,
+    `Applicants: ${applicants}`,
+    '',
+    gig.description,
+  ].join('\n')
+}
+
+export function buildClientGigNotFoundMessage() {
+  return 'That client gig could not be found.'
 }

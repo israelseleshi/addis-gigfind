@@ -4,7 +4,7 @@ import type {
   TelegramActiveJobSummary,
   TelegramApplicationSummary,
 } from '@/lib/actions/telegram/applications'
-import type { TelegramBrowseGig } from '@/lib/actions/telegram/gigs'
+import type { TelegramBrowseGig, TelegramClientGigSummary } from '@/lib/actions/telegram/gigs'
 import type { TelegramUserRole } from '@/lib/telegram/types'
 
 export function buildFreelancerHomeKeyboard() {
@@ -166,4 +166,40 @@ export function buildVerificationStatusKeyboard() {
     .text('Refresh status', 'freelancer:verification_status')
     .row()
     .text('Back to menu', 'freelancer:home')
+}
+
+export function buildClientGigsListKeyboard(
+  gigs: TelegramClientGigSummary[],
+  page: number,
+  hasPreviousPage: boolean,
+  hasNextPage: boolean
+) {
+  const keyboard = new InlineKeyboard()
+
+  for (const gig of gigs) {
+    keyboard.text(`View: ${gig.title.slice(0, 24)}`, `client:view_gig:${gig.id}`).row()
+  }
+
+  if (hasPreviousPage) {
+    keyboard.text('Previous', `client:my_gigs:${page - 1}`)
+  }
+
+  if (hasNextPage) {
+    keyboard.text('Next', `client:my_gigs:${page + 1}`)
+  }
+
+  if (hasPreviousPage || hasNextPage) {
+    keyboard.row()
+  }
+
+  keyboard.text('Back to menu', 'client:home')
+  return keyboard
+}
+
+export function buildClientGigDetailKeyboard(gigId: string) {
+  return new InlineKeyboard()
+    .text('Refresh gig', `client:view_gig:${gigId}`)
+    .row()
+    .text('My gigs', 'client:my_gigs:0')
+    .text('Back to menu', 'client:home')
 }
