@@ -31,6 +31,7 @@ import {
   buildLinkedWelcomeMessage,
   buildTemporaryUnavailableMessage,
 } from '@/lib/telegram/messages'
+import { respondWithTelegramMessage } from '@/lib/telegram/respond'
 
 const CLIENT_ONLY_MESSAGE = 'This action is only available to client accounts.'
 
@@ -55,7 +56,7 @@ export async function handleClientHome(ctx: TelegramBotContext) {
 
     const name = resolved.profile.full_name ?? 'there'
     await safeAnswerCallbackQuery(ctx)
-    await ctx.reply(buildLinkedWelcomeMessage(name, 'client'), {
+    await respondWithTelegramMessage(ctx, buildLinkedWelcomeMessage(name, 'client'), {
       parse_mode: 'HTML',
       reply_markup: buildLinkedHomeKeyboard('client'),
     })
@@ -79,13 +80,14 @@ export async function handleClientMyGigs(ctx: TelegramBotContext, page: number =
     })
 
     if (result.gigs.length === 0) {
-      await ctx.reply(buildClientGigsEmptyState(), {
+      await respondWithTelegramMessage(ctx, buildClientGigsEmptyState(), {
         reply_markup: buildLinkedHomeKeyboard('client'),
       })
       return
     }
 
-    await ctx.reply(
+    await respondWithTelegramMessage(
+      ctx,
       [buildClientGigsIntro(result.page, result.total), '', buildClientGigsListMessage(result.gigs)].join(
         '\n'
       ),
@@ -116,13 +118,13 @@ export async function handleClientViewGigDetails(ctx: TelegramBotContext, gigId:
     await safeAnswerCallbackQuery(ctx)
 
     if (!gig) {
-      await ctx.reply(buildClientGigNotFoundMessage(), {
+      await respondWithTelegramMessage(ctx, buildClientGigNotFoundMessage(), {
         reply_markup: buildLinkedHomeKeyboard('client'),
       })
       return
     }
 
-    await ctx.reply(buildClientGigDetailMessage(gig), {
+    await respondWithTelegramMessage(ctx, buildClientGigDetailMessage(gig), {
       parse_mode: 'HTML',
       reply_markup: buildClientGigDetailKeyboard(gig.id),
     })
@@ -144,20 +146,21 @@ export async function handleClientViewApplicants(ctx: TelegramBotContext, gigId:
     await safeAnswerCallbackQuery(ctx)
 
     if (!result) {
-      await ctx.reply(buildClientGigNotFoundMessage(), {
+      await respondWithTelegramMessage(ctx, buildClientGigNotFoundMessage(), {
         reply_markup: buildLinkedHomeKeyboard('client'),
       })
       return
     }
 
     if (result.applicants.length === 0) {
-      await ctx.reply(buildClientApplicantsEmptyState(result.gig.title), {
+      await respondWithTelegramMessage(ctx, buildClientApplicantsEmptyState(result.gig.title), {
         reply_markup: buildClientGigDetailKeyboard(gigId),
       })
       return
     }
 
-    await ctx.reply(
+    await respondWithTelegramMessage(
+      ctx,
       [
         buildClientApplicantsIntro(result.gig.title, result.applicants.length),
         '',
@@ -189,13 +192,13 @@ export async function handleClientViewApplicantDetails(
     await safeAnswerCallbackQuery(ctx)
 
     if (!details) {
-      await ctx.reply(buildClientApplicantNotFoundMessage(), {
+      await respondWithTelegramMessage(ctx, buildClientApplicantNotFoundMessage(), {
         reply_markup: buildLinkedHomeKeyboard('client'),
       })
       return
     }
 
-    await ctx.reply(buildClientApplicantDetailMessage(details.gig.title, details.applicant), {
+    await respondWithTelegramMessage(ctx, buildClientApplicantDetailMessage(details.gig.title, details.applicant), {
       parse_mode: 'HTML',
       reply_markup: buildClientApplicantDetailKeyboard(
         gigId,

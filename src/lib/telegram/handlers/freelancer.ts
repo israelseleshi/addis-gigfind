@@ -45,6 +45,7 @@ import {
   buildTemporaryUnavailableMessage,
   buildVerificationStatusMessage,
 } from '@/lib/telegram/messages'
+import { respondWithTelegramMessage } from '@/lib/telegram/respond'
 
 const FREELANCER_ONLY_MESSAGE = 'This action is only available to freelancer accounts.'
 
@@ -69,7 +70,7 @@ export async function handleFreelancerHome(ctx: TelegramBotContext) {
 
     const name = resolved.profile.full_name ?? 'there'
     await safeAnswerCallbackQuery(ctx)
-    await ctx.reply(buildLinkedWelcomeMessage(name, 'freelancer'), {
+    await respondWithTelegramMessage(ctx, buildLinkedWelcomeMessage(name, 'freelancer'), {
       parse_mode: 'HTML',
       reply_markup: buildLinkedHomeKeyboard('freelancer'),
     })
@@ -94,13 +95,14 @@ export async function handleBrowseGigs(ctx: TelegramBotContext, page: number = 0
     })
 
     if (result.gigs.length === 0) {
-      await ctx.reply(buildGigBrowseEmptyState(), {
+      await respondWithTelegramMessage(ctx, buildGigBrowseEmptyState(), {
         reply_markup: buildLinkedHomeKeyboard('freelancer'),
       })
       return
     }
 
-    await ctx.reply(
+    await respondWithTelegramMessage(
+      ctx,
       [buildGigBrowseIntro(result.page, result.total), '', buildGigListMessage(result.gigs)].join('\n'),
       {
         reply_markup: buildGigListKeyboard(
@@ -129,13 +131,13 @@ export async function handleViewGigDetails(ctx: TelegramBotContext, gigId: strin
     await safeAnswerCallbackQuery(ctx)
 
     if (!gig) {
-      await ctx.reply(buildGigNotFoundMessage(), {
+      await respondWithTelegramMessage(ctx, buildGigNotFoundMessage(), {
         reply_markup: buildLinkedHomeKeyboard('freelancer'),
       })
       return
     }
 
-    await ctx.reply(buildGigDetailMessage(gig), {
+    await respondWithTelegramMessage(ctx, buildGigDetailMessage(gig), {
       parse_mode: 'HTML',
       reply_markup: buildGigDetailKeyboard(gig.id),
     })
@@ -157,13 +159,13 @@ export async function handleApplyGigPlaceholder(ctx: TelegramBotContext, gigId: 
     await safeAnswerCallbackQuery(ctx)
 
     if (!gig) {
-      await ctx.reply(buildGigNotFoundMessage(), {
+      await respondWithTelegramMessage(ctx, buildGigNotFoundMessage(), {
         reply_markup: buildLinkedHomeKeyboard('freelancer'),
       })
       return
     }
 
-    await ctx.reply(buildGigApplyPromptMessage(gig), {
+    await respondWithTelegramMessage(ctx, buildGigApplyPromptMessage(gig), {
       parse_mode: 'HTML',
       reply_markup: buildGigDetailKeyboard(gigId),
     })
@@ -246,13 +248,14 @@ export async function handleMyApplications(ctx: TelegramBotContext, page: number
     })
 
     if (result.applications.length === 0) {
-      await ctx.reply(buildMyApplicationsEmptyState(), {
+      await respondWithTelegramMessage(ctx, buildMyApplicationsEmptyState(), {
         reply_markup: buildLinkedHomeKeyboard('freelancer'),
       })
       return
     }
 
-    await ctx.reply(
+    await respondWithTelegramMessage(
+      ctx,
       [
         buildMyApplicationsIntro(result.page, result.total),
         '',
@@ -291,13 +294,13 @@ export async function handleViewApplicationDetails(
     await safeAnswerCallbackQuery(ctx)
 
     if (!application || !application.gig) {
-      await ctx.reply(buildApplicationNotFoundMessage(), {
+      await respondWithTelegramMessage(ctx, buildApplicationNotFoundMessage(), {
         reply_markup: buildLinkedHomeKeyboard('freelancer'),
       })
       return
     }
 
-    await ctx.reply(buildApplicationDetailMessage(application), {
+    await respondWithTelegramMessage(ctx, buildApplicationDetailMessage(application), {
       parse_mode: 'HTML',
       reply_markup: buildApplicationDetailKeyboard(application.id),
     })
@@ -321,13 +324,14 @@ export async function handleActiveJobs(ctx: TelegramBotContext, page: number = 0
     })
 
     if (result.jobs.length === 0) {
-      await ctx.reply(buildActiveJobsEmptyState(), {
+      await respondWithTelegramMessage(ctx, buildActiveJobsEmptyState(), {
         reply_markup: buildLinkedHomeKeyboard('freelancer'),
       })
       return
     }
 
-    await ctx.reply(
+    await respondWithTelegramMessage(
+      ctx,
       [buildActiveJobsIntro(result.page, result.total), '', buildActiveJobsListMessage(result.jobs)].join(
         '\n'
       ),
@@ -361,13 +365,13 @@ export async function handleViewActiveJobDetails(
     await safeAnswerCallbackQuery(ctx)
 
     if (!job || !job.gig) {
-      await ctx.reply(buildActiveJobNotFoundMessage(), {
+      await respondWithTelegramMessage(ctx, buildActiveJobNotFoundMessage(), {
         reply_markup: buildLinkedHomeKeyboard('freelancer'),
       })
       return
     }
 
-    await ctx.reply(buildActiveJobDetailMessage(job), {
+    await respondWithTelegramMessage(ctx, buildActiveJobDetailMessage(job), {
       parse_mode: 'HTML',
       reply_markup: buildActiveJobDetailKeyboard(
         job.id,
@@ -426,7 +430,7 @@ export async function handleVerificationStatus(ctx: TelegramBotContext) {
       text: `Status: ${snapshot.status}`,
     })
 
-    await ctx.reply(buildVerificationStatusMessage(snapshot), {
+    await respondWithTelegramMessage(ctx, buildVerificationStatusMessage(snapshot), {
       reply_markup: buildVerificationStatusKeyboard(),
     })
   } catch (error) {

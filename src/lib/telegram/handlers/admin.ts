@@ -25,6 +25,7 @@ import {
   buildLinkedWelcomeMessage,
   buildTemporaryUnavailableMessage,
 } from '@/lib/telegram/messages'
+import { respondWithTelegramMessage } from '@/lib/telegram/respond'
 
 const ADMIN_ONLY_MESSAGE = 'This action is only available to admin and regulator accounts.'
 
@@ -50,7 +51,7 @@ export async function handleAdminHome(ctx: TelegramBotContext) {
     const name = resolved.profile.full_name ?? 'there'
     const role = resolved.role ?? 'admin'
     await safeAnswerCallbackQuery(ctx)
-    await ctx.reply(buildLinkedWelcomeMessage(name, role), {
+    await respondWithTelegramMessage(ctx, buildLinkedWelcomeMessage(name, role), {
       parse_mode: 'HTML',
       reply_markup: buildLinkedHomeKeyboard(role),
     })
@@ -74,13 +75,14 @@ export async function handlePendingVerifications(ctx: TelegramBotContext) {
     })
 
     if (documents.length === 0) {
-      await ctx.reply(buildAdminPendingVerificationsEmptyState(), {
+      await respondWithTelegramMessage(ctx, buildAdminPendingVerificationsEmptyState(), {
         reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
       })
       return
     }
 
-    await ctx.reply(
+    await respondWithTelegramMessage(
+      ctx,
       [
         buildAdminPendingVerificationsIntro(documents.length),
         '',
@@ -111,13 +113,13 @@ export async function handlePendingVerificationDetails(
     await safeAnswerCallbackQuery(ctx)
 
     if (!document) {
-      await ctx.reply(buildAdminVerificationNotFoundMessage(), {
+      await respondWithTelegramMessage(ctx, buildAdminVerificationNotFoundMessage(), {
         reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
       })
       return
     }
 
-    await ctx.reply(buildAdminVerificationDetailMessage(document), {
+    await respondWithTelegramMessage(ctx, buildAdminVerificationDetailMessage(document), {
       parse_mode: 'HTML',
       reply_markup: buildAdminVerificationDetailKeyboard(document.id),
     })
