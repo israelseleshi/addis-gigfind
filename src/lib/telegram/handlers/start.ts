@@ -1,5 +1,6 @@
-import { getTelegramAccountByTelegramUserId, touchTelegramAccount } from '@/lib/telegram/account-link'
+import { touchTelegramAccount } from '@/lib/telegram/account-link'
 import type { TelegramBotContext } from '@/lib/telegram/context'
+import { resolveLinkedTelegramAccount } from '@/lib/telegram/guards'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
   buildLinkInstructions,
@@ -18,16 +19,15 @@ export async function handleStartCommand(ctx: TelegramBotContext) {
       return
     }
 
-    const account = await getTelegramAccountByTelegramUserId(telegramUserId)
-    if (!account) {
+    const resolved = await resolveLinkedTelegramAccount(ctx)
+    if (!resolved.account || !resolved.profile) {
       await ctx.reply(buildLinkInstructions(), { parse_mode: 'HTML' })
       return
     }
 
     await touchTelegramAccount(telegramUserId)
-    const profile = Array.isArray(account.profiles) ? account.profiles[0] : account.profiles
-    const name = profile?.full_name ?? 'there'
-    const role = profile?.role ?? 'freelancer'
+    const name = resolved.profile.full_name ?? 'there'
+    const role = resolved.role ?? 'freelancer'
 
     await ctx.reply(buildLinkedWelcomeMessage(name, role), { parse_mode: 'HTML' })
   } catch (error) {

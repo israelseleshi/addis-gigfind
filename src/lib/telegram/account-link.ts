@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto'
 
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
-import type { TelegramLinkResult } from '@/lib/telegram/types'
+import type { TelegramLinkResult, TelegramLinkedAccount } from '@/lib/telegram/types'
 
 const LINK_CODE_LENGTH = 8
 
@@ -135,7 +135,7 @@ export async function getTelegramAccountByTelegramUserId(telegramUserId: string)
     return null
   }
 
-  return data
+  return data as TelegramLinkedAccount
 }
 
 export async function getTelegramAccountByUserId(userId: string) {
