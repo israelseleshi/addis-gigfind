@@ -59,8 +59,8 @@ export function buildGigListKeyboard(
   const keyboard = new InlineKeyboard()
 
   keyboard
-    .text('Category filter', 'freelancer:prompt_category')
-    .text('Location filter', 'freelancer:prompt_location')
+    .text('Choose category', 'freelancer:choose_category')
+    .text('Choose location', 'freelancer:choose_location')
     .row()
 
   if (filters.category || filters.location) {
@@ -84,6 +84,42 @@ export function buildGigListKeyboard(
   }
 
   keyboard.text('Back to menu', 'freelancer:home')
+  return keyboard
+}
+
+export function buildGigCategoryOptionsKeyboard(categories: string[], currentValue?: string | null) {
+  const keyboard = new InlineKeyboard()
+
+  for (const category of categories) {
+    const label = category === currentValue ? `• ${category}` : category
+    keyboard.text(label.slice(0, 28), `freelancer:set_category:${encodeURIComponent(category)}`).row()
+  }
+
+  keyboard.text('Type category', 'freelancer:prompt_category')
+
+  if (currentValue) {
+    keyboard.text('Clear category', 'freelancer:clear_category')
+  }
+
+  keyboard.row().text('Back to gigs', 'freelancer:browse_gigs:0')
+  return keyboard
+}
+
+export function buildGigLocationOptionsKeyboard(locations: string[], currentValue?: string | null) {
+  const keyboard = new InlineKeyboard()
+
+  for (const location of locations) {
+    const label = location === currentValue ? `• ${location}` : location
+    keyboard.text(label.slice(0, 28), `freelancer:set_location:${encodeURIComponent(location)}`).row()
+  }
+
+  keyboard.text('Type location', 'freelancer:prompt_location')
+
+  if (currentValue) {
+    keyboard.text('Clear location', 'freelancer:clear_location')
+  }
+
+  keyboard.row().text('Back to gigs', 'freelancer:browse_gigs:0')
   return keyboard
 }
 

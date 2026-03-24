@@ -333,6 +333,22 @@ export function buildGigFilterPromptMessage(field: 'category' | 'location', curr
   ].join('\n')
 }
 
+export function buildGigFilterOptionsMessage(
+  field: 'category' | 'location',
+  options: string[],
+  currentValue?: string | null
+) {
+  const label = field === 'category' ? 'category' : 'location'
+
+  return [
+    `Choose a ${label} filter below.`,
+    currentValue ? `Current ${label}: ${currentValue}` : `No ${label} filter is set yet.`,
+    options.length > 0
+      ? `Tap one of the suggested ${label} values or type your own.`
+      : `There are no suggested ${label} values right now. Type your own instead.`,
+  ].join('\n')
+}
+
 export function buildMyApplicationsIntro(page: number, total: number) {
   return [
     'Your applications',

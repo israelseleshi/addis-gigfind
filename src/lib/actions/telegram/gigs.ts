@@ -36,6 +36,11 @@ export type TelegramClientGigSummary = {
   applications: { count: number }[] | null
 }
 
+export type TelegramGigFilterOptions = {
+  categories: string[]
+  locations: string[]
+}
+
 function unwrapRelation<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) {
     return value[0] ?? null
@@ -93,6 +98,32 @@ function normalizeTelegramClientGigSummary(row: Record<string, unknown>): Telegr
     created_at: readNullableString(row.created_at),
     applications: Array.isArray(row.applications) ? row.applications : null,
   }
+}
+
+function buildUniqueTelegramValues(values: string[], limit: number) {
+  const seen = new Set<string>()
+  const result: string[] = []
+
+  for (const value of values) {
+    const normalized = value.trim()
+    if (!normalized) {
+      continue
+    }
+
+    const key = normalized.toLowerCase()
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+    result.push(normalized)
+
+    if (result.length >= limit) {
+      break
+    }
+  }
+
+  return result
 }
 
 export async function listTelegramOpenGigs(
@@ -189,6 +220,31 @@ export async function getTelegramGigDetails(gigId: string) {
   }
 
   return normalizeTelegramBrowseGig(data as Record<string, unknown>)
+}
+
+export async function listTelegramGigFilterOptions(): Promise<TelegramGigFilterOptions> {
+  const supabase = await createServiceRoleClient()
+  const { data, error } = await supabase
+    .from('gigs')
+    .select('category, location')
+    .eq('status', 'open')
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const categories = buildUniqueTelegramValues(
+    (data ?? []).map((row) => readString((row as Record<string, unknown>).category)),
+    8
+  )
+  const locations = buildUniqueTelegramValues(
+    (data ?? []).map((row) => readString((row as Record<string, unknown>).location)),
+    8
+  )
+
+  return { categories, locations }
 }
 
 export async function listTelegramClientGigs(clientId: string, page: number = 0) {

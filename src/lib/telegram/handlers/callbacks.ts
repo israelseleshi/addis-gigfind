@@ -19,6 +19,8 @@ import {
   handleActiveJobs,
   handleApplyGigPlaceholder,
   handleBrowseGigs,
+  handleChooseGigCategoryFilter,
+  handleChooseGigLocationFilter,
   handleCancelGigApplication,
   handleClearGigFilters,
   handleConfirmGigApplication,
@@ -27,6 +29,8 @@ import {
   handleMyApplications,
   handlePromptGigCategoryFilter,
   handlePromptGigLocationFilter,
+  handleSetGigCategoryFilter,
+  handleSetGigLocationFilter,
   handleVerificationStatus,
   handleViewActiveJobDetails,
   handleViewApplicationDetails,
@@ -153,6 +157,16 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
       return
     }
 
+    if (callbackData === 'freelancer:choose_category') {
+      await handleChooseGigCategoryFilter(ctx)
+      return
+    }
+
+    if (callbackData === 'freelancer:choose_location') {
+      await handleChooseGigLocationFilter(ctx)
+      return
+    }
+
     if (callbackData === 'freelancer:prompt_category') {
       await handlePromptGigCategoryFilter(ctx)
       return
@@ -165,6 +179,28 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
 
     if (callbackData === 'freelancer:clear_filters') {
       await handleClearGigFilters(ctx)
+      return
+    }
+
+    if (callbackData === 'freelancer:clear_category') {
+      await handleSetGigCategoryFilter(ctx, null)
+      return
+    }
+
+    if (callbackData === 'freelancer:clear_location') {
+      await handleSetGigLocationFilter(ctx, null)
+      return
+    }
+
+    if (callbackData.startsWith('freelancer:set_category:')) {
+      const category = decodeURIComponent(callbackData.slice('freelancer:set_category:'.length))
+      await handleSetGigCategoryFilter(ctx, category)
+      return
+    }
+
+    if (callbackData.startsWith('freelancer:set_location:')) {
+      const location = decodeURIComponent(callbackData.slice('freelancer:set_location:'.length))
+      await handleSetGigLocationFilter(ctx, location)
       return
     }
 

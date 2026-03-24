@@ -6,7 +6,11 @@ import {
   listTelegramActiveJobsForFreelancer,
   markTelegramActiveJobInProgress,
 } from '@/lib/actions/telegram/applications'
-import { getTelegramGigDetails, listTelegramOpenGigs } from '@/lib/actions/telegram/gigs'
+import {
+  getTelegramGigDetails,
+  listTelegramGigFilterOptions,
+  listTelegramOpenGigs,
+} from '@/lib/actions/telegram/gigs'
 import { getTelegramVerificationStatus } from '@/lib/actions/telegram/verifications'
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import {
@@ -27,8 +31,10 @@ import {
   buildApplicationDetailKeyboard,
   buildApplicationsListKeyboard,
   buildGigApplyDraftKeyboard,
+  buildGigCategoryOptionsKeyboard,
   buildGigDetailKeyboard,
   buildGigListKeyboard,
+  buildGigLocationOptionsKeyboard,
   buildLinkedHomeKeyboard,
   buildVerificationStatusKeyboard,
 } from '@/lib/telegram/keyboards'
@@ -54,6 +60,7 @@ import {
   buildGigBrowseIntro,
   buildGigDetailMessage,
   buildGigFilterPromptMessage,
+  buildGigFilterOptionsMessage,
   buildGigListMessage,
   buildGigNotFoundMessage,
   buildLinkedWelcomeMessage,
@@ -182,6 +189,33 @@ export async function handlePromptGigCategoryFilter(ctx: TelegramBotContext) {
   }
 }
 
+export async function handleChooseGigCategoryFilter(ctx: TelegramBotContext) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      await safeAnswerCallbackQuery(ctx)
+      return
+    }
+
+    const filters = getFreelancerBrowseFilters(String(resolved.telegramUserId))
+    const options = await listTelegramGigFilterOptions()
+    await safeAnswerCallbackQuery(ctx, { text: 'Choose a category' })
+    await respondWithTelegramMessage(
+      ctx,
+      buildGigFilterOptionsMessage('category', options.categories, filters.category),
+      {
+        reply_markup: buildGigCategoryOptionsKeyboard(options.categories, filters.category),
+      }
+    )
+  } catch (error) {
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'freelancer-choose-category' }) },
+      'Telegram freelancer choose category handler failed'
+    )
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
 export async function handlePromptGigLocationFilter(ctx: TelegramBotContext) {
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
@@ -205,6 +239,33 @@ export async function handlePromptGigLocationFilter(ctx: TelegramBotContext) {
   }
 }
 
+export async function handleChooseGigLocationFilter(ctx: TelegramBotContext) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      await safeAnswerCallbackQuery(ctx)
+      return
+    }
+
+    const filters = getFreelancerBrowseFilters(String(resolved.telegramUserId))
+    const options = await listTelegramGigFilterOptions()
+    await safeAnswerCallbackQuery(ctx, { text: 'Choose a location' })
+    await respondWithTelegramMessage(
+      ctx,
+      buildGigFilterOptionsMessage('location', options.locations, filters.location),
+      {
+        reply_markup: buildGigLocationOptionsKeyboard(options.locations, filters.location),
+      }
+    )
+  } catch (error) {
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'freelancer-choose-location' }) },
+      'Telegram freelancer choose location handler failed'
+    )
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
 export async function handleClearGigFilters(ctx: TelegramBotContext) {
   try {
     const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
@@ -220,6 +281,62 @@ export async function handleClearGigFilters(ctx: TelegramBotContext) {
     telegramLogger.error(
       { error, ...buildTelegramLogContext(ctx, { handler: 'freelancer-clear-filters' }) },
       'Telegram freelancer clear filters handler failed'
+    )
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+export async function handleSetGigCategoryFilter(ctx: TelegramBotContext, category: string | null) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      await safeAnswerCallbackQuery(ctx)
+      return
+    }
+
+    updateFreelancerBrowseFilters(String(resolved.telegramUserId), { category })
+    await safeAnswerCallbackQuery(ctx, {
+      text: category ? `Category: ${category}` : 'Category cleared',
+    })
+    await handleBrowseGigs(ctx, 0)
+  } catch (error) {
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, {
+          handler: 'freelancer-set-category',
+          category: category ?? 'any',
+        }),
+      },
+      'Telegram freelancer set category handler failed'
+    )
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+export async function handleSetGigLocationFilter(ctx: TelegramBotContext, location: string | null) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['freelancer'], FREELANCER_ONLY_MESSAGE)
+    if (!resolved) {
+      await safeAnswerCallbackQuery(ctx)
+      return
+    }
+
+    updateFreelancerBrowseFilters(String(resolved.telegramUserId), { location })
+    await safeAnswerCallbackQuery(ctx, {
+      text: location ? `Location: ${location}` : 'Location cleared',
+    })
+    await handleBrowseGigs(ctx, 0)
+  } catch (error) {
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, {
+          handler: 'freelancer-set-location',
+          location: location ?? 'any',
+        }),
+      },
+      'Telegram freelancer set location handler failed'
     )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
