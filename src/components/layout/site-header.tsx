@@ -52,7 +52,7 @@ export async function SiteHeader() {
           <span className="font-bold text-lg">Addis GigFind</span>
         </Link>
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-          <Link href="/find-work" className="transition-colors hover:text-amber-500">
+          <Link href="/freelancer/find-work" className="transition-colors hover:text-amber-500">
             Browse Gigs
           </Link>
           {profile?.role === 'client' && (

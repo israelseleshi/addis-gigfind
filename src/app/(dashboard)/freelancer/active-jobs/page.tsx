@@ -237,10 +237,10 @@ export default function ActiveJobsPage() {
 
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" asChild className="flex-1">
-                    <Link href={`/freelancer/jobs/${job.gig?.id}`}>View Details</Link>
+                    <Link href={`/freelancer/active-jobs/${job.gig?.id}`}>View Details</Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild className="flex-1">
-                    <Link href={`/freelancer/messages?recipient=${job.gig?.client_id}`}>
+                    <Link href={`/freelancer/chat?recipient=${job.gig?.client_id}`}>
                       <MessageSquare className="h-4 w-4 mr-1" />
                       Message
                     </Link>

@@ -241,6 +241,85 @@ export type Database = {
         }
         Relationships: []
       }
+      client_profiles: {
+        Row: {
+          company_name: string | null
+          created_at: string | null
+          id: string
+          industry: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string | null
+          id: string
+          industry?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      freelancer_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          experience_level: string | null
+          hourly_rate: number | null
+          id: string
+          languages: string[] | null
+          portfolio_url: string | null
+          skills: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          experience_level?: string | null
+          hourly_rate?: number | null
+          id: string
+          languages?: string[] | null
+          portfolio_url?: string | null
+          skills?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          experience_level?: string | null
+          hourly_rate?: number | null
+          id?: string
+          languages?: string[] | null
+          portfolio_url?: string | null
+          skills?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freelancer_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           comment: string | null

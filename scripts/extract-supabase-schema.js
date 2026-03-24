@@ -2,14 +2,14 @@
 /**
  * Supabase Schema Extractor
  * Extracts database schema, RLS policies, functions, triggers, and more
- * Outputs to supabase_schema.txt
+ * Outputs to docs/root-artifacts/supabase_schema.txt
  */
 
 import fs from 'fs';
 import path from 'path';
 
 const MIGRATIONS_DIR = path.join(__dirname, '..', 'supabase', 'migrations');
-const OUTPUT_FILE = path.join(__dirname, '..', 'supabase_schema.txt');
+const OUTPUT_FILE = path.join(__dirname, '..', 'docs', 'root-artifacts', 'supabase_schema.txt');
 
 let output = [];
 
@@ -137,6 +137,7 @@ function main() {
 
   extractFromMigrations();
 
+  fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
   fs.writeFileSync(OUTPUT_FILE, output.join('\n'), 'utf-8');
 
   console.log(`Schema documentation written to: ${OUTPUT_FILE}`);

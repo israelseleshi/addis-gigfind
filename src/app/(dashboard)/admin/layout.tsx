@@ -1,15 +1,14 @@
 
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Users, Briefcase, Shield, FileText,
   LogOut, Menu
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 
 const adminNavLinks = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,13 +25,44 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
 
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login')
+        return
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      
+      if (profile?.role !== 'admin') {
+        router.push('/')
+        return
+      }
+      setIsLoading(false)
+    }
+    checkAdmin()
+  }, [supabase, router])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+      </div>
+    )
   }
 
   return (
