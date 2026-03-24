@@ -150,16 +150,26 @@ export async function approveTelegramVerification(documentId: string) {
     .single()
 
   if (documentError || !document) {
-    return { error: 'Verification request not found.', fullName: null, alreadyHandled: false }
+    return { error: 'Verification request not found.', fullName: null, targetUserId: null, alreadyHandled: false }
   }
 
   if ((document as { status?: string }).status === 'verified') {
     const profile = Array.isArray(document.profiles) ? document.profiles[0] : document.profiles
-    return { error: null, fullName: profile?.full_name ?? 'This user', alreadyHandled: true }
+    return {
+      error: null,
+      fullName: profile?.full_name ?? 'This user',
+      targetUserId: document.user_id,
+      alreadyHandled: true,
+    }
   }
 
   if ((document as { status?: string }).status !== 'pending') {
-    return { error: 'Only pending verification requests can be approved.', fullName: null, alreadyHandled: false }
+    return {
+      error: 'Only pending verification requests can be approved.',
+      fullName: null,
+      targetUserId: null,
+      alreadyHandled: false,
+    }
   }
 
   const { error: verificationError } = await supabase
@@ -168,7 +178,7 @@ export async function approveTelegramVerification(documentId: string) {
     .eq('id', documentId)
 
   if (verificationError) {
-    return { error: verificationError.message, fullName: null, alreadyHandled: false }
+    return { error: verificationError.message, fullName: null, targetUserId: null, alreadyHandled: false }
   }
 
   const { error: profileError } = await supabase
@@ -177,7 +187,7 @@ export async function approveTelegramVerification(documentId: string) {
     .eq('id', document.user_id)
 
   if (profileError) {
-    return { error: profileError.message, fullName: null, alreadyHandled: false }
+    return { error: profileError.message, fullName: null, targetUserId: null, alreadyHandled: false }
   }
 
   const profile = Array.isArray(document.profiles) ? document.profiles[0] : document.profiles
@@ -187,13 +197,23 @@ export async function approveTelegramVerification(documentId: string) {
       'Telegram verification approved notification dispatch failed from bot flow'
     )
   })
-  return { error: null, fullName: profile?.full_name ?? 'This user', alreadyHandled: false }
+  return {
+    error: null,
+    fullName: profile?.full_name ?? 'This user',
+    targetUserId: document.user_id,
+    alreadyHandled: false,
+  }
 }
 
 export async function rejectTelegramVerification(documentId: string, reason: string) {
   const trimmedReason = reason.trim()
   if (trimmedReason.length < 5) {
-    return { error: 'Rejection reason must be at least 5 characters.', fullName: null, alreadyHandled: false }
+    return {
+      error: 'Rejection reason must be at least 5 characters.',
+      fullName: null,
+      targetUserId: null,
+      alreadyHandled: false,
+    }
   }
 
   const supabase = await createServiceRoleClient()
@@ -214,16 +234,26 @@ export async function rejectTelegramVerification(documentId: string, reason: str
     .single()
 
   if (documentError || !document) {
-    return { error: 'Verification request not found.', fullName: null, alreadyHandled: false }
+    return { error: 'Verification request not found.', fullName: null, targetUserId: null, alreadyHandled: false }
   }
 
   if ((document as { status?: string }).status === 'rejected') {
     const profile = Array.isArray(document.profiles) ? document.profiles[0] : document.profiles
-    return { error: null, fullName: profile?.full_name ?? 'This user', alreadyHandled: true }
+    return {
+      error: null,
+      fullName: profile?.full_name ?? 'This user',
+      targetUserId: document.user_id,
+      alreadyHandled: true,
+    }
   }
 
   if ((document as { status?: string }).status !== 'pending') {
-    return { error: 'Only pending verification requests can be rejected.', fullName: null, alreadyHandled: false }
+    return {
+      error: 'Only pending verification requests can be rejected.',
+      fullName: null,
+      targetUserId: null,
+      alreadyHandled: false,
+    }
   }
 
   const { error: verificationError } = await supabase
@@ -235,7 +265,7 @@ export async function rejectTelegramVerification(documentId: string, reason: str
     .eq('id', documentId)
 
   if (verificationError) {
-    return { error: verificationError.message, fullName: null, alreadyHandled: false }
+    return { error: verificationError.message, fullName: null, targetUserId: null, alreadyHandled: false }
   }
 
   const { error: profileError } = await supabase
@@ -244,7 +274,7 @@ export async function rejectTelegramVerification(documentId: string, reason: str
     .eq('id', document.user_id)
 
   if (profileError) {
-    return { error: profileError.message, fullName: null, alreadyHandled: false }
+    return { error: profileError.message, fullName: null, targetUserId: null, alreadyHandled: false }
   }
 
   const profile = Array.isArray(document.profiles) ? document.profiles[0] : document.profiles
@@ -256,5 +286,10 @@ export async function rejectTelegramVerification(documentId: string, reason: str
       )
     }
   )
-  return { error: null, fullName: profile?.full_name ?? 'This user', alreadyHandled: false }
+  return {
+    error: null,
+    fullName: profile?.full_name ?? 'This user',
+    targetUserId: document.user_id,
+    alreadyHandled: false,
+  }
 }

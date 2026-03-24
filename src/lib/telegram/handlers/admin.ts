@@ -1,3 +1,4 @@
+import { logTelegramAuditEntry } from '@/lib/actions/telegram/audit'
 import {
   approveTelegramVerification,
   getTelegramPendingVerificationDetails,
@@ -38,6 +39,31 @@ async function safeAnswerCallbackQuery(
   }
 
   await ctx.answerCallbackQuery(options)
+}
+
+async function logAdminVerificationAudit(params: {
+  actorUserId: string
+  actorTelegramUserId: string
+  actorRole: string
+  action: 'approve_verification' | 'reject_verification'
+  documentId: string
+  targetUserId: string | null
+  outcome: 'success' | 'already_handled'
+  rejectionReason?: string
+}) {
+  await logTelegramAuditEntry({
+    userId: params.actorUserId,
+    telegramUserId: params.actorTelegramUserId,
+    role: params.actorRole,
+    action: params.action,
+    entityType: 'verification_document',
+    entityId: params.documentId,
+    metadata: {
+      outcome: params.outcome,
+      target_user_id: params.targetUserId,
+      rejection_reason: params.rejectionReason ?? null,
+    },
+  })
 }
 
 export async function handleAdminHome(ctx: TelegramBotContext) {
@@ -157,6 +183,21 @@ export async function handleApproveVerification(
       return
     }
 
+    void logAdminVerificationAudit({
+      actorUserId: resolved.profile.id,
+      actorTelegramUserId: resolved.telegramUserId,
+      actorRole: resolved.role ?? 'admin',
+      action: 'approve_verification',
+      documentId,
+      targetUserId: result.targetUserId,
+      outcome: result.alreadyHandled ? 'already_handled' : 'success',
+    }).catch((auditError) => {
+      telegramLogger.error(
+        { error: auditError, actorUserId: resolved.profile.id, documentId },
+        'Telegram admin verification approval audit log failed'
+      )
+    })
+
     await ctx.reply(
       result.alreadyHandled
         ? `${result.fullName ?? 'This user'} was already verified.`
@@ -241,6 +282,22 @@ export async function handleRejectVerificationReply(ctx: TelegramBotContext) {
       })
       return true
     }
+
+    void logAdminVerificationAudit({
+      actorUserId: resolved.profile.id,
+      actorTelegramUserId: resolved.telegramUserId,
+      actorRole: resolved.role ?? 'admin',
+      action: 'reject_verification',
+      documentId,
+      targetUserId: result.targetUserId,
+      outcome: result.alreadyHandled ? 'already_handled' : 'success',
+      rejectionReason: reason.trim(),
+    }).catch((auditError) => {
+      telegramLogger.error(
+        { error: auditError, actorUserId: resolved.profile.id, documentId },
+        'Telegram admin verification rejection audit log failed'
+      )
+    })
 
     await ctx.reply(
       result.alreadyHandled
