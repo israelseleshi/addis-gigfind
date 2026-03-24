@@ -46,8 +46,10 @@ import {
   buildVerificationStatusMessage,
 } from '@/lib/telegram/messages'
 import { respondWithTelegramMessage } from '@/lib/telegram/respond'
+import { shouldThrottleTelegramAction } from '@/lib/telegram/rate-limit'
 
 const FREELANCER_ONLY_MESSAGE = 'This action is only available to freelancer accounts.'
+const APPLY_REPLY_WINDOW_MS = 10_000
 
 async function safeAnswerCallbackQuery(
   ctx: TelegramBotContext,
@@ -194,6 +196,14 @@ export async function handleApplyReply(ctx: TelegramBotContext) {
     const gigId = extractGigIdFromApplyPrompt(ctx.message?.reply_to_message?.text)
     if (!gigId) {
       return false
+    }
+
+    const throttleKey = `apply-reply:${resolved.profile.id}:${ctx.message?.reply_to_message?.message_id ?? 'unknown'}`
+    if (shouldThrottleTelegramAction(throttleKey, APPLY_REPLY_WINDOW_MS)) {
+      await ctx.reply('That application reply is already being processed.', {
+        reply_markup: buildGigDetailKeyboard(gigId),
+      })
+      return true
     }
 
     const coverNote = ctx.message?.text?.trim() ?? ''

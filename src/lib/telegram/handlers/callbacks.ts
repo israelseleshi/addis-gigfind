@@ -30,10 +30,33 @@ import {
 import { requireLinkedTelegramAccount } from '@/lib/telegram/guards'
 import { buildUnrecognizedInputMessage, buildTemporaryUnavailableMessage } from '@/lib/telegram/messages'
 import { telegramLogger } from '@/lib/telegram/logger'
+import { shouldThrottleTelegramAction } from '@/lib/telegram/rate-limit'
+
+const HIGH_RISK_CALLBACK_WINDOW_MS = 5_000
+
+function isHighRiskCallback(callbackData: string) {
+  return [
+    'admin:approve_verification:',
+    'client:accept_applicant:',
+    'client:reject_applicant:',
+    'freelancer:start_job:',
+  ].some((prefix) => callbackData.startsWith(prefix))
+}
 
 export async function handleCallbackQuery(ctx: TelegramBotContext) {
   try {
     const callbackData = ctx.callbackQuery.data
+    const actorId = String(ctx.from?.id ?? '')
+
+    if (actorId && isHighRiskCallback(callbackData)) {
+      const throttleKey = `callback:${actorId}:${callbackData}`
+      if (shouldThrottleTelegramAction(throttleKey, HIGH_RISK_CALLBACK_WINDOW_MS)) {
+        await ctx.answerCallbackQuery({
+          text: 'That action is already being processed.',
+        })
+        return
+      }
+    }
 
     if (callbackData === 'admin:home') {
       await handleAdminHome(ctx)

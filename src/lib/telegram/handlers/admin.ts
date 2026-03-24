@@ -27,8 +27,10 @@ import {
   buildTemporaryUnavailableMessage,
 } from '@/lib/telegram/messages'
 import { respondWithTelegramMessage } from '@/lib/telegram/respond'
+import { shouldThrottleTelegramAction } from '@/lib/telegram/rate-limit'
 
 const ADMIN_ONLY_MESSAGE = 'This action is only available to admin and regulator accounts.'
+const REJECT_REPLY_WINDOW_MS = 10_000
 
 async function safeAnswerCallbackQuery(
   ctx: TelegramBotContext,
@@ -267,6 +269,14 @@ export async function handleRejectVerificationReply(ctx: TelegramBotContext) {
     const documentId = extractDocumentIdFromRejectPrompt(ctx.message?.reply_to_message?.text)
     if (!documentId) {
       return false
+    }
+
+    const throttleKey = `reject-reply:${resolved.profile.id}:${ctx.message?.reply_to_message?.message_id ?? 'unknown'}`
+    if (shouldThrottleTelegramAction(throttleKey, REJECT_REPLY_WINDOW_MS)) {
+      await ctx.reply('That rejection reason is already being processed.', {
+        reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+      })
+      return true
     }
 
     const reason = ctx.message?.text?.trim() ?? ''
