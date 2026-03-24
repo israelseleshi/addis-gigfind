@@ -28,6 +28,7 @@ import {
   handleViewGigDetails,
 } from '@/lib/telegram/handlers/freelancer'
 import { requireLinkedTelegramAccount } from '@/lib/telegram/guards'
+import { buildTelegramLogContext } from '@/lib/telegram/log-context'
 import { buildUnrecognizedInputMessage, buildTemporaryUnavailableMessage } from '@/lib/telegram/messages'
 import { telegramLogger } from '@/lib/telegram/logger'
 import { shouldThrottleTelegramAction } from '@/lib/telegram/rate-limit'
@@ -202,7 +203,10 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
 
     await ctx.reply(buildUnrecognizedInputMessage())
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram callback handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'callbacks' }) },
+      'Telegram callback handler failed'
+    )
     await ctx.answerCallbackQuery({
       text: 'Something went wrong.',
       show_alert: true,

@@ -1,5 +1,6 @@
 import { consumeTelegramLinkCode } from '@/lib/telegram/account-link'
 import type { TelegramBotContext } from '@/lib/telegram/context'
+import { buildTelegramLogContext } from '@/lib/telegram/log-context'
 import { telegramLogger } from '@/lib/telegram/logger'
 import { buildRoleMenu, buildTemporaryUnavailableMessage } from '@/lib/telegram/messages'
 
@@ -42,7 +43,10 @@ export async function handleLinkCommand(ctx: TelegramBotContext) {
       ].join('\n')
     )
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram /link handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'link' }) },
+      'Telegram /link handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }

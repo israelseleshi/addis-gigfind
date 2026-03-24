@@ -31,6 +31,7 @@ import {
   buildLinkedWelcomeMessage,
   buildTemporaryUnavailableMessage,
 } from '@/lib/telegram/messages'
+import { buildTelegramLogContext } from '@/lib/telegram/log-context'
 import { respondWithTelegramMessage } from '@/lib/telegram/respond'
 
 const CLIENT_ONLY_MESSAGE = 'This action is only available to client accounts.'
@@ -61,7 +62,10 @@ export async function handleClientHome(ctx: TelegramBotContext) {
       reply_markup: buildLinkedHomeKeyboard('client'),
     })
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram client home handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'client-home' }) },
+      'Telegram client home handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -101,7 +105,10 @@ export async function handleClientMyGigs(ctx: TelegramBotContext, page: number =
       }
     )
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram client my gigs handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'client-my-gigs', page }) },
+      'Telegram client my gigs handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -129,7 +136,10 @@ export async function handleClientViewGigDetails(ctx: TelegramBotContext, gigId:
       reply_markup: buildClientGigDetailKeyboard(gig.id),
     })
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram client gig detail handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'client-gig-detail', gigId }) },
+      'Telegram client gig detail handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -171,7 +181,10 @@ export async function handleClientViewApplicants(ctx: TelegramBotContext, gigId:
       }
     )
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram client applicants handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'client-applicants', gigId }) },
+      'Telegram client applicants handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -207,7 +220,17 @@ export async function handleClientViewApplicantDetails(
       ),
     })
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram client applicant detail handler failed')
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, {
+          handler: 'client-applicant-detail',
+          gigId,
+          applicationId,
+        }),
+      },
+      'Telegram client applicant detail handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }

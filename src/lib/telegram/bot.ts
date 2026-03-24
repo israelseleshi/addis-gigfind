@@ -19,7 +19,16 @@ export function getTelegramBot() {
   registerTelegramHandlers(bot)
 
   bot.catch((error) => {
-    telegramLogger.error({ error }, 'Telegram bot error')
+    telegramLogger.error(
+      {
+        error,
+        telegramUserId: error.ctx?.from?.id ? String(error.ctx.from.id) : null,
+        telegramChatId: error.ctx?.chat?.id ? String(error.ctx.chat.id) : null,
+        telegramCallbackData: error.ctx?.callbackQuery?.data ?? null,
+        telegramUpdateType: error.ctx?.updateType ?? null,
+      },
+      'Telegram bot error'
+    )
   })
 
   botSingleton = bot

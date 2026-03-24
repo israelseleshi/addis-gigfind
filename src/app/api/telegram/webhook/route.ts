@@ -45,7 +45,17 @@ export async function POST(request: NextRequest) {
   try {
     return await handler(request)
   } catch (err) {
-    telegramLogger.error({ err }, 'Telegram update handling error')
+    telegramLogger.error(
+      {
+        err,
+        method: request.method,
+        url: request.nextUrl.pathname,
+        hasSecretHeader: Boolean(
+          request.headers.get('x-telegram-bot-api-secret-token')
+        ),
+      },
+      'Telegram update handling error'
+    )
     return NextResponse.json({ error: 'Telegram update handling error.' }, { status: 500 })
   }
 }

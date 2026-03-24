@@ -45,6 +45,7 @@ import {
   buildTemporaryUnavailableMessage,
   buildVerificationStatusMessage,
 } from '@/lib/telegram/messages'
+import { buildTelegramLogContext } from '@/lib/telegram/log-context'
 import { respondWithTelegramMessage } from '@/lib/telegram/respond'
 import { shouldThrottleTelegramAction } from '@/lib/telegram/rate-limit'
 
@@ -77,7 +78,10 @@ export async function handleFreelancerHome(ctx: TelegramBotContext) {
       reply_markup: buildLinkedHomeKeyboard('freelancer'),
     })
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram freelancer home handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'freelancer-home' }) },
+      'Telegram freelancer home handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -116,7 +120,13 @@ export async function handleBrowseGigs(ctx: TelegramBotContext, page: number = 0
       }
     )
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram freelancer browse gigs handler failed')
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, { handler: 'freelancer-browse-gigs', page }),
+      },
+      'Telegram freelancer browse gigs handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -144,7 +154,13 @@ export async function handleViewGigDetails(ctx: TelegramBotContext, gigId: strin
       reply_markup: buildGigDetailKeyboard(gig.id),
     })
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram freelancer gig detail handler failed')
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, { handler: 'freelancer-gig-detail', gigId }),
+      },
+      'Telegram freelancer gig detail handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -238,7 +254,13 @@ export async function handleApplyReply(ctx: TelegramBotContext) {
     })
     return true
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram freelancer apply reply handler failed')
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, { handler: 'freelancer-apply-reply', gigId }),
+      },
+      'Telegram freelancer apply reply handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
     return true
   }
@@ -355,7 +377,13 @@ export async function handleActiveJobs(ctx: TelegramBotContext, page: number = 0
       }
     )
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram freelancer active jobs handler failed')
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, { handler: 'freelancer-active-jobs', page }),
+      },
+      'Telegram freelancer active jobs handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }

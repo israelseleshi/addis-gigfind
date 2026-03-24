@@ -12,6 +12,7 @@ import {
   handleVerificationStatus,
 } from '@/lib/telegram/handlers/freelancer'
 import { requireLinkedTelegramAccount } from '@/lib/telegram/guards'
+import { buildTelegramLogContext } from '@/lib/telegram/log-context'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
   buildQuickActionHintMessage,
@@ -105,7 +106,10 @@ export async function handleTextMessage(ctx: TelegramBotContext) {
       reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'freelancer'),
     })
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram text handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'text' }) },
+      'Telegram text handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
