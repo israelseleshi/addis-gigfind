@@ -16,7 +16,6 @@ describe('telegram messages', () => {
       category: 'Design',
       description: 'A'.repeat(2500),
       created_at: new Date().toISOString(),
-      status: 'open',
       client: {
         id: 'client-1',
         full_name: 'Client User',
