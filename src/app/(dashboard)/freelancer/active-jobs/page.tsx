@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createClient } from '@/lib/supabase/client'
+import { markGigInProgress } from '@/lib/actions/applications'
 import Link from 'next/link'
 import { Briefcase, MapPin, MessageSquare } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface Gig {
   id: string
@@ -253,11 +255,12 @@ export default function ActiveJobsPage() {
                     className="w-full bg-amber-500 hover:bg-amber-600"
                     onClick={async () => {
                       if (!job.gig?.id) return
-                      const supabase = createClient()
-                      await supabase
-                        .from('gigs')
-                        .update({ status: 'in_progress' })
-                        .eq('id', job.gig.id)
+                      const result = await markGigInProgress(job.gig.id)
+                      if (result.error) {
+                        toast.error(result.error)
+                        return
+                      }
+                      toast.success('Job marked as in progress')
                       loadActiveJobs()
                     }}
                   >

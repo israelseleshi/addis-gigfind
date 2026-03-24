@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createClient } from '@/lib/supabase/client'
+import { acceptApplication, rejectApplication } from '@/lib/actions/applications'
 import { ArrowLeft, Check, X, Clock, Star, Phone, Users } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -106,33 +107,11 @@ export default function GigApplicantsPage() {
 
   const handleAccept = async (applicationId: string) => {
     try {
-      const supabase = createClient()
-      const application = applicants.find(a => a.id === applicationId)
-      if (!application) return
-
-      // Update application status
-      const { error } = await supabase
-        .from('applications')
-        .update({ status: 'accepted' })
-        .eq('id', applicationId)
-
-      if (error) {
-        toast.error('Failed to accept application')
+      const result = await acceptApplication(applicationId)
+      if (result.error) {
+        toast.error(result.error)
         return
       }
-
-      // Update gig status
-      await supabase
-        .from('gigs')
-        .update({ status: 'assigned' })
-        .eq('id', gigId)
-
-      // Reject other applications
-      await supabase
-        .from('applications')
-        .update({ status: 'rejected' })
-        .eq('gig_id', gigId)
-        .neq('id', applicationId)
 
       toast.success('Application accepted!')
       loadData()
@@ -144,18 +123,14 @@ export default function GigApplicantsPage() {
 
   const handleReject = async (applicationId: string) => {
     try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('applications')
-        .update({ status: 'rejected' })
-        .eq('id', applicationId)
-
-      if (error) {
-        toast.error('Failed to reject application')
-      } else {
-        toast.success('Application rejected')
-        loadData()
+      const result = await rejectApplication(applicationId)
+      if (result.error) {
+        toast.error(result.error)
+        return
       }
+
+      toast.success('Application rejected')
+      loadData()
     } catch (error) {
       console.error('Error:', error)
       toast.error('An error occurred')

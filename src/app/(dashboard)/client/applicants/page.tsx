@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
+import { acceptApplication, rejectApplication } from '@/lib/actions/applications'
 import { Check, X, Clock, Filter } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -84,30 +85,11 @@ export default function ApplicantsPage() {
 
   const handleAccept = async (applicationId: string) => {
     try {
-      const supabase = createClient()
-      const application = applicants.find(a => a.id === applicationId)
-      if (!application) return
-
-      const { error } = await supabase
-        .from('applications')
-        .update({ status: 'accepted' })
-        .eq('id', applicationId)
-
-      if (error) {
-        toast.error('Failed to accept application')
+      const result = await acceptApplication(applicationId)
+      if (result.error) {
+        toast.error(result.error)
         return
       }
-
-      await supabase
-        .from('gigs')
-        .update({ status: 'assigned' })
-        .eq('id', application.gig_id)
-
-      await supabase
-        .from('applications')
-        .update({ status: 'rejected' })
-        .eq('gig_id', application.gig_id)
-        .neq('id', applicationId)
 
       toast.success('Application accepted!')
       loadData()
@@ -119,18 +101,14 @@ export default function ApplicantsPage() {
 
   const handleReject = async (applicationId: string) => {
     try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('applications')
-        .update({ status: 'rejected' })
-        .eq('id', applicationId)
-
-      if (error) {
-        toast.error('Failed to reject application')
-      } else {
-        toast.success('Application rejected')
-        loadData()
+      const result = await rejectApplication(applicationId)
+      if (result.error) {
+        toast.error(result.error)
+        return
       }
+
+      toast.success('Application rejected')
+      loadData()
     } catch (error) {
       console.error('Error:', error)
       toast.error('An error occurred')

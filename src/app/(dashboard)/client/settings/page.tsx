@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TelegramLinkPanel } from '@/components/telegram/telegram-link-panel';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { uploadProfilePicture, removeProfilePicture } from '@/lib/actions/profile-picture';
@@ -36,10 +37,12 @@ export default function SettingsPage() {
         <nav className="flex flex-col w-full md:w-1/5">
           <Button variant={activeTab === 'profile' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('profile')} className="justify-start">Profile</Button>
           <Button variant={activeTab === 'notifications' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('notifications')} className="justify-start">Notifications</Button>
+          <Button variant={activeTab === 'telegram' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('telegram')} className="justify-start">Telegram</Button>
         </nav>
         <div className="flex-1">
           {activeTab === 'profile' && <ProfileForm />}
           {activeTab === 'notifications' && <NotificationsForm />}
+          {activeTab === 'telegram' && <TelegramLinkPanel />}
         </div>
       </div>
     </div>
