@@ -14,3 +14,15 @@ export function buildTelegramFreelancerGigDetailUrl(gigId: string, token: string
 export function buildTelegramFreelancerGigApplyUrl(gigId: string, token: string) {
   return buildTelegramWebviewUrl(`/telegram/freelancer/gigs/${gigId}/apply`, token)
 }
+
+export function buildTelegramClientGigsUrl(token: string) {
+  return buildTelegramWebviewUrl('/telegram/client/gigs', token)
+}
+
+export function buildTelegramClientCreateGigUrl(token: string) {
+  return buildTelegramWebviewUrl('/telegram/client/gigs/create', token)
+}
+
+export function buildTelegramClientGigDetailUrl(gigId: string, token: string) {
+  return buildTelegramWebviewUrl(`/telegram/client/gigs/${gigId}`, token)
+}

@@ -22,6 +22,7 @@ import {
   buildClientApplicantsListKeyboard,
   buildClientGigDetailKeyboard,
   buildClientGigsListKeyboard,
+  buildClientHomeWebviewKeyboard,
   buildClientPostGigCategoryKeyboard,
   buildClientPostGigLocationKeyboard,
   buildClientPostGigReviewKeyboard,
@@ -52,6 +53,12 @@ import {
 } from '@/lib/telegram/messages'
 import { buildTelegramLogContext } from '@/lib/telegram/log-context'
 import { respondWithTelegramMessage } from '@/lib/telegram/respond'
+import { createTelegramWebviewToken } from '@/lib/telegram/webview/auth'
+import {
+  buildTelegramClientCreateGigUrl,
+  buildTelegramClientGigDetailUrl,
+  buildTelegramClientGigsUrl,
+} from '@/lib/telegram/webview/urls'
 
 const CLIENT_ONLY_MESSAGE = 'This action is only available to client accounts.'
 
@@ -106,10 +113,19 @@ export async function handleClientHome(ctx: TelegramBotContext) {
     }
 
     const name = resolved.profile.full_name ?? 'there'
+    const token = createTelegramWebviewToken({
+      userId: resolved.profile.id,
+      telegramUserId: String(resolved.telegramUserId),
+      role: 'client',
+    })
+
     await safeAnswerCallbackQuery(ctx)
     await respondWithTelegramMessage(ctx, buildLinkedWelcomeMessage(name, 'client'), {
       parse_mode: 'HTML',
-      reply_markup: buildLinkedHomeKeyboard('client'),
+      reply_markup: buildClientHomeWebviewKeyboard(
+        buildTelegramClientCreateGigUrl(token),
+        buildTelegramClientGigsUrl(token)
+      ),
     })
   } catch (error) {
     telegramLogger.error(
@@ -386,6 +402,15 @@ export async function handleClientMyGigs(ctx: TelegramBotContext, page: number =
     }
 
     const result = await listTelegramClientGigs(resolved.profile.id, page)
+    const token = createTelegramWebviewToken({
+      userId: resolved.profile.id,
+      telegramUserId: String(resolved.telegramUserId),
+      role: 'client',
+    })
+    const detailUrls = Object.fromEntries(
+      result.gigs.map((gig) => [gig.id, buildTelegramClientGigDetailUrl(gig.id, token)])
+    )
+
     await safeAnswerCallbackQuery(ctx, {
       text: result.gigs.length > 0 ? `Loaded page ${result.page + 1}` : 'No gigs found',
     })
@@ -407,7 +432,8 @@ export async function handleClientMyGigs(ctx: TelegramBotContext, page: number =
           result.gigs,
           result.page,
           result.hasPreviousPage,
-          result.hasNextPage
+          result.hasNextPage,
+          detailUrls
         ),
       }
     )

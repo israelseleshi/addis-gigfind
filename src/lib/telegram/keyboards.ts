@@ -30,6 +30,14 @@ export function buildClientHomeKeyboard() {
     .text('Review applicants', 'client:review_applicants')
 }
 
+export function buildClientHomeWebviewKeyboard(postGigUrl: string, myGigsUrl: string) {
+  return new InlineKeyboard()
+    .url('Post gig', postGigUrl)
+    .url('My gigs', myGigsUrl)
+    .row()
+    .text('Review applicants', 'client:review_applicants')
+}
+
 export function buildAdminHomeKeyboard() {
   return new InlineKeyboard()
     .text('Pending verifications', 'admin:pending_verifications')
@@ -275,11 +283,18 @@ export function buildClientGigsListKeyboard(
   gigs: TelegramClientGigSummary[],
   page: number,
   hasPreviousPage: boolean,
-  hasNextPage: boolean
+  hasNextPage: boolean,
+  detailUrls?: Record<string, string>
 ) {
   const keyboard = new InlineKeyboard()
 
   for (const gig of gigs) {
+    const detailUrl = detailUrls?.[gig.id]
+    if (detailUrl) {
+      keyboard.url(`View: ${gig.title.slice(0, 24)}`, detailUrl).row()
+      continue
+    }
+
     keyboard.text(`View: ${gig.title.slice(0, 24)}`, `client:view_gig:${gig.id}`).row()
   }
 
