@@ -25,6 +25,8 @@ import {
   updateFreelancerBrowseFilters,
 } from '@/lib/telegram/conversations/freelancer'
 import { requireTelegramRole } from '@/lib/telegram/guards'
+import { createTelegramWebviewToken } from '@/lib/telegram/webview/auth'
+import { buildTelegramFreelancerGigDetailUrl } from '@/lib/telegram/webview/urls'
 import {
   buildActiveJobDetailKeyboard,
   buildActiveJobsListKeyboard,
@@ -119,6 +121,14 @@ export async function handleBrowseGigs(ctx: TelegramBotContext, page: number = 0
 
     const filters = getFreelancerBrowseFilters(String(resolved.telegramUserId))
     const result = await listTelegramOpenGigs(page, filters)
+    const webviewToken = createTelegramWebviewToken({
+      userId: resolved.profile.id,
+      telegramUserId: resolved.telegramUserId,
+      role: 'freelancer',
+    })
+    const detailUrls = Object.fromEntries(
+      result.gigs.map((gig) => [gig.id, buildTelegramFreelancerGigDetailUrl(gig.id, webviewToken)])
+    )
 
     await safeAnswerCallbackQuery(ctx, {
       text: result.gigs.length > 0 ? `Loaded page ${result.page + 1}` : 'No gigs found',
@@ -129,7 +139,7 @@ export async function handleBrowseGigs(ctx: TelegramBotContext, page: number = 0
         ctx,
         [buildGigBrowseFilterSummary(result.filters), '', buildGigBrowseEmptyState()].join('\n'),
         {
-          reply_markup: buildGigListKeyboard([], 0, false, false, result.filters),
+          reply_markup: buildGigListKeyboard([], 0, false, false, result.filters, detailUrls),
         }
       )
       return
@@ -150,7 +160,8 @@ export async function handleBrowseGigs(ctx: TelegramBotContext, page: number = 0
           result.page,
           result.hasPreviousPage,
           result.hasNextPage,
-          result.filters
+          result.filters,
+          detailUrls
         ),
       }
     )

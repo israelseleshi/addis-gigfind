@@ -54,7 +54,8 @@ export function buildGigListKeyboard(
   page: number,
   hasPreviousPage: boolean,
   hasNextPage: boolean,
-  filters: TelegramGigBrowseFilters
+  filters: TelegramGigBrowseFilters,
+  detailUrls?: Record<string, string>
 ) {
   const keyboard = new InlineKeyboard()
 
@@ -68,6 +69,12 @@ export function buildGigListKeyboard(
   }
 
   for (const gig of gigs) {
+    const detailUrl = detailUrls?.[gig.id]
+    if (detailUrl) {
+      keyboard.url(`View: ${gig.title.slice(0, 24)}`, detailUrl).row()
+      continue
+    }
+
     keyboard.text(`View: ${gig.title.slice(0, 24)}`, `freelancer:view_gig:${gig.id}`).row()
   }
 
