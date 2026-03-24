@@ -1,8 +1,19 @@
 'use server'
 
+import { z } from 'zod'
+
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 
 const TELEGRAM_GIG_PAGE_SIZE = 5
+
+const telegramPostGigSchema = z.object({
+  clientId: z.string().uuid(),
+  title: z.string().min(5, 'Title must be at least 5 characters.'),
+  category: z.string().min(1, 'Choose a category.'),
+  description: z.string().min(20, 'Description must be at least 20 characters.'),
+  budget: z.number().int().positive('Budget must be greater than 0.'),
+  location: z.string().min(1, 'Choose a location.'),
+})
 
 export type TelegramGigBrowseFilters = {
   category?: string | null
@@ -35,6 +46,8 @@ export type TelegramClientGigSummary = {
   created_at: string | null
   applications: { count: number }[] | null
 }
+
+export type TelegramPostGigInput = z.infer<typeof telegramPostGigSchema>
 
 export type TelegramGigFilterOptions = {
   categories: string[]
@@ -315,4 +328,51 @@ export async function getTelegramClientGigDetails(clientId: string, gigId: strin
   }
 
   return normalizeTelegramClientGigSummary(data as Record<string, unknown>)
+}
+
+export async function createTelegramGig(input: TelegramPostGigInput) {
+  const validated = telegramPostGigSchema.safeParse(input)
+  if (!validated.success) {
+    return { error: validated.error.issues[0]?.message ?? 'Invalid gig data.' }
+  }
+
+  const supabase = await createServiceRoleClient()
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', validated.data.clientId)
+    .single()
+
+  if (profileError || !profile) {
+    return { error: profileError?.message ?? 'Unable to verify client account.' }
+  }
+
+  if (profile.role !== 'client') {
+    return { error: 'Only clients can post gigs.' }
+  }
+
+  const { data, error } = await supabase
+    .from('gigs')
+    .insert({
+      title: validated.data.title,
+      category: validated.data.category,
+      description: validated.data.description,
+      budget: validated.data.budget,
+      location: validated.data.location,
+      client_id: validated.data.clientId,
+      status: 'open',
+    })
+    .select('id, title')
+    .single()
+
+  if (error || !data) {
+    return { error: error?.message ?? 'Unable to create gig.' }
+  }
+
+  return {
+    error: null,
+    gigId: readString((data as Record<string, unknown>).id),
+    title: readString((data as Record<string, unknown>).title),
+  }
 }

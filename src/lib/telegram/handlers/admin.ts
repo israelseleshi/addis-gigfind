@@ -176,6 +176,49 @@ export async function handlePendingVerificationDetails(
   }
 }
 
+export async function handleNextPendingVerification(
+  ctx: TelegramBotContext,
+  currentDocumentId: string
+) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['admin', 'regulator'], ADMIN_ONLY_MESSAGE)
+    if (!resolved) {
+      await safeAnswerCallbackQuery(ctx)
+      return
+    }
+
+    const documents = await listTelegramPendingVerifications()
+    await safeAnswerCallbackQuery(ctx)
+
+    if (documents.length === 0) {
+      await respondWithTelegramMessage(ctx, buildAdminPendingVerificationsEmptyState(), {
+        reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+      })
+      return
+    }
+
+    const currentIndex = documents.findIndex((document) => document.id === currentDocumentId)
+    const nextDocument = documents[currentIndex + 1] ?? documents[0]
+
+    await respondWithTelegramMessage(ctx, buildAdminVerificationDetailMessage(nextDocument), {
+      parse_mode: 'HTML',
+      reply_markup: buildAdminVerificationDetailKeyboard(nextDocument.id),
+    })
+  } catch (error) {
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, {
+          handler: 'admin-next-verification',
+          documentId: currentDocumentId,
+        }),
+      },
+      'Telegram admin next verification handler failed'
+    )
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
 export async function handleApproveVerification(
   ctx: TelegramBotContext,
   documentId: string

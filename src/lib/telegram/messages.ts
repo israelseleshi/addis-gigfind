@@ -542,6 +542,81 @@ export function buildClientGigsEmptyState() {
   ].join('\n')
 }
 
+export function buildClientPostGigStartMessage() {
+  return [
+    'Let’s post a new gig.',
+    '',
+    'Send the gig title in your next message.',
+    'Minimum length: 5 characters.',
+  ].join('\n')
+}
+
+export function buildClientPostGigBudgetPromptMessage(title: string, categoryLabel: string, locationLabel: string) {
+  return [
+    'Post a new gig',
+    '',
+    `Title: ${title}`,
+    `Category: ${categoryLabel}`,
+    `Location: ${locationLabel}`,
+    '',
+    'Send the budget in ETB as a number.',
+  ].join('\n')
+}
+
+export function buildClientPostGigDescriptionPromptMessage(
+  title: string,
+  categoryLabel: string,
+  locationLabel: string,
+  budget: number
+) {
+  return [
+    'Post a new gig',
+    '',
+    `Title: ${title}`,
+    `Category: ${categoryLabel}`,
+    `Location: ${locationLabel}`,
+    `Budget: ETB ${budget.toLocaleString()}`,
+    '',
+    'Send the gig description in your next message.',
+    'Minimum length: 20 characters.',
+  ].join('\n')
+}
+
+export function buildClientPostGigReviewMessage(input: {
+  title: string
+  categoryLabel: string
+  locationLabel: string
+  budget: number
+  description: string
+}) {
+  return joinTelegramMessage([
+    '<b>Review your gig</b>',
+    `Title: ${input.title}`,
+    `Category: ${input.categoryLabel}`,
+    `Location: ${input.locationLabel}`,
+    `Budget: ETB ${input.budget.toLocaleString()}`,
+    '',
+    '<b>Description</b>',
+    truncateTelegramLongText(input.description),
+    '',
+    'Tap publish when everything looks correct.',
+  ])
+}
+
+export function buildClientPostGigCancelledMessage() {
+  return [
+    'Gig posting was cancelled.',
+    'You can start again any time from the client menu.',
+  ].join('\n')
+}
+
+export function buildClientPostGigSuccessMessage(title: string) {
+  return [
+    `Your gig "${title}" is now live.`,
+    'Freelancers can start applying immediately.',
+  ].join('\n')
+}
+
 export function buildClientGigSummaryLines(gig: TelegramClientGigSummary) {
   const applicants = gig.applications?.[0]?.count ?? 0
 

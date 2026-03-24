@@ -2,15 +2,21 @@ import type { TelegramBotContext } from '@/lib/telegram/context'
 import {
   handleApproveVerification,
   handleAdminHome,
+  handleNextPendingVerification,
   handlePendingVerificationDetails,
   handlePendingVerifications,
   handleRejectVerificationPrompt,
 } from '@/lib/telegram/handlers/admin'
 import {
   handleClientAcceptApplicant,
+  handleClientCancelPostGig,
+  handleClientConfirmPostGig,
   handleClientHome,
   handleClientMyGigs,
+  handleClientPostGigStart,
   handleClientRejectApplicant,
+  handleClientSelectGigCategory,
+  handleClientSelectGigLocation,
   handleClientViewApplicantDetails,
   handleClientViewApplicants,
   handleClientViewGigDetails,
@@ -94,6 +100,12 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
       return
     }
 
+    if (callbackData.startsWith('admin:next_verification:')) {
+      const documentId = callbackData.split(':')[2]
+      await handleNextPendingVerification(ctx, documentId)
+      return
+    }
+
     if (callbackData.startsWith('admin:reject_verification:')) {
       const documentId = callbackData.split(':')[3]
       await handleRejectVerificationPrompt(ctx, documentId)
@@ -102,6 +114,33 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
 
     if (callbackData === 'client:home') {
       await handleClientHome(ctx)
+      return
+    }
+
+    if (callbackData === 'client:post_gig') {
+      await handleClientPostGigStart(ctx)
+      return
+    }
+
+    if (callbackData === 'client:cancel_post_gig') {
+      await handleClientCancelPostGig(ctx)
+      return
+    }
+
+    if (callbackData === 'client:confirm_post_gig') {
+      await handleClientConfirmPostGig(ctx)
+      return
+    }
+
+    if (callbackData.startsWith('client:post_category:')) {
+      const category = callbackData.split(':')[2]
+      await handleClientSelectGigCategory(ctx, category)
+      return
+    }
+
+    if (callbackData.startsWith('client:post_location:')) {
+      const location = callbackData.split(':')[2]
+      await handleClientSelectGigLocation(ctx, location)
       return
     }
 

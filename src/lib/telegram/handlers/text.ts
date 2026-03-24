@@ -1,7 +1,11 @@
 import { touchTelegramAccount } from '@/lib/telegram/account-link'
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import { handleAdminHome, handlePendingVerifications } from '@/lib/telegram/handlers/admin'
-import { handleClientHome, handleClientMyGigs } from '@/lib/telegram/handlers/client'
+import {
+  handleClientConversationText,
+  handleClientHome,
+  handleClientMyGigs,
+} from '@/lib/telegram/handlers/client'
 import { handleRejectVerificationReply } from '@/lib/telegram/handlers/admin'
 import {
   handleActiveJobs,
@@ -46,6 +50,11 @@ export async function handleTextMessage(ctx: TelegramBotContext) {
 
     const browseFilterHandled = await handleBrowseFilterReply(ctx)
     if (browseFilterHandled) {
+      return
+    }
+
+    const clientConversationHandled = await handleClientConversationText(ctx)
+    if (clientConversationHandled) {
       return
     }
 

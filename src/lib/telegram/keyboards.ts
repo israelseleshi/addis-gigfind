@@ -246,6 +246,7 @@ export function buildAdminPendingVerificationsKeyboard(
       .row()
   }
 
+  keyboard.text('Refresh queue', 'admin:pending_verifications').row()
   keyboard.text('Back to menu', 'admin:home')
   return keyboard
 }
@@ -256,6 +257,8 @@ export function buildAdminVerificationDetailKeyboard(documentId: string) {
     .text('Reject', `admin:reject_verification:${documentId}`)
     .row()
     .text('Refresh verification', `admin:view_verification:${documentId}`)
+    .row()
+    .text('Next pending', `admin:next_verification:${documentId}`)
     .row()
     .text('Pending verifications', 'admin:pending_verifications')
     .text('Back to menu', 'admin:home')
@@ -287,6 +290,49 @@ export function buildClientGigsListKeyboard(
 
   keyboard.text('Back to menu', 'client:home')
   return keyboard
+}
+
+export function buildClientPostGigCategoryKeyboard(
+  categories: ReadonlyArray<{ value: string; label: string }>,
+  currentValue?: string | null
+) {
+  const keyboard = new InlineKeyboard()
+
+  for (const category of categories) {
+    const label = category.value === currentValue ? `• ${category.label}` : category.label
+    keyboard.text(label.slice(0, 28), `client:post_category:${category.value}`).row()
+  }
+
+  return keyboard
+    .text('Cancel posting', 'client:cancel_post_gig')
+    .row()
+    .text('Back to menu', 'client:home')
+}
+
+export function buildClientPostGigLocationKeyboard(
+  locations: ReadonlyArray<{ value: string; label: string }>,
+  currentValue?: string | null
+) {
+  const keyboard = new InlineKeyboard()
+
+  for (const location of locations) {
+    const label = location.value === currentValue ? `• ${location.label}` : location.label
+    keyboard.text(label.slice(0, 28), `client:post_location:${location.value}`).row()
+  }
+
+  return keyboard
+    .text('Cancel posting', 'client:cancel_post_gig')
+    .row()
+    .text('Back to menu', 'client:home')
+}
+
+export function buildClientPostGigReviewKeyboard() {
+  return new InlineKeyboard()
+    .text('Publish gig', 'client:confirm_post_gig')
+    .row()
+    .text('Cancel posting', 'client:cancel_post_gig')
+    .row()
+    .text('Back to menu', 'client:home')
 }
 
 export function buildClientGigDetailKeyboard(gigId: string) {
