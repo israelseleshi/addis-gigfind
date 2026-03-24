@@ -90,10 +90,22 @@ describe('handleCallbackQuery', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.shouldThrottleTelegramAction.mockReturnValue(false)
+    mocks.requireLinkedTelegramAccount.mockResolvedValue({
+      telegramUserId: '12345',
+      account: { user_id: 'user-1' },
+      profile: { id: 'user-1', role: 'freelancer', full_name: 'Test User' },
+      role: 'freelancer',
+    })
   })
 
   it('routes applicant detail callbacks with parsed gig and application ids', async () => {
     const ctx = createCallbackContext('client:view_applicant:gig-1:application-1')
+    mocks.requireLinkedTelegramAccount.mockResolvedValue({
+      telegramUserId: '12345',
+      account: { user_id: 'user-2' },
+      profile: { id: 'user-2', role: 'client', full_name: 'Client User' },
+      role: 'client',
+    })
 
     await handleCallbackQuery(ctx)
 

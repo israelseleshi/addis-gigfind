@@ -66,7 +66,6 @@ export function buildRoleMenu(role: string) {
     return [
       'Available actions:',
       '- Review verifications',
-      '- View platform stats',
       '- Moderate users and gigs',
     ].join('\n')
   }

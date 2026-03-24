@@ -50,6 +50,43 @@ import { shouldThrottleTelegramAction } from '@/lib/telegram/rate-limit'
 
 const HIGH_RISK_CALLBACK_WINDOW_MS = 5_000
 
+function getCallbackRolePrefix(callbackData: string) {
+  if (callbackData.startsWith('freelancer:')) {
+    return 'freelancer'
+  }
+
+  if (callbackData.startsWith('client:')) {
+    return 'client'
+  }
+
+  if (callbackData.startsWith('admin:')) {
+    return 'admin'
+  }
+
+  return null
+}
+
+async function handleRoleMismatchCallback(ctx: TelegramBotContext) {
+  const resolved = await requireLinkedTelegramAccount(ctx)
+  if (!resolved) {
+    await ctx.answerCallbackQuery()
+    return true
+  }
+
+  if (resolved.role === 'client') {
+    await handleClientHome(ctx)
+    return true
+  }
+
+  if (resolved.role === 'admin' || resolved.role === 'regulator') {
+    await handleAdminHome(ctx)
+    return true
+  }
+
+  await handleFreelancerHome(ctx)
+  return true
+}
+
 function isHighRiskCallback(callbackData: string) {
   return [
     'admin:approve_verification:',
@@ -67,6 +104,7 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
     }
 
     const actorId = String(ctx.from?.id ?? '')
+    const callbackRolePrefix = getCallbackRolePrefix(callbackData)
 
     if (actorId && isHighRiskCallback(callbackData)) {
       const throttleKey = `callback:${actorId}:${callbackData}`
@@ -74,6 +112,26 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
         await ctx.answerCallbackQuery({
           text: 'That action is already being processed.',
         })
+        return
+      }
+    }
+
+    if (callbackRolePrefix) {
+      const resolved = await requireLinkedTelegramAccount(ctx)
+      if (!resolved) {
+        await ctx.answerCallbackQuery()
+        return
+      }
+
+      const allowedPrefixes =
+        resolved.role === 'client'
+          ? ['client']
+          : resolved.role === 'admin' || resolved.role === 'regulator'
+            ? ['admin']
+            : ['freelancer']
+
+      if (!allowedPrefixes.includes(callbackRolePrefix)) {
+        await handleRoleMismatchCallback(ctx)
         return
       }
     }

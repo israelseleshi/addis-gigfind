@@ -39,10 +39,7 @@ export function buildClientHomeWebviewKeyboard(postGigUrl: string, myGigsUrl: st
 }
 
 export function buildAdminHomeKeyboard() {
-  return new InlineKeyboard()
-    .text('Pending verifications', 'admin:pending_verifications')
-    .row()
-    .text('Platform stats', 'admin:platform_stats')
+  return new InlineKeyboard().text('Pending verifications', 'admin:pending_verifications')
 }
 
 export function buildLinkedHomeKeyboard(role: TelegramUserRole) {
