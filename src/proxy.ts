@@ -51,6 +51,22 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Protect admin routes with authentication and role check
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single()
+    
+    if (profile?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
+
   // Redirect logged in users away from auth pages
   if (request.nextUrl.pathname.startsWith('/login') ||
       request.nextUrl.pathname.startsWith('/register')) {
@@ -74,6 +90,7 @@ export const config = {
     '/client/:path*',
     '/freelancer/:path*',
     '/onboarding/:path*',
+    '/admin/:path*',
     '/login',
     '/register',
   ],

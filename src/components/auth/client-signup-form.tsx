@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toast } from 'sonner'
@@ -20,13 +21,12 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { industries, locations } from '@/lib/constants'
 
 export function ClientSignUpForm() {
   const [isPending, startTransition] = React.useTransition()
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
+  const router = useRouter()
 
   const form = useForm<z.infer<typeof clientSignUpSchema>>({
     resolver: zodResolver(clientSignUpSchema),
@@ -35,10 +35,6 @@ export function ClientSignUpForm() {
       email: '',
       password: '',
       confirmPassword: '',
-      companyName: '',
-      industry: '',
-      location: '',
-      phone: '',
     },
   })
 
@@ -48,6 +44,9 @@ export function ClientSignUpForm() {
         const result = await registerClient(values)
         if (result?.error) {
           toast.error(result.error)
+        } else if (result?.success) {
+          toast.success('Account created! Redirecting...')
+          router.push('/onboarding/client')
         }
       } catch {
         toast.error('Something went wrong. Please try again.')
@@ -152,80 +151,6 @@ export function ClientSignUpForm() {
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="companyName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Company Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your company name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="industry"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Industry</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select an industry" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {industries.map((industry) => (
-                    <SelectItem key={industry} value={industry}>
-                      {industry}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location (Sub-city)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a location" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {locations.map((location) => (
-                    <SelectItem key={location} value={location}>
-                      {location}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your phone number" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

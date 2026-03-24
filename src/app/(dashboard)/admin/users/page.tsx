@@ -223,7 +223,6 @@ export default function AdminUsersPage() {
                   </Avatar>
                   <div>
                     <h3 className="font-medium">{user.full_name}</h3>
-                    <p className="text-sm text-gray-500">{user.id}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
