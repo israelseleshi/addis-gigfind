@@ -3,7 +3,11 @@ import type {
   TelegramApplicationSummary,
   TelegramGigApplicantSummary,
 } from '@/lib/actions/telegram/applications'
-import type { TelegramBrowseGig, TelegramClientGigSummary } from '@/lib/actions/telegram/gigs'
+import type {
+  TelegramBrowseGig,
+  TelegramClientGigSummary,
+  TelegramGigBrowseFilters,
+} from '@/lib/actions/telegram/gigs'
 import type { TelegramVerificationSnapshot } from '@/lib/actions/telegram/verifications'
 import type { TelegramPendingVerificationSummary } from '@/lib/actions/telegram/verifications'
 
@@ -223,10 +227,25 @@ export function buildGigBrowseIntro(page: number, total: number) {
   ].join('\n')
 }
 
+export function buildGigBrowseFilterSummary(filters: TelegramGigBrowseFilters) {
+  const category = filters.category?.trim()
+  const location = filters.location?.trim()
+
+  if (!category && !location) {
+    return 'Showing all open gigs.'
+  }
+
+  return [
+    'Current filters:',
+    `- Category: ${category ?? 'Any'}`,
+    `- Location: ${location ?? 'Any'}`,
+  ].join('\n')
+}
+
 export function buildGigBrowseEmptyState() {
   return [
     'No open gigs are available right now.',
-    'Check back later or use the website to browse again.',
+    'Adjust the filters below or check back later.',
   ].join('\n')
 }
 
@@ -260,15 +279,26 @@ export function buildGigNotFoundMessage() {
 }
 
 export function buildGigApplyPromptMessage(gig: TelegramBrowseGig) {
-  return [
-    `Apply prompt for gig ${gig.id}`,
-    '',
-    `<b>${gig.title}</b>`,
+  return joinTelegramMessage([
+    `<b>Application draft for ${gig.title}</b>`,
+    `Gig ID: <code>${gig.id}</code>`,
     `Budget: ETB ${gig.budget.toLocaleString()}`,
     '',
-    'Reply to this exact message with your cover note.',
+    'Send your cover note in the next message.',
     'Minimum length: 20 characters.',
-  ].join('\n')
+  ])
+}
+
+export function buildGigApplyDraftReviewMessage(gigTitle: string, coverNote: string) {
+  return joinTelegramMessage([
+    `<b>Review your application</b>`,
+    `Gig: ${gigTitle}`,
+    '',
+    '<b>Cover note</b>',
+    truncateTelegramNoteText(coverNote),
+    '',
+    'Tap confirm to submit or send a new message to replace the cover note.',
+  ])
 }
 
 export function buildGigApplySuccessMessage(title: string) {
@@ -280,8 +310,26 @@ export function buildGigApplySuccessMessage(title: string) {
 
 export function buildGigApplyInstructionMessage() {
   return [
-    'Please reply directly to the apply prompt message with your cover note.',
-    'That lets the bot know which gig you are applying to.',
+    'Send your cover note as a normal message.',
+    'The bot will attach it to your current application draft automatically.',
+  ].join('\n')
+}
+
+export function buildGigApplyCancelledMessage() {
+  return [
+    'Your application draft was cancelled.',
+    'You can browse gigs and start again anytime.',
+  ].join('\n')
+}
+
+export function buildGigFilterPromptMessage(field: 'category' | 'location', currentValue?: string | null) {
+  const label = field === 'category' ? 'category' : 'location'
+  const current = currentValue?.trim()
+
+  return [
+    `Send the ${label} you want to filter by.`,
+    current ? `Current ${label}: ${current}` : `No ${label} filter is set yet.`,
+    'Send "any" to clear that filter.',
   ].join('\n')
 }
 

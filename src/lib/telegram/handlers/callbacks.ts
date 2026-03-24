@@ -19,9 +19,14 @@ import {
   handleActiveJobs,
   handleApplyGigPlaceholder,
   handleBrowseGigs,
+  handleCancelGigApplication,
+  handleClearGigFilters,
+  handleConfirmGigApplication,
   handleFreelancerHome,
   handleMarkActiveJobInProgress,
   handleMyApplications,
+  handlePromptGigCategoryFilter,
+  handlePromptGigLocationFilter,
   handleVerificationStatus,
   handleViewActiveJobDetails,
   handleViewApplicationDetails,
@@ -148,6 +153,21 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
       return
     }
 
+    if (callbackData === 'freelancer:prompt_category') {
+      await handlePromptGigCategoryFilter(ctx)
+      return
+    }
+
+    if (callbackData === 'freelancer:prompt_location') {
+      await handlePromptGigLocationFilter(ctx)
+      return
+    }
+
+    if (callbackData === 'freelancer:clear_filters') {
+      await handleClearGigFilters(ctx)
+      return
+    }
+
     if (callbackData.startsWith('freelancer:view_gig:')) {
       const gigId = callbackData.split(':')[2]
       await handleViewGigDetails(ctx, gigId)
@@ -192,6 +212,17 @@ export async function handleCallbackQuery(ctx: TelegramBotContext) {
     if (callbackData.startsWith('freelancer:apply_gig:')) {
       const gigId = callbackData.split(':')[2]
       await handleApplyGigPlaceholder(ctx, gigId)
+      return
+    }
+
+    if (callbackData.startsWith('freelancer:confirm_apply:')) {
+      const gigId = callbackData.split(':')[2]
+      await handleConfirmGigApplication(ctx, gigId)
+      return
+    }
+
+    if (callbackData === 'freelancer:cancel_apply') {
+      await handleCancelGigApplication(ctx)
       return
     }
 

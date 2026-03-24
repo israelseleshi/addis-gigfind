@@ -4,6 +4,11 @@ import { createServiceRoleClient } from '@/lib/supabase/service-role'
 
 const TELEGRAM_GIG_PAGE_SIZE = 5
 
+export type TelegramGigBrowseFilters = {
+  category?: string | null
+  location?: string | null
+}
+
 export type TelegramBrowseGig = {
   id: string
   title: string
@@ -39,48 +44,67 @@ function unwrapRelation<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null
 }
 
-function normalizeTelegramBrowseGig(row: Record<string, any>): TelegramBrowseGig {
-  const client = unwrapRelation(row.client)
+function readString(value: unknown) {
+  return typeof value === 'string' ? value : ''
+}
+
+function readNullableString(value: unknown) {
+  return typeof value === 'string' ? value : null
+}
+
+function readNumber(value: unknown) {
+  return typeof value === 'number' ? value : 0
+}
+
+function readNullableNumber(value: unknown) {
+  return typeof value === 'number' ? value : null
+}
+
+function normalizeTelegramBrowseGig(row: Record<string, unknown>): TelegramBrowseGig {
+  const client = unwrapRelation(row.client) as Record<string, unknown> | null
 
   return {
-    id: row.id,
-    title: row.title,
-    category: row.category,
-    location: row.location,
-    budget: row.budget,
-    description: row.description,
-    created_at: row.created_at ?? null,
+    id: readString(row.id),
+    title: readString(row.title),
+    category: readString(row.category),
+    location: readString(row.location),
+    budget: readNumber(row.budget),
+    description: readString(row.description),
+    created_at: readNullableString(row.created_at),
     client: client
       ? {
-          id: client.id,
-          full_name: client.full_name ?? null,
-          average_rating: client.average_rating ?? null,
+          id: readString(client.id),
+          full_name: readNullableString(client.full_name),
+          average_rating: readNullableNumber(client.average_rating),
         }
       : null,
   }
 }
 
-function normalizeTelegramClientGigSummary(row: Record<string, any>): TelegramClientGigSummary {
+function normalizeTelegramClientGigSummary(row: Record<string, unknown>): TelegramClientGigSummary {
   return {
-    id: row.id,
-    title: row.title,
-    category: row.category,
-    location: row.location,
-    budget: row.budget,
-    description: row.description,
-    status: row.status ?? null,
-    created_at: row.created_at ?? null,
+    id: readString(row.id),
+    title: readString(row.title),
+    category: readString(row.category),
+    location: readString(row.location),
+    budget: readNumber(row.budget),
+    description: readString(row.description),
+    status: readNullableString(row.status),
+    created_at: readNullableString(row.created_at),
     applications: Array.isArray(row.applications) ? row.applications : null,
   }
 }
 
-export async function listTelegramOpenGigs(page: number = 0) {
+export async function listTelegramOpenGigs(
+  page: number = 0,
+  filters: TelegramGigBrowseFilters = {}
+) {
   const safePage = Math.max(0, page)
   const from = safePage * TELEGRAM_GIG_PAGE_SIZE
   const to = from + TELEGRAM_GIG_PAGE_SIZE - 1
 
   const supabase = await createServiceRoleClient()
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('gigs')
     .select(
       `
@@ -101,7 +125,19 @@ export async function listTelegramOpenGigs(page: number = 0) {
     )
     .eq('status', 'open')
     .order('created_at', { ascending: false })
-    .range(from, to)
+
+  const normalizedCategory = filters.category?.trim()
+  const normalizedLocation = filters.location?.trim()
+
+  if (normalizedCategory) {
+    query = query.ilike('category', `%${normalizedCategory}%`)
+  }
+
+  if (normalizedLocation) {
+    query = query.ilike('location', `%${normalizedLocation}%`)
+  }
+
+  const { data, error, count } = await query.range(from, to)
 
   if (error) {
     throw new Error(error.message)
@@ -109,13 +145,17 @@ export async function listTelegramOpenGigs(page: number = 0) {
 
   return {
     gigs: (data ?? []).map((row) =>
-      normalizeTelegramBrowseGig(row as Record<string, any>)
+      normalizeTelegramBrowseGig(row as Record<string, unknown>)
     ),
     page: safePage,
     pageSize: TELEGRAM_GIG_PAGE_SIZE,
     total: count ?? 0,
     hasNextPage: typeof count === 'number' ? to + 1 < count : false,
     hasPreviousPage: safePage > 0,
+    filters: {
+      category: normalizedCategory ?? null,
+      location: normalizedLocation ?? null,
+    },
   }
 }
 
@@ -148,7 +188,7 @@ export async function getTelegramGigDetails(gigId: string) {
     return null
   }
 
-  return normalizeTelegramBrowseGig(data as Record<string, any>)
+  return normalizeTelegramBrowseGig(data as Record<string, unknown>)
 }
 
 export async function listTelegramClientGigs(clientId: string, page: number = 0) {
@@ -183,7 +223,7 @@ export async function listTelegramClientGigs(clientId: string, page: number = 0)
 
   return {
     gigs: (data ?? []).map((row) =>
-      normalizeTelegramClientGigSummary(row as Record<string, any>)
+      normalizeTelegramClientGigSummary(row as Record<string, unknown>)
     ),
     page: safePage,
     pageSize: TELEGRAM_GIG_PAGE_SIZE,
@@ -218,5 +258,5 @@ export async function getTelegramClientGigDetails(clientId: string, gigId: strin
     return null
   }
 
-  return normalizeTelegramClientGigSummary(data as Record<string, any>)
+  return normalizeTelegramClientGigSummary(data as Record<string, unknown>)
 }

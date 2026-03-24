@@ -5,7 +5,11 @@ import type {
   TelegramApplicationSummary,
   TelegramGigApplicantSummary,
 } from '@/lib/actions/telegram/applications'
-import type { TelegramBrowseGig, TelegramClientGigSummary } from '@/lib/actions/telegram/gigs'
+import type {
+  TelegramBrowseGig,
+  TelegramClientGigSummary,
+  TelegramGigBrowseFilters,
+} from '@/lib/actions/telegram/gigs'
 import type { TelegramPendingVerificationSummary } from '@/lib/actions/telegram/verifications'
 import type { TelegramUserRole } from '@/lib/telegram/types'
 
@@ -49,9 +53,19 @@ export function buildGigListKeyboard(
   gigs: TelegramBrowseGig[],
   page: number,
   hasPreviousPage: boolean,
-  hasNextPage: boolean
+  hasNextPage: boolean,
+  filters: TelegramGigBrowseFilters
 ) {
   const keyboard = new InlineKeyboard()
+
+  keyboard
+    .text('Category filter', 'freelancer:prompt_category')
+    .text('Location filter', 'freelancer:prompt_location')
+    .row()
+
+  if (filters.category || filters.location) {
+    keyboard.text('Clear filters', 'freelancer:clear_filters').row()
+  }
 
   for (const gig of gigs) {
     keyboard.text(`View: ${gig.title.slice(0, 24)}`, `freelancer:view_gig:${gig.id}`).row()
@@ -78,6 +92,20 @@ export function buildGigDetailKeyboard(gigId: string) {
     .text('Apply to this gig', `freelancer:apply_gig:${gigId}`)
     .row()
     .text('Browse more gigs', 'freelancer:browse_gigs:0')
+    .text('Back to menu', 'freelancer:home')
+}
+
+export function buildGigApplyDraftKeyboard(gigId: string, hasCoverNote: boolean) {
+  const keyboard = new InlineKeyboard()
+
+  if (hasCoverNote) {
+    keyboard.text('Confirm application', `freelancer:confirm_apply:${gigId}`).row()
+  }
+
+  return keyboard
+    .text('Cancel application', 'freelancer:cancel_apply')
+    .row()
+    .text('Back to gig', `freelancer:view_gig:${gigId}`)
     .text('Back to menu', 'freelancer:home')
 }
 

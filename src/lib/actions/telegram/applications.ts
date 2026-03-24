@@ -83,30 +83,46 @@ function unwrapRelation<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null
 }
 
+function readString(value: unknown) {
+  return typeof value === 'string' ? value : ''
+}
+
+function readNullableString(value: unknown) {
+  return typeof value === 'string' ? value : null
+}
+
+function readNumber(value: unknown) {
+  return typeof value === 'number' ? value : 0
+}
+
+function readNullableNumber(value: unknown) {
+  return typeof value === 'number' ? value : null
+}
+
 function normalizeTelegramApplicationSummary(
-  row: Record<string, any>
+  row: Record<string, unknown>
 ): TelegramApplicationSummary {
-  const gig = unwrapRelation(row.gig)
-  const client = unwrapRelation(gig?.client)
+  const gig = unwrapRelation(row.gig) as Record<string, unknown> | null
+  const client = unwrapRelation(gig?.client) as Record<string, unknown> | null
 
   return {
-    id: row.id,
-    status: row.status ?? null,
-    cover_note: row.cover_note ?? null,
-    created_at: row.created_at ?? null,
+    id: readString(row.id),
+    status: readNullableString(row.status),
+    cover_note: readNullableString(row.cover_note),
+    created_at: readNullableString(row.created_at),
     gig: gig
       ? {
-          id: gig.id,
-          title: gig.title,
-          budget: gig.budget,
-          location: gig.location,
-          category: gig.category,
-          status: gig.status ?? null,
+          id: readString(gig.id),
+          title: readString(gig.title),
+          budget: readNumber(gig.budget),
+          location: readString(gig.location),
+          category: readString(gig.category),
+          status: readNullableString(gig.status),
           client: client
             ? {
-                id: client.id,
-                full_name: client.full_name ?? null,
-                average_rating: client.average_rating ?? null,
+                id: readString(client.id),
+                full_name: readNullableString(client.full_name),
+                average_rating: readNullableNumber(client.average_rating),
               }
             : null,
         }
@@ -114,29 +130,29 @@ function normalizeTelegramApplicationSummary(
   }
 }
 
-function normalizeTelegramActiveJobSummary(row: Record<string, any>): TelegramActiveJobSummary {
-  const gig = unwrapRelation(row.gig)
-  const client = unwrapRelation(gig?.client)
+function normalizeTelegramActiveJobSummary(row: Record<string, unknown>): TelegramActiveJobSummary {
+  const gig = unwrapRelation(row.gig) as Record<string, unknown> | null
+  const client = unwrapRelation(gig?.client) as Record<string, unknown> | null
 
   return {
-    id: row.id,
-    status: row.status ?? null,
-    created_at: row.created_at ?? null,
+    id: readString(row.id),
+    status: readNullableString(row.status),
+    created_at: readNullableString(row.created_at),
     gig: gig
       ? {
-          id: gig.id,
-          title: gig.title,
-          description: gig.description,
-          budget: gig.budget,
-          location: gig.location,
-          category: gig.category,
-          status: gig.status ?? null,
-          client_id: gig.client_id,
+          id: readString(gig.id),
+          title: readString(gig.title),
+          description: readString(gig.description),
+          budget: readNumber(gig.budget),
+          location: readString(gig.location),
+          category: readString(gig.category),
+          status: readNullableString(gig.status),
+          client_id: readString(gig.client_id),
           client: client
             ? {
-                id: client.id,
-                full_name: client.full_name ?? null,
-                average_rating: client.average_rating ?? null,
+                id: readString(client.id),
+                full_name: readNullableString(client.full_name),
+                average_rating: readNullableNumber(client.average_rating),
               }
             : null,
         }
@@ -144,22 +160,22 @@ function normalizeTelegramActiveJobSummary(row: Record<string, any>): TelegramAc
   }
 }
 
-function normalizeTelegramGigApplicantSummary(row: Record<string, any>): TelegramGigApplicantSummary {
-  const freelancer = unwrapRelation(row.freelancer)
+function normalizeTelegramGigApplicantSummary(row: Record<string, unknown>): TelegramGigApplicantSummary {
+  const freelancer = unwrapRelation(row.freelancer) as Record<string, unknown> | null
 
   return {
-    id: row.id,
-    status: row.status ?? null,
-    cover_note: row.cover_note ?? null,
-    bid_amount: row.bid_amount ?? null,
-    created_at: row.created_at ?? null,
+    id: readString(row.id),
+    status: readNullableString(row.status),
+    cover_note: readNullableString(row.cover_note),
+    bid_amount: readNullableNumber(row.bid_amount),
+    created_at: readNullableString(row.created_at),
     freelancer: freelancer
       ? {
-          id: freelancer.id,
-          full_name: freelancer.full_name ?? null,
-          average_rating: freelancer.average_rating ?? null,
-          reviews_count: freelancer.reviews_count ?? null,
-          phone_number: freelancer.phone_number ?? null,
+          id: readString(freelancer.id),
+          full_name: readNullableString(freelancer.full_name),
+          average_rating: readNullableNumber(freelancer.average_rating),
+          reviews_count: readNullableNumber(freelancer.reviews_count),
+          phone_number: readNullableString(freelancer.phone_number),
         }
       : null,
   }
@@ -303,7 +319,7 @@ export async function listTelegramApplicationsForFreelancer(
 
   return {
     applications: (data ?? []).map((row) =>
-      normalizeTelegramApplicationSummary(row as Record<string, any>)
+      normalizeTelegramApplicationSummary(row as Record<string, unknown>)
     ),
     page: safePage,
     total: count ?? 0,
@@ -349,8 +365,8 @@ export async function getTelegramApplicationDetails(
     return null
   }
 
-  const application = normalizeTelegramApplicationSummary(data as Record<string, any>)
-  const gig = unwrapRelation((data as Record<string, any>).gig)
+  const application = normalizeTelegramApplicationSummary(data as Record<string, unknown>)
+  const gig = unwrapRelation((data as Record<string, unknown>).gig) as Record<string, unknown> | null
 
   if (!application.gig || !gig?.description) {
     return null
@@ -360,7 +376,7 @@ export async function getTelegramApplicationDetails(
     ...application,
     gig: {
       ...application.gig,
-      description: gig.description,
+      description: readString(gig.description),
     },
   }
 }
@@ -405,7 +421,7 @@ export async function listTelegramActiveJobsForFreelancer(
   }
 
   const activeJobs = (data ?? []).map((row) =>
-    normalizeTelegramActiveJobSummary(row as Record<string, any>)
+    normalizeTelegramActiveJobSummary(row as Record<string, unknown>)
   ).filter((job) =>
     ['assigned', 'in_progress'].includes(job.gig?.status ?? '')
   )
@@ -460,7 +476,7 @@ export async function getTelegramActiveJobDetails(
     return null
   }
 
-  const job = normalizeTelegramActiveJobSummary(data as Record<string, any>)
+  const job = normalizeTelegramActiveJobSummary(data as Record<string, unknown>)
   if (!job.gig || !['assigned', 'in_progress'].includes(job.gig.status ?? '')) {
     return null
   }
@@ -563,7 +579,7 @@ export async function listTelegramGigApplicants(clientId: string, gigId: string)
   return {
     gig,
     applicants: (applicants ?? []).map((row) =>
-      normalizeTelegramGigApplicantSummary(row as Record<string, any>)
+      normalizeTelegramGigApplicantSummary(row as Record<string, unknown>)
     ),
   }
 }

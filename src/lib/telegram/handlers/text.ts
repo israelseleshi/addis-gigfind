@@ -6,6 +6,7 @@ import { handleRejectVerificationReply } from '@/lib/telegram/handlers/admin'
 import {
   handleActiveJobs,
   handleApplyReply,
+  handleBrowseFilterReply,
   handleBrowseGigs,
   handleFreelancerHome,
   handleMyApplications,
@@ -40,6 +41,11 @@ export async function handleTextMessage(ctx: TelegramBotContext) {
 
     const rejectVerificationHandled = await handleRejectVerificationReply(ctx)
     if (rejectVerificationHandled) {
+      return
+    }
+
+    const browseFilterHandled = await handleBrowseFilterReply(ctx)
+    if (browseFilterHandled) {
       return
     }
 

@@ -45,25 +45,33 @@ function unwrapRelation<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null
 }
 
+function readString(value: unknown) {
+  return typeof value === 'string' ? value : ''
+}
+
+function readNullableString(value: unknown) {
+  return typeof value === 'string' ? value : null
+}
+
 function normalizeTelegramPendingVerificationSummary(
-  row: Record<string, any>
+  row: Record<string, unknown>
 ): TelegramPendingVerificationSummary {
-  const profile = unwrapRelation(row.profiles)
+  const profile = unwrapRelation(row.profiles) as Record<string, unknown> | null
 
   return {
-    id: row.id,
-    user_id: row.user_id,
-    document_type: row.document_type,
-    id_number: row.id_number,
-    description: row.description ?? null,
-    status: row.status,
-    admin_notes: row.admin_notes ?? null,
-    submitted_at: row.submitted_at ?? null,
+    id: readString(row.id),
+    user_id: readString(row.user_id),
+    document_type: readString(row.document_type),
+    id_number: readString(row.id_number),
+    description: readNullableString(row.description),
+    status: readString(row.status),
+    admin_notes: readNullableString(row.admin_notes),
+    submitted_at: readNullableString(row.submitted_at),
     profiles: profile
       ? {
-          id: profile.id,
-          full_name: profile.full_name ?? null,
-          avatar_url: profile.avatar_url ?? null,
+          id: readString(profile.id),
+          full_name: readNullableString(profile.full_name),
+          avatar_url: readNullableString(profile.avatar_url),
         }
       : null,
   }
@@ -129,7 +137,7 @@ export async function listTelegramPendingVerifications() {
   }
 
   return (data ?? []).map((row) =>
-    normalizeTelegramPendingVerificationSummary(row as Record<string, any>)
+    normalizeTelegramPendingVerificationSummary(row as Record<string, unknown>)
   )
 }
 
@@ -162,7 +170,7 @@ export async function getTelegramPendingVerificationDetails(documentId: string) 
     return null
   }
 
-  return normalizeTelegramPendingVerificationSummary(data as Record<string, any>)
+  return normalizeTelegramPendingVerificationSummary(data as Record<string, unknown>)
 }
 
 export async function approveTelegramVerification(documentId: string) {
