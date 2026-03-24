@@ -148,7 +148,7 @@ export function TelegramLinkPanel() {
   const handleGenerateCode = () => {
     startTransition(async () => {
       const result = await createTelegramLinkCode();
-      if (result.error) {
+      if (!("success" in result) || !result.success) {
         toast.error(result.error);
         return;
       }

@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function AuthCodeErrorPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50">
@@ -14,18 +16,18 @@ export default function AuthCodeErrorPage() {
           </p>
         </div>
         <div className="space-y-3">
-          <a
+          <Link
             href="/login"
             className="flex w-full items-center justify-center rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-amber-600 transition-colors"
           >
             Try Again
-          </a>
-          <a
+          </Link>
+          <Link
             href="/"
             className="flex w-full items-center justify-center rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
           >
             Go Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -75,6 +75,96 @@ export type TelegramGigApplicantSummary = {
   } | null
 }
 
+function unwrapRelation<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) {
+    return value[0] ?? null
+  }
+
+  return value ?? null
+}
+
+function normalizeTelegramApplicationSummary(
+  row: Record<string, any>
+): TelegramApplicationSummary {
+  const gig = unwrapRelation(row.gig)
+  const client = unwrapRelation(gig?.client)
+
+  return {
+    id: row.id,
+    status: row.status ?? null,
+    cover_note: row.cover_note ?? null,
+    created_at: row.created_at ?? null,
+    gig: gig
+      ? {
+          id: gig.id,
+          title: gig.title,
+          budget: gig.budget,
+          location: gig.location,
+          category: gig.category,
+          status: gig.status ?? null,
+          client: client
+            ? {
+                id: client.id,
+                full_name: client.full_name ?? null,
+                average_rating: client.average_rating ?? null,
+              }
+            : null,
+        }
+      : null,
+  }
+}
+
+function normalizeTelegramActiveJobSummary(row: Record<string, any>): TelegramActiveJobSummary {
+  const gig = unwrapRelation(row.gig)
+  const client = unwrapRelation(gig?.client)
+
+  return {
+    id: row.id,
+    status: row.status ?? null,
+    created_at: row.created_at ?? null,
+    gig: gig
+      ? {
+          id: gig.id,
+          title: gig.title,
+          description: gig.description,
+          budget: gig.budget,
+          location: gig.location,
+          category: gig.category,
+          status: gig.status ?? null,
+          client_id: gig.client_id,
+          client: client
+            ? {
+                id: client.id,
+                full_name: client.full_name ?? null,
+                average_rating: client.average_rating ?? null,
+              }
+            : null,
+        }
+      : null,
+  }
+}
+
+function normalizeTelegramGigApplicantSummary(row: Record<string, any>): TelegramGigApplicantSummary {
+  const freelancer = unwrapRelation(row.freelancer)
+
+  return {
+    id: row.id,
+    status: row.status ?? null,
+    cover_note: row.cover_note ?? null,
+    bid_amount: row.bid_amount ?? null,
+    created_at: row.created_at ?? null,
+    freelancer: freelancer
+      ? {
+          id: freelancer.id,
+          full_name: freelancer.full_name ?? null,
+          average_rating: freelancer.average_rating ?? null,
+          reviews_count: freelancer.reviews_count ?? null,
+          phone_number: freelancer.phone_number ?? null,
+        }
+      : null,
+  }
+}
+
 export async function applyForGigFromTelegram(data: {
   gigId: string
   freelancerId: string
@@ -212,7 +302,9 @@ export async function listTelegramApplicationsForFreelancer(
   }
 
   return {
-    applications: (data ?? []) as TelegramApplicationSummary[],
+    applications: (data ?? []).map((row) =>
+      normalizeTelegramApplicationSummary(row as Record<string, any>)
+    ),
     page: safePage,
     total: count ?? 0,
     hasNextPage: typeof count === 'number' ? to + 1 < count : false,
@@ -257,10 +349,19 @@ export async function getTelegramApplicationDetails(
     return null
   }
 
-  return data as TelegramApplicationSummary & {
-    gig: TelegramApplicationSummary['gig'] & {
-      description: string
-    }
+  const application = normalizeTelegramApplicationSummary(data as Record<string, any>)
+  const gig = unwrapRelation((data as Record<string, any>).gig)
+
+  if (!application.gig || !gig?.description) {
+    return null
+  }
+
+  return {
+    ...application,
+    gig: {
+      ...application.gig,
+      description: gig.description,
+    },
   }
 }
 
@@ -303,7 +404,9 @@ export async function listTelegramActiveJobsForFreelancer(
     throw new Error(error.message)
   }
 
-  const activeJobs = ((data ?? []) as TelegramActiveJobSummary[]).filter((job) =>
+  const activeJobs = (data ?? []).map((row) =>
+    normalizeTelegramActiveJobSummary(row as Record<string, any>)
+  ).filter((job) =>
     ['assigned', 'in_progress'].includes(job.gig?.status ?? '')
   )
   const total = activeJobs.length
@@ -357,7 +460,7 @@ export async function getTelegramActiveJobDetails(
     return null
   }
 
-  const job = data as TelegramActiveJobSummary
+  const job = normalizeTelegramActiveJobSummary(data as Record<string, any>)
   if (!job.gig || !['assigned', 'in_progress'].includes(job.gig.status ?? '')) {
     return null
   }
@@ -459,7 +562,9 @@ export async function listTelegramGigApplicants(clientId: string, gigId: string)
 
   return {
     gig,
-    applicants: (applicants ?? []) as TelegramGigApplicantSummary[],
+    applicants: (applicants ?? []).map((row) =>
+      normalizeTelegramGigApplicantSummary(row as Record<string, any>)
+    ),
   }
 }
 

@@ -23,7 +23,12 @@ import { buildLinkedHomeKeyboard } from '@/lib/telegram/keyboards'
 
 export async function handleTextMessage(ctx: TelegramBotContext) {
   try {
-    const input = ctx.message.text.trim()
+    const messageText = ctx.message?.text
+    if (!messageText) {
+      return
+    }
+
+    const input = messageText.trim()
     if (input.startsWith('/')) {
       return
     }

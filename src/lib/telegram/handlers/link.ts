@@ -7,7 +7,8 @@ import { buildRoleMenu, buildTemporaryUnavailableMessage } from '@/lib/telegram/
 export async function handleLinkCommand(ctx: TelegramBotContext) {
   try {
     const from = ctx.from
-    if (!from) {
+    const chat = ctx.chat
+    if (!from || !chat) {
       await ctx.reply('Could not identify your Telegram account.')
       return
     }
@@ -23,7 +24,7 @@ export async function handleLinkCommand(ctx: TelegramBotContext) {
     const result = await consumeTelegramLinkCode({
       code,
       telegramUserId: String(from.id),
-      telegramChatId: String(ctx.chat.id),
+      telegramChatId: String(chat.id),
       username: from.username,
       firstName: from.first_name,
       lastName: from.last_name,

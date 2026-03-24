@@ -19,13 +19,18 @@ export function getTelegramBot() {
   registerTelegramHandlers(bot)
 
   bot.catch((error) => {
+    const telegramUpdateType =
+      error.ctx && 'updateType' in error.ctx && typeof error.ctx.updateType === 'string'
+        ? error.ctx.updateType
+        : null
+
     telegramLogger.error(
       {
         error,
         telegramUserId: error.ctx?.from?.id ? String(error.ctx.from.id) : null,
         telegramChatId: error.ctx?.chat?.id ? String(error.ctx.chat.id) : null,
         telegramCallbackData: error.ctx?.callbackQuery?.data ?? null,
-        telegramUpdateType: error.ctx?.updateType ?? null,
+        telegramUpdateType,
       },
       'Telegram bot error'
     )

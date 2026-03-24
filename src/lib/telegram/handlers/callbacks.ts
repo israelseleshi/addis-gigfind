@@ -46,7 +46,11 @@ function isHighRiskCallback(callbackData: string) {
 
 export async function handleCallbackQuery(ctx: TelegramBotContext) {
   try {
-    const callbackData = ctx.callbackQuery.data
+    const callbackData = ctx.callbackQuery?.data
+    if (!callbackData) {
+      return
+    }
+
     const actorId = String(ctx.from?.id ?? '')
 
     if (actorId && isHighRiskCallback(callbackData)) {

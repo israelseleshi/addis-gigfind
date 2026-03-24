@@ -257,7 +257,7 @@ export async function handleApplyReply(ctx: TelegramBotContext) {
     telegramLogger.error(
       {
         error,
-        ...buildTelegramLogContext(ctx, { handler: 'freelancer-apply-reply', gigId }),
+        ...buildTelegramLogContext(ctx, { handler: 'freelancer-apply-reply' }),
       },
       'Telegram freelancer apply reply handler failed'
     )

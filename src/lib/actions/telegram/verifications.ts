@@ -37,6 +37,38 @@ export type TelegramPendingVerificationSummary = {
   } | null
 }
 
+function unwrapRelation<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) {
+    return value[0] ?? null
+  }
+
+  return value ?? null
+}
+
+function normalizeTelegramPendingVerificationSummary(
+  row: Record<string, any>
+): TelegramPendingVerificationSummary {
+  const profile = unwrapRelation(row.profiles)
+
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    document_type: row.document_type,
+    id_number: row.id_number,
+    description: row.description ?? null,
+    status: row.status,
+    admin_notes: row.admin_notes ?? null,
+    submitted_at: row.submitted_at ?? null,
+    profiles: profile
+      ? {
+          id: profile.id,
+          full_name: profile.full_name ?? null,
+          avatar_url: profile.avatar_url ?? null,
+        }
+      : null,
+  }
+}
+
 export async function getTelegramVerificationStatus(
   userId: string
 ): Promise<TelegramVerificationSnapshot> {
@@ -96,7 +128,9 @@ export async function listTelegramPendingVerifications() {
     throw new Error(error.message)
   }
 
-  return (data ?? []) as TelegramPendingVerificationSummary[]
+  return (data ?? []).map((row) =>
+    normalizeTelegramPendingVerificationSummary(row as Record<string, any>)
+  )
 }
 
 export async function getTelegramPendingVerificationDetails(documentId: string) {
@@ -128,7 +162,7 @@ export async function getTelegramPendingVerificationDetails(documentId: string) 
     return null
   }
 
-  return data as TelegramPendingVerificationSummary
+  return normalizeTelegramPendingVerificationSummary(data as Record<string, any>)
 }
 
 export async function approveTelegramVerification(documentId: string) {
