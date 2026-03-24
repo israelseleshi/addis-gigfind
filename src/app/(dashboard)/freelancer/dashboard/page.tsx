@@ -218,7 +218,7 @@ export default function FreelancerDashboardPage() {
     { icon: Search, label: 'Find Work', href: '/freelancer/find-work', color: 'from-orange-500 to-amber-500' },
     { icon: FileText, label: 'My Applications', href: '/freelancer/my-applications', color: 'from-blue-500 to-cyan-500' },
     { icon: CheckCircle, label: 'Active Jobs', href: '/freelancer/active-jobs', color: 'from-green-500 to-emerald-500' },
-    { icon: Zap, label: 'Profile Boost', href: '/freelancer/profile', color: 'from-purple-500 to-pink-500' },
+    { icon: Zap, label: 'Profile Boost', href: '/freelancer/profile/edit', color: 'from-purple-500 to-pink-500' },
   ]
 
 

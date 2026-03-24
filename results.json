@@ -1,0 +1,29 @@
+[
+  {
+    "enumlabel": "client"
+  },
+  {
+    "enumlabel": "freelancer"
+  },
+  {
+    "enumlabel": "admin"
+  },
+  {
+    "enumlabel": "regulator"
+  }
+]
+
+
+
+[
+  {
+    "proname": "handle_new_user",
+    "prosrc": "\r\nBEGIN\r\n  INSERT INTO public.profiles (id, full_name, role)\r\n  VALUES (\r\n    new.id,\r\n    COALESCE(\r\n      NULLIF(new.raw_user_meta_data->>'full_name', ''),\r\n      NULLIF(new.raw_user_meta_data->>'fullName', ''),\r\n      new.email,\r\n      'New User'\r\n    ),\r\n    COALESCE(\r\n      NULLIF(new.raw_user_meta_data->>'role', ''),\r\n      'client'\r\n    )::user_role\r\n  )\r\n  ON CONFLICT (id) DO NOTHING;\r\n  RETURN new;\r\nEND;\r\n",
+    "prosecdef": true,
+    "owner": "postgres"
+  }
+]
+
+
+
+Success. No rows returned

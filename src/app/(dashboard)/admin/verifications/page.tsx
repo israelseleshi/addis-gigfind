@@ -281,7 +281,7 @@ export default function AdminVerificationsPage() {
                             </Avatar>
                             <div className="min-w-0">
                               <div className="truncate font-medium">{doc.profiles.full_name}</div>
-                              <div className="text-xs text-gray-500">{doc.user_id}</div>
+                              
                             </div>
                           </div>
                         </TableCell>
@@ -379,7 +379,7 @@ export default function AdminVerificationsPage() {
                             </Avatar>
                             <div className="min-w-0">
                               <div className="truncate font-medium">{doc.profiles.full_name}</div>
-                              <div className="text-xs text-gray-500">{doc.user_id}</div>
+                              
                             </div>
                           </div>
                         </TableCell>

@@ -56,32 +56,54 @@ export async function registerClient(values: z.infer<typeof clientSignUpSchema>)
       return { error: 'Invalid form data. Please check your inputs.' }
     }
 
-    const { fullName, email, password, phone, location, companyName, industry } = validated.data
+    const { fullName, email, password } = validated.data
 
-    // Sign up WITHOUT email confirmation (we'll use our custom OTP)
+    // Sign up WITHOUT email confirmation
+    console.log('[registerClient] Step 1: Creating auth user...')
     const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: undefined, // Disable Supabase email confirmation
         data: {
           full_name: fullName,
           role: 'client',
-          phone: phone,
-          location: location,
-          company_name: companyName,
-          industry: industry,
         },
       },
     })
 
     if (error) {
-      console.error('Sign up error:', error)
-      return { error: error.message }
+      console.error('[registerClient] Auth signUp error:', error.code, error.message)
+      return { error: `Auth error: ${error.message}` }
     }
 
-    console.log('[registerClient] User created:', signUpData.user?.id)
-    // Profile is created automatically by the trigger with all fields
+    console.log('[registerClient] Auth user created:', signUpData.user?.id)
+
+    // Sign in immediately to create active session for RLS
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (signInError) {
+      console.error('[registerClient] Sign in after signup error:', signInError)
+      return { error: 'Account created but failed to sign in. Please try logging in.' }
+    }
+
+    // Now create profile with active session
+    if (signUpData.user) {
+      console.log('[registerClient] Creating profile...')
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: signUpData.user.id,
+        full_name: fullName,
+        role: 'client',
+      })
+
+      if (profileError) {
+        console.error('[registerClient] Profile creation error:', profileError)
+        return { error: `Profile error: ${profileError.message}` }
+      }
+      console.log('[registerClient] Profile created successfully')
+    }
 
     return { success: true, userId: signUpData.user?.id }
   } catch (e) {
@@ -102,22 +124,16 @@ export async function registerFreelancer(values: z.infer<typeof freelancerSignUp
       return { error: 'Invalid form data. Please check your inputs.' }
     }
 
-    const { fullName, email, password, phone, location, skills, experience, bio } = validated.data
+    const { fullName, email, password } = validated.data
 
-    // Sign up WITHOUT email confirmation (we'll use our custom OTP)
+    // Sign up WITHOUT email confirmation
     const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: undefined, // Disable Supabase email confirmation
         data: {
           full_name: fullName,
           role: 'freelancer',
-          phone: phone,
-          location: location,
-          skills: skills,
-          experience: experience,
-          bio: bio,
         },
       },
     })
@@ -128,7 +144,33 @@ export async function registerFreelancer(values: z.infer<typeof freelancerSignUp
     }
 
     console.log('[registerFreelancer] User created:', signUpData.user?.id)
-    // Profile is created automatically by the trigger with all fields
+
+    // Sign in immediately to create active session for RLS
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (signInError) {
+      console.error('[registerFreelancer] Sign in after signup error:', signInError)
+      return { error: 'Account created but failed to sign in. Please try logging in.' }
+    }
+
+    // Now create profile with active session
+    if (signUpData.user) {
+      console.log('[registerFreelancer] Creating profile...')
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: signUpData.user.id,
+        full_name: fullName,
+        role: 'freelancer',
+      })
+
+      if (profileError) {
+        console.error('[registerFreelancer] Profile creation error:', profileError)
+        return { error: `Profile error: ${profileError.message}` }
+      }
+      console.log('[registerFreelancer] Profile created successfully')
+    }
 
     return { success: true, userId: signUpData.user?.id }
   } catch (e) {

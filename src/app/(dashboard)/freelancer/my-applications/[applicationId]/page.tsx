@@ -254,13 +254,8 @@ export default function ApplicationDetailsPage() {
                 </div>
               )}
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-500">
-                <div>
-                  <span className="font-medium">Application ID:</span> {application.id}
-                </div>
-                <div>
-                  <span className="font-medium">Last Updated:</span> {application.updated_at ? new Date(application.updated_at).toLocaleDateString() : 'N/A'}
-                </div>
+              <div className="text-sm text-gray-500">
+                <span className="font-medium">Last Updated:</span> {application.updated_at ? new Date(application.updated_at).toLocaleDateString() : 'N/A'}
               </div>
             </CardContent>
           </Card>
@@ -296,13 +291,6 @@ export default function ApplicationDetailsPage() {
               </div>
               
               <Separator />
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-gray-500" />
-                  <span>Client ID: {application.gig?.client?.id || 'N/A'}</span>
-                </div>
-              </div>
             </CardContent>
           </Card>
 
