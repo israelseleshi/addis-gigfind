@@ -50,6 +50,7 @@ export default function SettingsPage() {
 
 function ProfileForm() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
   const [, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
