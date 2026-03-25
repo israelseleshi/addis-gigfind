@@ -67,16 +67,16 @@ function StatCard({ title, value, icon: Icon, color, delay }: { title: string; v
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, delay }}
     >
-      <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${color} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2`} />
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div className={`p-2 rounded-lg bg-gradient-to-br ${color} shadow-md`}>
-            <Icon className="h-5 w-5 text-white" />
+      <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 p-3 sm:p-4 md:p-5 lg:p-6">
+        <div className={`absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-gradient-to-br ${color} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2`} />
+        <CardHeader className="flex flex-row items-center justify-between pb-2 p-0 sm:p-1">
+          <div className={`p-1.5 sm:p-2 md:p-3 rounded-lg bg-gradient-to-br ${color} shadow-md`}>
+            <Icon className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-white" />
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold tracking-tight">{value}</div>
-          <p className="text-sm text-muted-foreground mt-1">{title}</p>
+        <CardContent className="p-0 sm:p-1">
+          <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">{value}</div>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1 sm:mt-2">{title}</p>
         </CardContent>
       </Card>
     </motion.div>
@@ -89,15 +89,15 @@ function QuickAction({ icon: Icon, label, href, color }: { icon: React.ElementTy
       <motion.div
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="group relative overflow-hidden rounded-xl bg-white p-4 shadow-sm border border-zinc-100 hover:shadow-md transition-all"
+        className="group relative overflow-hidden rounded-xl bg-white p-3 sm:p-4 shadow-sm border border-zinc-100 hover:shadow-md transition-all"
       >
         <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-5 transition-opacity`} />
-        <div className={`inline-flex p-2 rounded-lg bg-gradient-to-br ${color} mb-3 shadow-md`}>
-          <Icon className="h-5 w-5 text-white" />
+        <div className={`inline-flex p-1.5 sm:p-2 md:p-3 rounded-lg bg-gradient-to-br ${color} mb-2 sm:mb-3 md:mb-4 shadow-md`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
         </div>
-        <p className="font-semibold text-zinc-900">{label}</p>
-        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 group-hover:text-orange-500 transition-colors">
-          Open <ArrowRight className="h-3 w-3" />
+        <p className="font-semibold text-zinc-900 text-xs sm:text-sm md:text-base lg:text-lg">{label}</p>
+        <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground mt-0.5 sm:mt-1 flex items-center gap-1 group-hover:text-orange-500 transition-colors">
+          Open <ArrowRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
         </p>
       </motion.div>
     </Link>
@@ -187,41 +187,41 @@ export default function ClientDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 p-4 lg:p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="min-h-screen bg-zinc-50 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i}>
-                <CardHeader className="pb-2">
-                  <Skeleton className="h-4 w-20" />
+              <Card key={i} className="p-3 sm:p-4">
+                <CardHeader className="pb-2 p-0 sm:p-1">
+                  <Skeleton className="h-3 w-16 sm:h-4 sm:w-20" />
                 </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-8 w-16" />
+                <CardContent className="p-0 sm:p-1">
+                  <Skeleton className="h-6 w-12 sm:h-8 sm:w-16" />
                 </CardContent>
               </Card>
             ))}
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+            <Card className="xl:col-span-2">
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <Skeleton className="h-5 w-24 sm:h-6 sm:w-32" />
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className="p-3 sm:p-4 md:p-6 pt-0 sm:pt-0 md:pt-0">
+                <div className="space-y-2 sm:space-y-3">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-20 w-full" />
+                    <Skeleton key={i} className="h-16 sm:h-20 w-full" />
                   ))}
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <Skeleton className="h-5 w-24 sm:h-6 sm:w-32" />
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+                <div className="space-y-2 sm:space-y-3">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
+                    <Skeleton key={i} className="h-14 sm:h-16 w-full" />
                   ))}
                 </div>
               </CardContent>
@@ -237,62 +237,62 @@ export default function ClientDashboardPage() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="min-h-screen bg-zinc-50/50 pb-20 lg:pb-6 space-y-6"
+      className="min-h-screen bg-zinc-50/50 pb-14 sm:pb-16 md:pb-20 lg:pb-8 xl:pb-10 space-y-4 sm:space-y-6 md:space-y-8"
     >
       {/* Welcome Section */}
       <motion.div variants={itemVariants}>
         <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-zinc-900">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight text-zinc-900">
             Welcome back, {profile?.full_name || 'Client'}
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">Here&apos;s what&apos;s happening with your gigs today.</p>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1 sm:mt-2">Here&apos;s what&apos;s happening with your gigs today.</p>
         </div>
       </motion.div>
 
-      {/* Stats Grid - Full width on mobile */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
         {statsData.map((stat: StatItem, index: number) => (
           <StatCard key={stat.title} {...stat} delay={index * 0.1} />
         ))}
       </div>
 
-      {/* Main Content Grid - Stack on mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        {/* Recent Gigs - Full width on mobile */}
-        <motion.div variants={itemVariants} className="lg:col-span-2">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+        {/* Recent Gigs */}
+        <motion.div variants={itemVariants} className="xl:col-span-2">
           <Card className="border-0 shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 px-4 pt-4">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6">
               <div>
-                <CardTitle className="text-lg sm:text-xl">Your Recent Gigs</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Manage and track your posted gigs</CardDescription>
+                <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl">Your Recent Gigs</CardTitle>
+                <CardDescription className="text-xs sm:text-sm md:text-base">Manage and track your posted gigs</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm">
                 <Link href="/client/my-jobs">View All</Link>
               </Button>
             </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <div className="space-y-3">
+            <CardContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
+              <div className="space-y-2 sm:space-y-3 md:space-y-4">
                 {recentGigs.map((gig) => (
                   <motion.div
                     key={gig.id}
                     whileHover={{ x: 4 }}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-zinc-50 rounded-xl border border-zinc-100 hover:border-orange-200 hover:bg-orange-50/30 transition-all cursor-pointer gap-3"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 md:p-5 bg-zinc-50 rounded-xl border border-zinc-100 hover:border-orange-200 hover:bg-orange-50/30 transition-all cursor-pointer gap-2 sm:gap-3"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center flex-shrink-0">
-                        <Briefcase className="h-5 w-5 text-orange-500" />
+                    <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center flex-shrink-0">
+                        <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-orange-500" />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-zinc-900 text-sm sm:text-base truncate">{gig.title}</h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground">{gig.budget}</p>
+                        <h3 className="font-semibold text-zinc-900 text-xs sm:text-sm md:text-base lg:text-lg truncate">{gig.title}</h3>
+                        <p className="text-xs sm:text-sm md:text-base text-muted-foreground">{gig.budget}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-auto sm:ml-0">
                       <StatusBadge status={gig.status} />
                       <span className="text-xs text-muted-foreground hidden xs:inline">
                         {gig.applicants} applicants
                       </span>
-                      <Button variant="ghost" size="sm" asChild>
+                      <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm">
                         <Link href={`/client/my-jobs/${gig.id}`}>View</Link>
                       </Button>
                     </div>
@@ -303,17 +303,17 @@ export default function ClientDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Sidebar - Quick Actions & Activity - Full width on mobile */}
-        <div className="space-y-4 lg:space-y-6">
+        {/* Sidebar - Quick Actions & Activity */}
+        <div className="space-y-3 sm:space-y-4 md:space-y-6 lg:space-y-8">
           {/* Quick Actions */}
           <motion.div variants={itemVariants}>
             <Card className="border-0 shadow-lg">
-              <CardHeader className="pb-3 px-4 pt-4">
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Common tasks and shortcuts</CardDescription>
+              <CardHeader className="pb-3 px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6">
+                <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl">Quick Actions</CardTitle>
+                <CardDescription className="text-xs sm:text-sm md:text-base">Common tasks and shortcuts</CardDescription>
               </CardHeader>
-              <CardContent className="px-4 pb-4">
-                <div className="grid grid-cols-2 gap-3">
+              <CardContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                   {quickActions.map((action) => (
                     <QuickAction key={action.label} {...action} />
                   ))}
@@ -325,29 +325,29 @@ export default function ClientDashboardPage() {
           {/* Recent Activity */}
           <motion.div variants={itemVariants}>
             <Card className="border-0 shadow-lg">
-              <CardHeader className="pb-3 px-4 pt-4">
-                <CardTitle className="text-lg">Recent Activity</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Your latest updates</CardDescription>
+              <CardHeader className="pb-3 px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6">
+                <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl">Recent Activity</CardTitle>
+                <CardDescription className="text-xs sm:text-sm md:text-base">Your latest updates</CardDescription>
               </CardHeader>
-              <CardContent className="px-4 pb-4">
-                <div className="space-y-3">
+              <CardContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
+                <div className="space-y-2 sm:space-y-3 md:space-y-4">
                   {activities.length > 0 ? (
                     activities.map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-3">
-                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                      <div key={activity.id} className="flex items-start gap-2 sm:gap-3">
+                        <div className={`w-2 h-2 rounded-full mt-1.5 sm:mt-2 flex-shrink-0 ${
                           activity.type === 'application' ? 'bg-orange-500' :
                           activity.type === 'completed' ? 'bg-green-500' :
                           activity.type === 'payment' ? 'bg-blue-500' : 'bg-purple-500'
                         }`} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-zinc-900 line-clamp-2">{activity.text}</p>
-                          <p className="text-xs text-muted-foreground">{activity.time}</p>
+                          <p className="text-xs sm:text-sm md:text-base font-medium text-zinc-900 line-clamp-2">{activity.text}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{activity.time}</p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8">
-                      <p className="text-sm text-muted-foreground">No recent activity</p>
+                    <div className="text-center py-4 sm:py-6 md:py-8">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">No recent activity</p>
                     </div>
                   )}
                 </div>

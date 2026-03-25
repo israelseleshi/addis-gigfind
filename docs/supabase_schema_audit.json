@@ -1,10 +1,10 @@
 [
   {
     "table_name": "applications",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
+    "column_name": "bid_amount",
+    "data_type": "numeric",
     "is_nullable": "YES",
-    "column_default": "timezone('utc'::text, now())"
+    "column_default": null
   },
   {
     "table_name": "applications",
@@ -15,10 +15,10 @@
   },
   {
     "table_name": "applications",
-    "column_name": "bid_amount",
-    "data_type": "numeric",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
     "is_nullable": "YES",
-    "column_default": null
+    "column_default": "timezone('utc'::text, now())"
   },
   {
     "table_name": "applications",
@@ -29,10 +29,10 @@
   },
   {
     "table_name": "applications",
-    "column_name": "freelancer_id",
+    "column_name": "id",
     "data_type": "uuid",
     "is_nullable": "NO",
-    "column_default": null
+    "column_default": "uuid_generate_v4()"
   },
   {
     "table_name": "applications",
@@ -43,16 +43,16 @@
   },
   {
     "table_name": "applications",
-    "column_name": "id",
+    "column_name": "freelancer_id",
     "data_type": "uuid",
     "is_nullable": "NO",
-    "column_default": "uuid_generate_v4()"
+    "column_default": null
   },
   {
     "table_name": "client_profiles",
-    "column_name": "industry",
-    "data_type": "text",
-    "is_nullable": "YES",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
     "column_default": null
   },
   {
@@ -64,14 +64,21 @@
   },
   {
     "table_name": "client_profiles",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": null
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
   },
   {
     "table_name": "client_profiles",
     "column_name": "website",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "client_profiles",
+    "column_name": "industry",
     "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
@@ -84,30 +91,16 @@
     "column_default": null
   },
   {
-    "table_name": "client_profiles",
-    "column_name": "updated_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()"
-  },
-  {
     "table_name": "conversations",
-    "column_name": "participant_ids",
-    "data_type": "ARRAY",
+    "column_name": "gig_id",
+    "data_type": "uuid",
     "is_nullable": "NO",
     "column_default": null
   },
   {
     "table_name": "conversations",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": "gen_random_uuid()"
-  },
-  {
-    "table_name": "conversations",
-    "column_name": "gig_id",
-    "data_type": "uuid",
+    "column_name": "participant_ids",
+    "data_type": "ARRAY",
     "is_nullable": "NO",
     "column_default": null
   },
@@ -126,9 +119,37 @@
     "column_default": "timezone('utc'::text, now())"
   },
   {
+    "table_name": "conversations",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
     "table_name": "freelancer_profiles",
-    "column_name": "skills",
+    "column_name": "languages",
     "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "freelancer_profiles",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "freelancer_profiles",
+    "column_name": "bio",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "freelancer_profiles",
+    "column_name": "experience_level",
+    "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -155,14 +176,7 @@
   },
   {
     "table_name": "freelancer_profiles",
-    "column_name": "experience_level",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "freelancer_profiles",
-    "column_name": "languages",
+    "column_name": "skills",
     "data_type": "ARRAY",
     "is_nullable": "YES",
     "column_default": null
@@ -175,25 +189,25 @@
     "column_default": null
   },
   {
-    "table_name": "freelancer_profiles",
-    "column_name": "bio",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "freelancer_profiles",
-    "column_name": "created_at",
+    "table_name": "gigs",
+    "column_name": "updated_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
-    "column_default": "now()"
+    "column_default": "timezone('utc'::text, now())"
   },
   {
     "table_name": "gigs",
-    "column_name": "budget",
-    "data_type": "numeric",
+    "column_name": "client_id",
+    "data_type": "uuid",
     "is_nullable": "NO",
     "column_default": null
+  },
+  {
+    "table_name": "gigs",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "timezone('utc'::text, now())"
   },
   {
     "table_name": "gigs",
@@ -206,6 +220,13 @@
     "table_name": "gigs",
     "column_name": "category",
     "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "gigs",
+    "column_name": "budget",
+    "data_type": "numeric",
     "is_nullable": "NO",
     "column_default": null
   },
@@ -225,20 +246,6 @@
   },
   {
     "table_name": "gigs",
-    "column_name": "updated_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "timezone('utc'::text, now())"
-  },
-  {
-    "table_name": "gigs",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "timezone('utc'::text, now())"
-  },
-  {
-    "table_name": "gigs",
     "column_name": "status",
     "data_type": "USER-DEFINED",
     "is_nullable": "YES",
@@ -246,17 +253,38 @@
   },
   {
     "table_name": "gigs",
-    "column_name": "client_id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "gigs",
     "column_name": "id",
     "data_type": "uuid",
     "is_nullable": "NO",
     "column_default": "uuid_generate_v4()"
+  },
+  {
+    "table_name": "messages",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "uuid_generate_v4()"
+  },
+  {
+    "table_name": "messages",
+    "column_name": "content",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "messages",
+    "column_name": "conversation_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "messages",
+    "column_name": "read",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
   },
   {
     "table_name": "messages",
@@ -269,13 +297,6 @@
     "table_name": "messages",
     "column_name": "recipient_id",
     "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "messages",
-    "column_name": "content",
-    "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
   },
@@ -294,15 +315,29 @@
     "column_default": null
   },
   {
-    "table_name": "messages",
-    "column_name": "id",
-    "data_type": "uuid",
+    "table_name": "notifications",
+    "column_name": "content",
+    "data_type": "text",
     "is_nullable": "NO",
-    "column_default": "uuid_generate_v4()"
+    "column_default": null
   },
   {
     "table_name": "notifications",
-    "column_name": "content",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "timezone('utc'::text, now())"
+  },
+  {
+    "table_name": "notifications",
+    "column_name": "is_read",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "notifications",
+    "column_name": "type",
     "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
@@ -316,43 +351,22 @@
   },
   {
     "table_name": "notifications",
-    "column_name": "is_read",
-    "data_type": "boolean",
-    "is_nullable": "YES",
-    "column_default": "false"
-  },
-  {
-    "table_name": "notifications",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "timezone('utc'::text, now())"
-  },
-  {
-    "table_name": "notifications",
     "column_name": "id",
     "data_type": "uuid",
     "is_nullable": "NO",
     "column_default": "uuid_generate_v4()"
   },
   {
-    "table_name": "notifications",
-    "column_name": "type",
+    "table_name": "otp_verifications",
+    "column_name": "purpose",
     "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
   },
   {
     "table_name": "otp_verifications",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()"
-  },
-  {
-    "table_name": "otp_verifications",
-    "column_name": "expires_at",
-    "data_type": "timestamp with time zone",
+    "column_name": "otp_code",
+    "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
   },
@@ -365,8 +379,8 @@
   },
   {
     "table_name": "otp_verifications",
-    "column_name": "email",
-    "data_type": "text",
+    "column_name": "expires_at",
+    "data_type": "timestamp with time zone",
     "is_nullable": "NO",
     "column_default": null
   },
@@ -379,15 +393,29 @@
   },
   {
     "table_name": "otp_verifications",
-    "column_name": "otp_code",
+    "column_name": "email",
     "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
   },
   {
     "table_name": "otp_verifications",
-    "column_name": "purpose",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "ban_reason",
     "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "id",
+    "data_type": "uuid",
     "is_nullable": "NO",
     "column_default": null
   },
@@ -400,17 +428,17 @@
   },
   {
     "table_name": "profiles",
-    "column_name": "phone_number",
-    "data_type": "text",
+    "column_name": "verification_status",
+    "data_type": "USER-DEFINED",
     "is_nullable": "YES",
-    "column_default": null
+    "column_default": "'unverified'::verification_status"
   },
   {
     "table_name": "profiles",
-    "column_name": "location_sub_city",
-    "data_type": "text",
+    "column_name": "average_rating",
+    "data_type": "numeric",
     "is_nullable": "YES",
-    "column_default": null
+    "column_default": "0.0"
   },
   {
     "table_name": "profiles",
@@ -442,16 +470,23 @@
   },
   {
     "table_name": "profiles",
-    "column_name": "bio",
-    "data_type": "text",
+    "column_name": "is_banned",
+    "data_type": "boolean",
     "is_nullable": "YES",
-    "column_default": null
+    "column_default": "false"
   },
   {
     "table_name": "profiles",
     "column_name": "full_name",
     "data_type": "text",
     "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "phone_number",
+    "data_type": "text",
+    "is_nullable": "YES",
     "column_default": null
   },
   {
@@ -463,35 +498,21 @@
   },
   {
     "table_name": "profiles",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
+    "column_name": "bio",
+    "data_type": "text",
+    "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "profiles",
-    "column_name": "verification_status",
-    "data_type": "USER-DEFINED",
-    "is_nullable": "YES",
-    "column_default": "'unverified'::verification_status"
-  },
-  {
-    "table_name": "profiles",
-    "column_name": "average_rating",
-    "data_type": "numeric",
-    "is_nullable": "YES",
-    "column_default": "0.0"
-  },
-  {
-    "table_name": "reviews",
-    "column_name": "comment",
+    "column_name": "location_sub_city",
     "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "reviews",
-    "column_name": "reviewee_id",
+    "column_name": "reviewer_id",
     "data_type": "uuid",
     "is_nullable": "NO",
     "column_default": null
@@ -512,13 +533,6 @@
   },
   {
     "table_name": "reviews",
-    "column_name": "rating",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "reviews",
     "column_name": "created_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
@@ -526,9 +540,23 @@
   },
   {
     "table_name": "reviews",
-    "column_name": "reviewer_id",
+    "column_name": "rating",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "reviews",
+    "column_name": "reviewee_id",
     "data_type": "uuid",
     "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "reviews",
+    "column_name": "comment",
+    "data_type": "text",
+    "is_nullable": "YES",
     "column_default": null
   },
   {
@@ -540,35 +568,7 @@
   },
   {
     "table_name": "telegram_accounts",
-    "column_name": "last_seen_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "NO",
-    "column_default": "timezone('utc'::text, now())"
-  },
-  {
-    "table_name": "telegram_accounts",
-    "column_name": "linked_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "NO",
-    "column_default": "timezone('utc'::text, now())"
-  },
-  {
-    "table_name": "telegram_accounts",
-    "column_name": "is_active",
-    "data_type": "boolean",
-    "is_nullable": "NO",
-    "column_default": "true"
-  },
-  {
-    "table_name": "telegram_accounts",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": "gen_random_uuid()"
-  },
-  {
-    "table_name": "telegram_accounts",
-    "column_name": "telegram_user_id",
+    "column_name": "telegram_chat_id",
     "data_type": "text",
     "is_nullable": "NO",
     "column_default": null
@@ -596,8 +596,64 @@
   },
   {
     "table_name": "telegram_accounts",
-    "column_name": "telegram_chat_id",
+    "column_name": "last_seen_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "timezone('utc'::text, now())"
+  },
+  {
+    "table_name": "telegram_accounts",
+    "column_name": "linked_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "timezone('utc'::text, now())"
+  },
+  {
+    "table_name": "telegram_accounts",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "true"
+  },
+  {
+    "table_name": "telegram_accounts",
+    "column_name": "telegram_user_id",
     "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "telegram_accounts",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "telegram_link_codes",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "telegram_link_codes",
+    "column_name": "code",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "telegram_link_codes",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "telegram_link_codes",
+    "column_name": "expires_at",
+    "data_type": "timestamp with time zone",
     "is_nullable": "NO",
     "column_default": null
   },
@@ -610,64 +666,15 @@
   },
   {
     "table_name": "telegram_link_codes",
-    "column_name": "user_id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "telegram_link_codes",
-    "column_name": "expires_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "telegram_link_codes",
     "column_name": "consumed_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": null
   },
   {
-    "table_name": "telegram_link_codes",
+    "table_name": "user_verification_status",
     "column_name": "id",
     "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": "gen_random_uuid()"
-  },
-  {
-    "table_name": "telegram_link_codes",
-    "column_name": "code",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null
-  },
-  {
-    "table_name": "user_verification_status",
-    "column_name": "id_verification_status",
-    "data_type": "USER-DEFINED",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "user_verification_status",
-    "column_name": "full_name",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "user_verification_status",
-    "column_name": "role",
-    "data_type": "USER-DEFINED",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "user_verification_status",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -680,8 +687,43 @@
   },
   {
     "table_name": "user_verification_status",
-    "column_name": "id",
-    "data_type": "uuid",
+    "column_name": "email_verification_status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "user_verification_status",
+    "column_name": "full_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "user_verification_status",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "user_verification_status",
+    "column_name": "verification_exempt",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "user_verification_status",
+    "column_name": "id_verification_status",
+    "data_type": "USER-DEFINED",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "user_verification_status",
+    "column_name": "role",
+    "data_type": "USER-DEFINED",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -693,9 +735,72 @@
     "column_default": null
   },
   {
-    "table_name": "user_verification_status",
-    "column_name": "verification_exempt",
-    "data_type": "boolean",
+    "table_name": "verification_documents",
+    "column_name": "back_image_url",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "verification_documents",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "verification_documents",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'pending'::text"
+  },
+  {
+    "table_name": "verification_documents",
+    "column_name": "document_type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "verification_documents",
+    "column_name": "id_number",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "''::text"
+  },
+  {
+    "table_name": "verification_documents",
+    "column_name": "front_image_url",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "verification_documents",
+    "column_name": "submitted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "timezone('utc'::text, now())"
+  },
+  {
+    "table_name": "verification_documents",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "uuid_generate_v4()"
+  },
+  {
+    "table_name": "verification_documents",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "verification_documents",
+    "column_name": "admin_notes",
+    "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
   }

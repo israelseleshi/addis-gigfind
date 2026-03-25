@@ -96,7 +96,24 @@ export async function listTelegramPendingVerifications() {
     throw new Error(error.message)
   }
 
-  return (data ?? []) as TelegramPendingVerificationSummary[]
+  const mappedData = (data ?? []).map((item: any) => {
+    const rawProfile = Array.isArray(item.profiles) ? item.profiles[0] ?? null : item.profiles ?? null
+    const profiles = rawProfile ? { ...rawProfile } : null
+
+    return {
+      id: item.id,
+      user_id: item.user_id,
+      document_type: item.document_type,
+      id_number: item.id_number,
+      description: item.description,
+      status: item.status,
+      admin_notes: item.admin_notes,
+      submitted_at: item.submitted_at,
+      profiles,
+    } as TelegramPendingVerificationSummary
+  })
+
+  return mappedData
 }
 
 export async function getTelegramPendingVerificationDetails(documentId: string) {
@@ -128,7 +145,13 @@ export async function getTelegramPendingVerificationDetails(documentId: string) 
     return null
   }
 
-  return data as TelegramPendingVerificationSummary
+  const rawProfile = Array.isArray(data.profiles) ? data.profiles[0] ?? null : data.profiles ?? null
+  const profiles = rawProfile ? { ...rawProfile } : null
+
+  return {
+    ...data,
+    profiles,
+  } as TelegramPendingVerificationSummary
 }
 
 export async function approveTelegramVerification(documentId: string) {

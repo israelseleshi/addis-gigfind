@@ -33,7 +33,7 @@ import { telegramLogger } from '@/lib/telegram/logger'
 
 export async function handleCallbackQuery(ctx: TelegramBotContext) {
   try {
-    const callbackData = ctx.callbackQuery.data
+    const callbackData = ctx.callbackQuery?.data ?? ''
 
     if (callbackData === 'admin:home') {
       await handleAdminHome(ctx)

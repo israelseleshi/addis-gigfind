@@ -16,7 +16,6 @@ import { Camera, Trash2 } from 'lucide-react';
 interface Profile {
   id: string;
   full_name: string;
-  email: string;
   phone: string;
   avatar_url: string;
   role: string;
@@ -51,6 +50,7 @@ export default function SettingsPage() {
 
 function ProfileForm() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
   const [_, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -71,6 +71,9 @@ function ProfileForm() {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
+        // Get email from auth.users (correct way)
+        setUserEmail(user.email || 'Not set');
+
         const { data } = await supabase
           .from('profiles')
           .select('*')
@@ -286,7 +289,7 @@ function ProfileForm() {
       <div className="space-y-2">
         <Label>Account Info</Label>
         <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-          <p className="text-sm"><span className="font-medium">Email:</span> {profile?.email || 'Not set'}</p>
+          <p className="text-sm"><span className="font-medium">Email:</span> {userEmail}</p>
           <p className="text-sm"><span className="font-medium">Role:</span> {profile?.role || 'client'}</p>
           <p className="text-sm"><span className="font-medium">Member since:</span> {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Unknown'}</p>
         </div>

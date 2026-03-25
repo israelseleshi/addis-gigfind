@@ -211,8 +211,28 @@ export async function listTelegramApplicationsForFreelancer(
     throw new Error(error.message)
   }
 
+  const applications = (data ?? []).map((app: any) => {
+    const rawGig = Array.isArray(app.gig) ? app.gig[0] ?? null : app.gig ?? null
+    const gig = rawGig
+      ? {
+          ...rawGig,
+          client: Array.isArray(rawGig.client)
+            ? rawGig.client[0] ?? null
+            : rawGig.client,
+        }
+      : null
+
+    return {
+      id: app.id,
+      status: app.status,
+      cover_note: app.cover_note,
+      created_at: app.created_at,
+      gig,
+    } as TelegramApplicationSummary
+  })
+
   return {
-    applications: (data ?? []) as TelegramApplicationSummary[],
+    applications,
     page: safePage,
     total: count ?? 0,
     hasNextPage: typeof count === 'number' ? to + 1 < count : false,
@@ -257,7 +277,18 @@ export async function getTelegramApplicationDetails(
     return null
   }
 
-  return data as TelegramApplicationSummary & {
+  const rawGig = Array.isArray(data.gig) ? data.gig[0] ?? null : data.gig ?? null
+  const gig = rawGig
+    ? {
+        ...rawGig,
+        client: Array.isArray(rawGig.client) ? rawGig.client[0] ?? null : rawGig.client,
+      }
+    : null
+
+  return {
+    ...data,
+    gig,
+  } as TelegramApplicationSummary & {
     gig: TelegramApplicationSummary['gig'] & {
       description: string
     }
@@ -303,7 +334,24 @@ export async function listTelegramActiveJobsForFreelancer(
     throw new Error(error.message)
   }
 
-  const activeJobs = ((data ?? []) as TelegramActiveJobSummary[]).filter((job) =>
+  const mappedJobs = (data ?? []).map((app: any) => {
+    const rawGig = Array.isArray(app.gig) ? app.gig[0] ?? null : app.gig ?? null
+    const gig = rawGig
+      ? {
+          ...rawGig,
+          client: Array.isArray(rawGig.client) ? rawGig.client[0] ?? null : rawGig.client,
+        }
+      : null
+
+    return {
+      id: app.id,
+      status: app.status,
+      created_at: app.created_at,
+      gig,
+    } as TelegramActiveJobSummary
+  })
+
+  const activeJobs = mappedJobs.filter((job) =>
     ['assigned', 'in_progress'].includes(job.gig?.status ?? '')
   )
   const total = activeJobs.length
@@ -357,7 +405,19 @@ export async function getTelegramActiveJobDetails(
     return null
   }
 
-  const job = data as TelegramActiveJobSummary
+  const rawGig = Array.isArray(data.gig) ? data.gig[0] ?? null : data.gig ?? null
+  const gig = rawGig
+    ? {
+        ...rawGig,
+        client: Array.isArray(rawGig.client) ? rawGig.client[0] ?? null : rawGig.client,
+      }
+    : null
+
+  const job = {
+    ...data,
+    gig,
+  } as TelegramActiveJobSummary
+
   if (!job.gig || !['assigned', 'in_progress'].includes(job.gig.status ?? '')) {
     return null
   }
@@ -457,9 +517,27 @@ export async function listTelegramGigApplicants(clientId: string, gigId: string)
     throw new Error(applicantsError.message)
   }
 
+  const mappedApplicants = (applicants ?? []).map((app: any) => {
+    const rawFreelancer = Array.isArray(app.freelancer) ? app.freelancer[0] ?? null : app.freelancer ?? null
+    const freelancer = rawFreelancer
+      ? {
+          ...rawFreelancer,
+        }
+      : null
+
+    return {
+      id: app.id,
+      status: app.status,
+      cover_note: app.cover_note,
+      bid_amount: app.bid_amount,
+      created_at: app.created_at,
+      freelancer,
+    } as TelegramGigApplicantSummary
+  })
+
   return {
     gig,
-    applicants: (applicants ?? []) as TelegramGigApplicantSummary[],
+    applicants: mappedApplicants,
   }
 }
 

@@ -91,16 +91,6 @@
   },
   {
     "schemaname": "public",
-    "tablename": "messages",
-    "policyname": "Users can send messages",
-    "permissive": "PERMISSIVE",
-    "roles": "{public}",
-    "cmd": "INSERT",
-    "qual": null,
-    "with_check": "(auth.uid() = sender_id)"
-  },
-  {
-    "schemaname": "public",
     "tablename": "gigs",
     "policyname": "All authenticated users can view open gigs",
     "permissive": "PERMISSIVE",
@@ -497,6 +487,26 @@
     "roles": "{public}",
     "cmd": "SELECT",
     "qual": "(auth.uid() = id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "messages",
+    "policyname": "users_can_send_messages",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((auth.uid() = sender_id) AND ((EXISTS ( SELECT 1\n   FROM gigs\n  WHERE ((gigs.id = messages.gig_id) AND (gigs.client_id = auth.uid())))) OR (EXISTS ( SELECT 1\n   FROM applications\n  WHERE ((applications.gig_id = applications.gig_id) AND (applications.freelancer_id = auth.uid()) AND (applications.status = 'accepted'::application_status))))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "messages",
+    "policyname": "users_can_update_own_messages",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = recipient_id)",
     "with_check": null
   }
 ]

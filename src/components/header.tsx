@@ -66,7 +66,7 @@ export function Header() {
                 <Menu className="h-6 w-6" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-6 md:hidden">
+            <SheetContent side="left" className="p-6 md:hidden bg-white">
               <SheetTitle className="sr-only">Main Navigation Menu</SheetTitle>
               <nav className="mt-8 flex flex-col space-y-4">
                 <Link href="/search" className="text-lg font-medium">Search</Link>

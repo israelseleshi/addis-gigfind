@@ -54,7 +54,7 @@ export async function handleClientHome(ctx: TelegramBotContext) {
       return
     }
 
-    const name = resolved.profile.full_name ?? 'there'
+    const name = resolved.profile?.full_name ?? 'there'
     await safeAnswerCallbackQuery(ctx)
     await respondWithTelegramMessage(ctx, buildLinkedWelcomeMessage(name, 'client'), {
       parse_mode: 'HTML',

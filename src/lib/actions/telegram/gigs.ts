@@ -64,8 +64,28 @@ export async function listTelegramOpenGigs(page: number = 0) {
     throw new Error(error.message)
   }
 
+  const mappedGigs = (data ?? []).map((g: any) => {
+    const rawClient = Array.isArray(g.client) ? g.client[0] ?? null : g.client ?? null
+    const client = rawClient
+      ? {
+          ...rawClient,
+        }
+      : null
+
+    return {
+      id: g.id,
+      title: g.title,
+      category: g.category,
+      location: g.location,
+      budget: g.budget,
+      description: g.description,
+      created_at: g.created_at,
+      client,
+    } as TelegramBrowseGig
+  })
+
   return {
-    gigs: (data ?? []) as TelegramBrowseGig[],
+    gigs: mappedGigs,
     page: safePage,
     pageSize: TELEGRAM_GIG_PAGE_SIZE,
     total: count ?? 0,
@@ -103,7 +123,13 @@ export async function getTelegramGigDetails(gigId: string) {
     return null
   }
 
-  return data as TelegramBrowseGig
+  const rawClient = Array.isArray(data.client) ? data.client[0] ?? null : data.client ?? null
+  const client = rawClient ? { ...rawClient } : null
+
+  return {
+    ...data,
+    client,
+  } as TelegramBrowseGig
 }
 
 export async function listTelegramClientGigs(clientId: string, page: number = 0) {
