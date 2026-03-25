@@ -1,0 +1,174 @@
+{
+  "project": "Addis GigFind",
+  "document_date": "2025-01-26",
+  "business_rules": [
+    {
+      "category": "User Eligibility & Identity Verification",
+      "rules": [
+        {
+          "id": "AGF-BR-101",
+          "name": "Kebele/ID Mandate",
+          "related_use_cases": ["UC-04", "UC-07", "UC-16"],
+          "description": "No freelancer account shall be activated without the upload of a valid government-issued ID (Kebele ID, Passport, or Digital ID/Fayda). The name on the profile must exactly match the name on the ID."
+        },
+        {
+          "id": "AGF-BR-102",
+          "name": "Residency Requirement",
+          "related_use_cases": ["UC-03", "UC-05"],
+          "description": "Freelancers must provide a primary location within the recognized sub-cities of Addis Ababa. Profiles registered outside the metropolitan area will be flagged or restricted."
+        },
+        {
+          "id": "AGF-BR-103",
+          "name": "Student Verification Priority",
+          "related_use_cases": ["UC-04", "UC-05"],
+          "description": "Users uploading a valid University Student ID alongside their Kebele ID will receive a 'Student Freelancer' badge, allowing for specific work-hour filtering."
+        },
+        {
+          "id": "AGF-BR-104",
+          "name": "One Person, One Profile",
+          "related_use_cases": ["UC-01", "UC-04"],
+          "description": "A unique phone number and ID combination can only be associated with one account. Duplicate accounts detected via ID matching will be permanently banned."
+        }
+      ]
+    },
+    {
+      "category": "Gig Application & Engagement Limits",
+      "rules": [
+        {
+          "id": "AGF-BR-201",
+          "name": "The '5-Active' Rule",
+          "related_use_cases": ["UC-07"],
+          "description": "To prevent job hoarding, a freelancer may have a maximum of 5 active applications (pending status) at any one time."
+        },
+        {
+          "id": "AGF-BR-202",
+          "name": "Concurrent Job Limit",
+          "related_use_cases": ["UC-12", "UC-13"],
+          "description": "A freelancer is restricted to 2 'In-Progress' gigs simultaneously to ensure quality and academic balance for students."
+        },
+        {
+          "id": "AGF-BR-203",
+          "name": "Re-Application Lock",
+          "related_use_cases": ["UC-07"],
+          "description": "If a Client rejects an application for a specific gig, the freelancer is blocked from re-applying to that same gig ID."
+        },
+        {
+          "id": "AGF-BR-204",
+          "name": "Client Posting Velocity",
+          "related_use_cases": ["UC-09"],
+          "description": "New Client accounts are limited to posting 3 open gigs per 24-hour period until they complete their first transaction."
+        },
+        {
+          "id": "AGF-BR-205",
+          "name": "Self-Hiring Prohibition",
+          "related_use_cases": ["UC-07"],
+          "description": "Users are prohibited from applying to their own gigs or gigs posted by accounts sharing the same device fingerprint/IP address."
+        }
+      ]
+    },
+    {
+      "category": "Gig Posting & Content Standards",
+      "rules": [
+        {
+          "id": "AGF-BR-301",
+          "name": "Minimum Wage Protection",
+          "related_use_cases": ["UC-09"],
+          "description": "The system enforces a minimum budget floor (e.g., 100 ETB) for any posted gig to cover transport and time."
+        },
+        {
+          "id": "AGF-BR-302",
+          "name": "Location Specificity",
+          "related_use_cases": ["UC-09"],
+          "description": "All gigs must be pinned to a specific Woreda or Sub-City. Generic locations like 'Addis Ababa' are not permitted."
+        },
+        {
+          "id": "AGF-BR-303",
+          "name": "Contact Sanitization",
+          "related_use_cases": ["UC-09", "UC-08"],
+          "description": "Clients cannot include phone numbers or Telegram usernames in public gig descriptions. Contact details are revealed only after an application is accepted."
+        }
+      ]
+    },
+    {
+      "category": "Financial & Contractual Integrity",
+      "rules": [
+        {
+          "id": "AGF-BR-401",
+          "name": "Binding Digital Agreement",
+          "related_use_cases": ["UC-12"],
+          "description": "The agreed budget on the platform constitutes a binding verbal contract. Deviation in final payment without mutual consent is grounds for suspension."
+        },
+        {
+          "id": "AGF-BR-402",
+          "name": "Currency Standard",
+          "related_use_cases": ["UC-09", "UC-08"],
+          "description": "All gig budgets must be conducted in Ethiopian Birr (ETB). Foreign currency offers are prohibited per National Bank regulations."
+        },
+        {
+          "id": "AGF-BR-403",
+          "name": "Material Cost Separation",
+          "related_use_cases": ["UC-09"],
+          "description": "Gig descriptions must explicitly state if the budget includes materials (spare parts, supplies) or if they are reimbursed separately."
+        },
+        {
+          "id": "AGF-BR-404",
+          "name": "Cancellation Policy",
+          "related_use_cases": ["UC-10", "UC-13"],
+          "description": "Clients may cancel 'Open' gigs without penalty. Canceling 'In-Progress' gigs without a valid reason impacts client completion rates."
+        }
+      ]
+    },
+    {
+      "category": "Reputation & Dispute Resolution",
+      "rules": [
+        {
+          "id": "AGF-BR-501",
+          "name": "Review Lock-in",
+          "related_use_cases": ["UC-14"],
+          "description": "Once a rating/review is submitted, it is permanent and cannot be edited or deleted by the user."
+        },
+        {
+          "id": "AGF-BR-502",
+          "name": "Completion-Only Ratings",
+          "related_use_cases": ["UC-13", "UC-14"],
+          "description": "Users can only rate gigs that have reached 'Completed' status. Canceled or rejected applications do not generate scores."
+        },
+        {
+          "id": "AGF-BR-503",
+          "name": "Right to Rebuttal",
+          "related_use_cases": ["UC-14"],
+          "description": "Users have the right to post one public 'Response' to any review left on their profile to explain their side of the story."
+        }
+      ]
+    },
+    {
+      "category": "Compliance with Ethiopian Law",
+      "rules": [
+        {
+          "id": "AGF-BR-601",
+          "name": "Independent Contractor Status",
+          "related_use_cases": ["UC-01"],
+          "description": "Freelancers are defined as 'Independent Contractors,' not employees of Addis GigFind. The platform is a facilitator, not an employer."
+        },
+        {
+          "id": "AGF-BR-602",
+          "name": "Data Privacy & Storage",
+          "related_use_cases": ["UC-01", "UC-04"],
+          "description": "In compliance with Ethiopian Data Protection principles, user data (IDs, phone numbers) is stored encrypted and never sold to third parties."
+        },
+        {
+          "id": "AGF-BR-603",
+          "name": "Dispute Arbitration",
+          "related_use_cases": ["UC-15", "UC-18"],
+          "description": "For disputes exceeding 5,000 ETB involving theft or damage, the platform's role is limited to providing data logs to local law enforcement."
+        },
+        {
+          "id": "AGF-BR-604",
+          "name": "Platform Neutrality",
+          "related_use_cases": ["UC-09", "UC-12"],
+          "description": "Addis GigFind does not set prices. All rates are market-driven, complying with free-market competition laws."
+        }
+      ]
+    }
+  ]
+}

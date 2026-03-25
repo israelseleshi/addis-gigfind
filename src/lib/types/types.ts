@@ -54,17 +54,36 @@ export interface Application {
 
 export interface Message {
   id: string;
-  conversation_id: string;
+  gig_id: string;
   sender_id: string;
+  recipient_id: string;
   content: string;
   created_at: string;
-  read: boolean;
+  read: boolean | null;
+  conversation_id: string | null;
 }
 
 export interface Conversation {
   id: string;
-  gig_id: string | null;
-  participants: string[];
+  gig_id: string;
+  participant_ids: string[];
   created_at: string;
   updated_at: string;
+}
+
+export interface ConversationWithDetails extends Conversation {
+  gig?: {
+    id: string;
+    title: string;
+  };
+  other_participant?: {
+    id: string;
+    full_name: string;
+    avatar_url: string | null;
+  };
+  last_message?: {
+    content: string;
+    created_at: string;
+  };
+  unread_count?: number;
 }

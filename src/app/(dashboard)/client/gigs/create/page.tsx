@@ -114,50 +114,50 @@ export default function PostGigPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
-      <div className="w-full max-w-2xl bg-white rounded-lg overflow-hidden border border-gray-200 shadow-lg">
+    <div className="h-auto sm:h-[calc(100vh-8rem)] md:h-[calc(100vh-10rem)] flex items-start sm:items-center justify-center py-4 sm:py-0">
+      <div className="w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white rounded-lg overflow-hidden border border-gray-200 shadow-lg">
         {/* Header */}
-        <div className="bg-amber-600 p-4 text-white">
-          <h2 className="text-xl font-semibold">Post a New Gig</h2>
-          <p className="text-sm opacity-80 mt-1">Fill in the details below</p>
+        <div className="bg-amber-600 p-3 sm:p-4 md:p-6 text-white">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold">Post a New Gig</h2>
+          <p className="text-xs sm:text-sm opacity-80 mt-0.5 sm:mt-1">Fill in the details below</p>
         </div>
 
         {/* Form */}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-5">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-3 sm:space-y-4 md:space-y-5">
             {/* Title */}
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Gig Title</FormLabel>
+                  <FormLabel className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Gig Title</FormLabel>
                   <div className="relative">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Tag className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                     <FormControl>
                       <Input
                         placeholder="e.g., Professional House Painting"
-                        className="pl-10 bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500"
+                        className="pl-9 sm:pl-10 bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500 h-9 sm:h-10 md:h-11 text-sm"
                         {...field}
                       />
                     </FormControl>
                   </div>
-                  <FormMessage className="text-red-500 text-sm" />
+                  <FormMessage className="text-red-500 text-[10px] sm:text-xs md:text-sm" />
                 </FormItem>
               )}
             />
 
             {/* Category and Location Row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <FormField
                 control={form.control}
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-medium">Category</FormLabel>
+                    <FormLabel className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Category</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500">
+                        <SelectTrigger className="bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500 h-9 sm:h-10 md:h-11 text-sm">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                       </FormControl>
@@ -169,7 +169,7 @@ export default function PostGigPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage className="text-red-500 text-sm" />
+                    <FormMessage className="text-red-500 text-[10px] sm:text-xs md:text-sm" />
                   </FormItem>
                 )}
               />
@@ -179,10 +179,10 @@ export default function PostGigPage() {
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-medium">Location</FormLabel>
+                    <FormLabel className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Location</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500">
+                        <SelectTrigger className="bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500 h-9 sm:h-10 md:h-11 text-sm">
                           <SelectValue placeholder="Select location" />
                         </SelectTrigger>
                       </FormControl>
@@ -194,7 +194,7 @@ export default function PostGigPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage className="text-red-500 text-sm" />
+                    <FormMessage className="text-red-500 text-[10px] sm:text-xs md:text-sm" />
                   </FormItem>
                 )}
               />
@@ -206,20 +206,20 @@ export default function PostGigPage() {
               name="budget"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Budget (ETB)</FormLabel>
+                  <FormLabel className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Budget (ETB)</FormLabel>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <DollarSign className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="e.g., 5000"
-                        className="pl-10 bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500"
+                        className="pl-9 sm:pl-10 bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500 h-9 sm:h-10 md:h-11 text-sm"
                         value={field.value}
                         onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                   </div>
-                  <FormMessage className="text-red-500 text-sm" />
+                  <FormMessage className="text-red-500 text-[10px] sm:text-xs md:text-sm" />
                 </FormItem>
               )}
             />
@@ -230,18 +230,18 @@ export default function PostGigPage() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Description</FormLabel>
+                  <FormLabel className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Description</FormLabel>
                   <div className="relative">
-                    <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <FileText className="absolute left-2.5 sm:left-3 top-3 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                     <FormControl>
                       <Textarea
                         placeholder="Describe the work to be done in detail..."
-                        className="pl-10 min-h-[120px] bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500 resize-none"
+                        className="pl-9 sm:pl-10 min-h-[100px] sm:min-h-[120px] bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500 resize-none text-sm"
                         {...field}
                       />
                     </FormControl>
                   </div>
-                  <FormMessage className="text-red-500 text-sm" />
+                  <FormMessage className="text-red-500 text-[10px] sm:text-xs md:text-sm" />
                 </FormItem>
               )}
             />
@@ -250,16 +250,16 @@ export default function PostGigPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 mt-4"
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 sm:py-2.5 md:py-3 mt-3 sm:mt-4 md:mt-6 text-xs sm:text-sm md:text-base"
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
                   Posting...
                 </>
               ) : (
                 <>
-                  <Send className="mr-2 h-4 w-4" />
+                  <Send className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Post Gig
                 </>
               )}

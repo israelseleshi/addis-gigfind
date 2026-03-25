@@ -187,6 +187,26 @@ export async function listTelegramOpenGigs(
     throw new Error(error.message)
   }
 
+  const mappedGigs = (data ?? []).map((g: any) => {
+    const rawClient = Array.isArray(g.client) ? g.client[0] ?? null : g.client ?? null
+    const client = rawClient
+      ? {
+          ...rawClient,
+        }
+      : null
+
+    return {
+      id: g.id,
+      title: g.title,
+      category: g.category,
+      location: g.location,
+      budget: g.budget,
+      description: g.description,
+      created_at: g.created_at,
+      client,
+    } as TelegramBrowseGig
+  })
+
   return {
     gigs: (data ?? []).map((row) =>
       normalizeTelegramBrowseGig(row as Record<string, unknown>)

@@ -317,6 +317,26 @@ export async function listTelegramApplicationsForFreelancer(
     throw new Error(error.message)
   }
 
+  const applications = (data ?? []).map((app: any) => {
+    const rawGig = Array.isArray(app.gig) ? app.gig[0] ?? null : app.gig ?? null
+    const gig = rawGig
+      ? {
+          ...rawGig,
+          client: Array.isArray(rawGig.client)
+            ? rawGig.client[0] ?? null
+            : rawGig.client,
+        }
+      : null
+
+    return {
+      id: app.id,
+      status: app.status,
+      cover_note: app.cover_note,
+      created_at: app.created_at,
+      gig,
+    } as TelegramApplicationSummary
+  })
+
   return {
     applications: (data ?? []).map((row) =>
       normalizeTelegramApplicationSummary(row as Record<string, unknown>)
@@ -575,6 +595,24 @@ export async function listTelegramGigApplicants(clientId: string, gigId: string)
   if (applicantsError) {
     throw new Error(applicantsError.message)
   }
+
+  const mappedApplicants = (applicants ?? []).map((app: any) => {
+    const rawFreelancer = Array.isArray(app.freelancer) ? app.freelancer[0] ?? null : app.freelancer ?? null
+    const freelancer = rawFreelancer
+      ? {
+          ...rawFreelancer,
+        }
+      : null
+
+    return {
+      id: app.id,
+      status: app.status,
+      cover_note: app.cover_note,
+      bid_amount: app.bid_amount,
+      created_at: app.created_at,
+      freelancer,
+    } as TelegramGigApplicantSummary
+  })
 
   return {
     gig,

@@ -134,12 +134,12 @@ export default function ApplicantsPage() {
 
   if (loading) {
     return (
-      <div className="p-4 sm:p-6 space-y-6">
-        <div className="h-8 bg-gray-200 rounded w-1/4 animate-pulse"></div>
-        <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
+        <div className="h-6 sm:h-7 md:h-8 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+        <div className="h-10 sm:h-12 bg-gray-200 rounded animate-pulse"></div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 bg-gray-200 rounded animate-pulse"></div>
+            <div key={i} className="h-20 sm:h-24 md:h-28 bg-gray-200 rounded animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -147,15 +147,15 @@ export default function ApplicantsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10 space-y-4 sm:space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold">Applicants</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">Applicants</h1>
         
         {/* Gig Filter */}
         <Select value={selectedGig} onValueChange={setSelectedGig}>
-          <SelectTrigger className="w-full sm:w-64">
-            <Filter className="h-4 w-4 mr-2" />
+          <SelectTrigger className="w-full sm:w-48 md:w-56 lg:w-64">
+            <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
             <SelectValue placeholder="Filter by gig" />
           </SelectTrigger>
           <SelectContent>
@@ -168,72 +168,72 @@ export default function ApplicantsPage() {
       </div>
 
       {/* Stats - Responsive Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-xl sm:text-2xl font-bold">{filteredApplicants.length}</div>
-            <p className="text-xs sm:text-sm text-gray-500">Total Applications</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+        <Card className="p-2 sm:p-3 md:p-4">
+          <CardContent className="pt-2 sm:pt-3 md:pt-4 p-0">
+            <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{filteredApplicants.length}</div>
+            <p className="text-[10px] sm:text-xs md:text-sm text-gray-500">Total Applications</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-xl sm:text-2xl font-bold text-amber-500">{pendingApps.length}</div>
-            <p className="text-xs sm:text-sm text-gray-500">Pending</p>
+        <Card className="p-2 sm:p-3 md:p-4">
+          <CardContent className="pt-2 sm:pt-3 md:pt-4 p-0">
+            <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-amber-500">{pendingApps.length}</div>
+            <p className="text-[10px] sm:text-xs md:text-sm text-gray-500">Pending</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-xl sm:text-2xl font-bold text-green-500">
+        <Card className="p-2 sm:p-3 md:p-4">
+          <CardContent className="pt-2 sm:pt-3 md:pt-4 p-0">
+            <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-green-500">
               {filteredApplicants.filter(a => a.status === 'accepted').length}
             </div>
-            <p className="text-xs sm:text-sm text-gray-500">Accepted</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-gray-500">Accepted</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-xl sm:text-2xl font-bold text-red-500">
+        <Card className="p-2 sm:p-3 md:p-4">
+          <CardContent className="pt-2 sm:pt-3 md:pt-4 p-0">
+            <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-red-500">
               {filteredApplicants.filter(a => a.status === 'rejected').length}
             </div>
-            <p className="text-xs sm:text-sm text-gray-500">Rejected</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-gray-500">Rejected</p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="pending">
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="pending">Pending ({pendingApps.length})</TabsTrigger>
-          <TabsTrigger value="reviewed">Reviewed ({reviewedApps.length})</TabsTrigger>
+        <TabsList className="w-full sm:w-auto h-auto flex flex-wrap">
+          <TabsTrigger value="pending" className="text-xs sm:text-sm md:text-base">Pending ({pendingApps.length})</TabsTrigger>
+          <TabsTrigger value="reviewed" className="text-xs sm:text-sm md:text-base">Reviewed ({reviewedApps.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="space-y-3 sm:space-y-4 mt-4">
+        <TabsContent value="pending" className="space-y-2 sm:space-y-3 md:space-y-4 mt-3 sm:mt-4 md:mt-6">
           {pendingApps.length === 0 ? (
             <Card>
-              <CardContent className="pt-6 text-center">
-                <Clock className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-gray-300 mb-4" />
-                <p className="text-gray-500">No pending applications</p>
+              <CardContent className="pt-4 sm:pt-6 md:pt-8 text-center">
+                <Clock className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 mx-auto text-gray-300 mb-3 sm:mb-4" />
+                <p className="text-sm sm:text-base text-gray-500">No pending applications</p>
               </CardContent>
             </Card>
           ) : (
             pendingApps.map(app => (
-              <Card key={app.id} className="w-full">
-                <CardContent className="pt-4 sm:pt-6">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                    <div className="flex gap-3 sm:gap-4">
-                      <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
+              <Card key={app.id} className="w-full p-3 sm:p-4 md:p-5 lg:p-6">
+                <CardContent className="pt-3 sm:pt-4 md:pt-5 p-0">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+                    <div className="flex gap-2.5 sm:gap-3 md:gap-4">
+                      <Avatar className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14">
                         <AvatarImage src={app.freelancer?.avatar_url || ''} />
                         <AvatarFallback className="bg-amber-100 text-amber-600">
                           {app.freelancer?.full_name?.charAt(0) || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-sm sm:text-base truncate">
+                        <h3 className="font-medium text-xs sm:text-sm md:text-base lg:text-lg truncate">
                           {app.freelancer?.full_name || 'Unknown'}
                         </h3>
-                        <p className="text-xs sm:text-sm text-gray-500 truncate">
+                        <p className="text-[10px] sm:text-xs md:text-sm text-gray-500 truncate">
                           {app.gig?.title}
                         </p>
                         {app.freelancer?.average_rating && (
-                          <p className="text-xs sm:text-sm text-amber-500">
+                          <p className="text-[10px] sm:text-xs md:text-sm text-amber-500">
                             ★ {app.freelancer.average_rating.toFixed(1)} ({app.freelancer.reviews_count} reviews)
                           </p>
                         )}
@@ -246,27 +246,27 @@ export default function ApplicantsPage() {
                   </div>
                   
                   {app.cover_note && (
-                    <div className="mt-3 sm:mt-4 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-xs sm:text-sm text-gray-600">{app.cover_note}</p>
+                    <div className="mt-2.5 sm:mt-3 md:mt-4 p-2.5 sm:p-3 md:p-4 bg-gray-50 rounded-lg">
+                      <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">{app.cover_note}</p>
                     </div>
                   )}
                   
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
+                  <div className="flex flex-col sm:flex-row gap-1.5 sm:gap-2 md:gap-3 mt-3 sm:mt-4 md:mt-5">
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={() => handleReject(app.id)}
-                      className="text-red-500 hover:text-red-600 flex-1 sm:flex-none"
+                      className="text-red-500 hover:text-red-600 flex-1 sm:flex-none text-[10px] sm:text-xs md:text-sm"
                     >
-                      <X className="h-4 w-4 mr-1 sm:mr-2" />
+                      <X className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 mr-1 sm:mr-2" />
                       Reject
                     </Button>
                     <Button 
                       size="sm" 
-                      className="bg-green-500 hover:bg-green-600 flex-1 sm:flex-none"
+                      className="bg-green-500 hover:bg-green-600 flex-1 sm:flex-none text-[10px] sm:text-xs md:text-sm"
                       onClick={() => handleAccept(app.id)}
                     >
-                      <Check className="h-4 w-4 mr-1 sm:mr-2" />
+                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 mr-1 sm:mr-2" />
                       Accept
                     </Button>
                   </div>
@@ -276,28 +276,28 @@ export default function ApplicantsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="reviewed" className="space-y-3 sm:space-y-4 mt-4">
+        <TabsContent value="reviewed" className="space-y-2 sm:space-y-3 md:space-y-4 mt-3 sm:mt-4 md:mt-6">
           {reviewedApps.length === 0 ? (
             <Card>
-              <CardContent className="pt-6 text-center">
-                <p className="text-gray-500">No reviewed applications yet</p>
+              <CardContent className="pt-4 sm:pt-6 md:pt-8 text-center">
+                <p className="text-sm sm:text-base text-gray-500">No reviewed applications yet</p>
               </CardContent>
             </Card>
           ) : (
             reviewedApps.map(app => (
-              <Card key={app.id}>
-                <CardContent className="pt-4 sm:pt-6">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                    <div className="flex gap-3 sm:gap-4">
-                      <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+              <Card key={app.id} className="p-3 sm:p-4 md:p-5 lg:p-6">
+                <CardContent className="pt-3 sm:pt-4 md:pt-5 p-0">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-3 md:gap-4">
+                    <div className="flex gap-2.5 sm:gap-3 md:gap-4">
+                      <Avatar className="h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12">
                         <AvatarImage src={app.freelancer?.avatar_url || ''} />
                         <AvatarFallback className="bg-amber-100 text-amber-600">
                           {app.freelancer?.full_name?.charAt(0) || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="font-medium text-sm sm:text-base">{app.freelancer?.full_name || 'Unknown'}</h3>
-                        <p className="text-xs sm:text-sm text-gray-500">{app.gig?.title}</p>
+                        <h3 className="font-medium text-xs sm:text-sm md:text-base lg:text-lg">{app.freelancer?.full_name || 'Unknown'}</h3>
+                        <p className="text-[10px] sm:text-xs md:text-sm text-gray-500">{app.gig?.title}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2">

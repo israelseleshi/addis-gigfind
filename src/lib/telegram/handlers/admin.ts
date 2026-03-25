@@ -77,7 +77,7 @@ export async function handleAdminHome(ctx: TelegramBotContext) {
       return
     }
 
-    const name = resolved.profile.full_name ?? 'there'
+    const name = resolved.profile?.full_name ?? 'there'
     const role = resolved.role ?? 'admin'
     await safeAnswerCallbackQuery(ctx)
     await respondWithTelegramMessage(ctx, buildLinkedWelcomeMessage(name, role), {
@@ -247,8 +247,10 @@ export async function handleApproveVerification(
       return
     }
 
+    const actorUserId = resolved.profile?.id ?? 'unknown'
+
     void logAdminVerificationAudit({
-      actorUserId: resolved.profile.id,
+      actorUserId,
       actorTelegramUserId: resolved.telegramUserId,
       actorRole: resolved.role ?? 'admin',
       action: 'approve_verification',
@@ -257,7 +259,7 @@ export async function handleApproveVerification(
       outcome: result.alreadyHandled ? 'already_handled' : 'success',
     }).catch((auditError) => {
       telegramLogger.error(
-        { error: auditError, actorUserId: resolved.profile.id, documentId },
+        { error: auditError, actorUserId, documentId },
         'Telegram admin verification approval audit log failed'
       )
     })
@@ -373,8 +375,10 @@ export async function handleRejectVerificationReply(ctx: TelegramBotContext) {
       return true
     }
 
+    const actorUserId = resolved.profile?.id ?? 'unknown'
+
     void logAdminVerificationAudit({
-      actorUserId: resolved.profile.id,
+      actorUserId,
       actorTelegramUserId: resolved.telegramUserId,
       actorRole: resolved.role ?? 'admin',
       action: 'reject_verification',
@@ -384,7 +388,7 @@ export async function handleRejectVerificationReply(ctx: TelegramBotContext) {
       rejectionReason: reason.trim(),
     }).catch((auditError) => {
       telegramLogger.error(
-        { error: auditError, actorUserId: resolved.profile.id, documentId },
+        { error: auditError, actorUserId, documentId },
         'Telegram admin verification rejection audit log failed'
       )
     })

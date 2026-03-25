@@ -1,45 +1,79 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Send, Paperclip, MoreVertical, Phone, Video, ArrowLeft } from 'lucide-react';
+import { Send, MoreVertical, Phone, Video, ArrowLeft, MessageSquare } from 'lucide-react';
+import { ConversationList } from '@/components/chat/ConversationList';
+import { MessageBubble } from '@/components/chat/MessageBubble';
+import { MessageInput } from '@/components/chat/MessageInput';
+import {
+  getConversations,
+  getMessages,
+  sendMessage as sendMessageAction,
+  markMessagesAsRead,
+  getOtherParticipant,
+  ConversationWithDetails,
+} from '@/lib/actions/chat';
 
-interface Message {
+type Message = {
   id: string;
+  gig_id: string;
   content: string;
   sender_id: string;
   created_at: string;
-  is_own: boolean;
-}
+  read: boolean | null;
+  recipient_id: string;
+  sender?: {
+    id: string;
+    full_name: string;
+    avatar_url: string | null;
+  };
+};
 
-interface Conversation {
+type Conversation = {
   id: string;
-  gig_title: string;
-  client_name: string;
-  client_avatar: string | null;
-  last_message: string;
-  last_message_time: string;
-  unread_count: number;
-}
+  gig_id: string;
+  gig?: {
+    id: string;
+    title: string;
+  };
+  participant_ids: string[];
+  updated_at: string;
+  messages?: Message[];
+  other_participant?: {
+    id: string;
+    full_name: string;
+    avatar_url: string | null;
+  };
+  last_message?: {
+    content: string;
+    created_at: string;
+  };
+  unread_count?: number;
+};
 
 export default function MessagesPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [otherParticipant, setOtherParticipant] = useState<{ id: string; full_name: string; avatar_url: string | null } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const supabase = createClient();
 
   useEffect(() => {
-    loadConversations();
+    loadInitialData();
+    setupRealtimeSubscription();
   }, []);
 
   useEffect(() => {
     if (selectedConversation) {
-      loadMessages();
+      loadMessages(selectedConversation.gig_id);
     }
   }, [selectedConversation]);
 
@@ -47,138 +81,156 @@ export default function MessagesPage() {
     scrollToBottom();
   }, [messages]);
 
-  const loadConversations = async () => {
+  const loadInitialData = async () => {
     try {
-      setConversations([
-        {
-          id: '1',
-          gig_title: 'Logo Design for Cafe',
-          client_name: 'Abebe Bikila',
-          client_avatar: null,
-          last_message: 'That sounds great, thank you!',
-          last_message_time: new Date().toISOString(),
-          unread_count: 1,
-        },
-        {
-          id: '2',
-          gig_title: 'Translation Service',
-          client_name: 'Sara Tadesse',
-          client_avatar: null,
-          last_message: 'Can you send the invoice?',
-          last_message_time: new Date(Date.now() - 86400000).toISOString(),
-          unread_count: 0,
-        },
-      ]);
-    } catch (error) {
-      console.error('Error loading conversations:', error);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+
+      const result = await getConversations();
+      if (result.error) {
+        setError(result.error);
+      } else if (result.conversations) {
+        const convsWithParticipantInfo = await Promise.all(
+          (result.conversations as ConversationWithDetails[]).map(async (conv) => {
+            const participantResult = await getOtherParticipant(conv.gig_id);
+            return {
+              ...conv,
+              other_participant: participantResult.participant || undefined,
+            };
+          })
+        );
+        setConversations(convsWithParticipantInfo);
+      }
+    } catch (err) {
+      console.error('Error loading conversations:', err);
+      setError('Failed to load conversations');
     } finally {
       setLoading(false);
     }
   };
 
-  const loadMessages = async () => {
-    setMessages([
-      { id: '1', content: 'Hello, I am interested in your services.', sender_id: 'other', created_at: new Date(Date.now() - 3600000).toISOString(), is_own: false },
-      { id: '2', content: 'Hi Abebe, thank you for reaching out. How can I help you?', sender_id: 'me', created_at: new Date(Date.now() - 3500000).toISOString(), is_own: true },
-      { id: '3', content: 'I need a logo for my new cafe. Can you share your portfolio?', sender_id: 'other', created_at: new Date(Date.now() - 1800000).toISOString(), is_own: false },
-      { id: '4', content: 'Of course, I will send it over shortly.', sender_id: 'me', created_at: new Date().toISOString(), is_own: true },
-    ]);
+  const setupRealtimeSubscription = () => {
+    const channel = supabase
+      .channel('freelancer_messages_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        async (payload) => {
+          const newMessage = payload.new as Message;
+          
+          setMessages((prev) => {
+            const exists = prev.some((m) => m.id === newMessage.id);
+            if (exists) return prev;
+            if (selectedConversation && newMessage.gig_id === selectedConversation.gig_id) {
+              return [...prev, newMessage];
+            }
+            return prev;
+          });
+          
+          if (newMessage.recipient_id === currentUserId) {
+            await markMessagesAsRead(newMessage.gig_id);
+          }
+          
+          await loadInitialData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   };
 
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
+  const loadMessages = async (gigId: string) => {
+    setMessagesLoading(true);
+    try {
+      const result = await getMessages(gigId);
+      if (result.error) {
+        setError(result.error);
+      } else if (result.messages) {
+        setMessages(result.messages as Message[]);
+        
+        const participantResult = await getOtherParticipant(gigId);
+        if (participantResult.participant) {
+          setOtherParticipant(participantResult.participant);
+        }
+        
+        await markMessagesAsRead(gigId);
+      }
+    } catch (err) {
+      console.error('Error loading messages:', err);
+      setError('Failed to load messages');
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
 
-    const message: Message = {
-      id: Date.now().toString(),
-      content: newMessage,
-      sender_id: 'me',
+  const handleSendMessage = async (content: string) => {
+    if (!selectedConversation || !otherParticipant || !currentUserId) return;
+
+    const tempId = `temp-${Date.now()}`
+    const optimisticMessage: Message = {
+      id: tempId,
+      gig_id: selectedConversation.gig_id,
+      content,
+      sender_id: currentUserId,
+      recipient_id: otherParticipant.id,
       created_at: new Date().toISOString(),
-      is_own: true,
-    };
+      read: false,
+    }
 
-    setMessages(prev => [...prev, message]);
-    setNewMessage('');
+    setMessages((prev) => [...prev, optimisticMessage]);
+
+    try {
+      const result = await sendMessageAction({
+        gigId: selectedConversation.gig_id,
+        recipientId: otherParticipant.id,
+        content,
+      });
+
+      if (result.error) {
+        setError(result.error);
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      } else if (result.message) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...result.message, sender: m.sender } as Message : m))
+        );
+        await loadInitialData();
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setError('Failed to send message');
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+    }
   };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const handleSelectConversation = (conv: Conversation) => {
+    setSelectedConversation(conv);
+    setMessages([]);
+    setOtherParticipant(conv.other_participant || null);
+    setError(null);
   };
-
-  const filteredConversations = conversations.filter(conv =>
-    conv.gig_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.client_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="h-[calc(100vh-6rem)] flex bg-white rounded-lg overflow-hidden border border-gray-200">
       {/* Sidebar - Conversation List */}
       <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-col border-r border-gray-200 bg-gray-50`}>
-        {/* Header */}
-        <div className="p-4 bg-amber-600 text-white">
-          <h2 className="text-xl font-semibold">Chats</h2>
-          <div className="mt-3 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search conversations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white text-gray-900 border-0"
-            />
-          </div>
-        </div>
-
-        {/* Conversations */}
-        <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="p-4 space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-3 animate-pulse">
-                  <div className="h-12 w-12 bg-gray-200 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 w-24 bg-gray-200 rounded" />
-                    <div className="h-3 w-full bg-gray-200 rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : filteredConversations.length > 0 ? (
-            filteredConversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => setSelectedConversation(conv)}
-                className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-100 transition-colors ${
-                  selectedConversation?.id === conv.id ? 'bg-gray-100' : ''
-                }`}
-              >
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={conv.client_avatar || undefined} />
-                  <AvatarFallback className="bg-amber-100 text-amber-600">
-                    {conv.client_name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium text-gray-900 truncate">{conv.client_name}</h3>
-                    <span className="text-xs text-gray-500">{formatTime(conv.last_message_time)}</span>
-                  </div>
-                  <p className="text-sm text-gray-600 truncate">{conv.gig_title}</p>
-                  <p className="text-sm text-gray-500 truncate">{conv.last_message}</p>
-                </div>
-                {conv.unread_count > 0 && (
-                  <div className="h-5 w-5 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center">
-                    {conv.unread_count}
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="p-8 text-center text-gray-500">No conversations yet</div>
-          )}
-        </div>
+        <ConversationList
+          conversations={conversations}
+          selectedGigId={selectedConversation?.gig_id}
+          onSelectConversation={handleSelectConversation}
+          isLoading={loading}
+        />
       </div>
 
       {/* Chat Area */}
@@ -190,14 +242,14 @@ export default function MessagesPage() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <Avatar className="h-10 w-10">
-              <AvatarImage src={selectedConversation.client_avatar || undefined} />
+              <AvatarImage src={otherParticipant?.avatar_url || undefined} />
               <AvatarFallback className="bg-amber-100 text-amber-600">
-                {selectedConversation.client_name.split(' ').map(n => n[0]).join('')}
+                {otherParticipant?.full_name?.split(' ').map(n => n[0]).join('') || '?'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h3 className="font-medium">{selectedConversation.client_name}</h3>
-              <p className="text-xs opacity-80">{selectedConversation.gig_title}</p>
+              <h3 className="font-medium">{otherParticipant?.full_name || 'Loading...'}</h3>
+              <p className="text-xs opacity-80">{selectedConversation.gig?.title}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="text-white hover:bg-amber-500">
@@ -212,37 +264,48 @@ export default function MessagesPage() {
             </div>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="px-4 py-2 bg-red-50 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {messages.map((message) => (
-              <div key={message.id} className={`flex ${message.is_own ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[70%] rounded-lg px-4 py-2 ${message.is_own ? 'bg-amber-100 text-gray-900' : 'bg-white text-gray-900'}`}>
-                  <p className="text-sm">{message.content}</p>
-                  <p className={`text-xs text-gray-500 mt-1 ${message.is_own ? 'text-right' : ''}`}>{formatTime(message.created_at)}</p>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messagesLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="h-8 w-8 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Loading messages...</p>
                 </div>
               </div>
-            ))}
+            ) : messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No messages yet</p>
+                  <p className="text-xs text-gray-400">Send a message to start the conversation</p>
+                </div>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <MessageBubble
+                  key={message.id}
+                  content={message.content}
+                  senderName={message.sender?.full_name || (message.sender_id === currentUserId ? 'You' : 'User')}
+                  senderAvatar={message.sender?.avatar_url}
+                  isOwnMessage={message.sender_id === currentUserId}
+                  createdAt={message.created_at}
+                  read={message.read}
+                />
+              ))
+            )}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Input Area */}
-          <div className="p-3 bg-gray-100">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="text-gray-500">
-                <Paperclip className="h-5 w-5" />
-              </Button>
-              <Input
-                placeholder="Type a message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                className="flex-1 bg-white border-0"
-              />
-              <Button onClick={sendMessage} disabled={!newMessage.trim()} className="bg-amber-600 hover:bg-amber-700">
-                <Send className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
+          <MessageInput onSendMessage={handleSendMessage} disabled={!otherParticipant} />
         </div>
       ) : (
         <div className="hidden md:flex flex-1 items-center justify-center bg-gray-50">
