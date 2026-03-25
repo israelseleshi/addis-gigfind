@@ -37,6 +37,46 @@ export type TelegramPendingVerificationSummary = {
   } | null
 }
 
+function unwrapRelation<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) {
+    return value[0] ?? null
+  }
+
+  return value ?? null
+}
+
+function readString(value: unknown) {
+  return typeof value === 'string' ? value : ''
+}
+
+function readNullableString(value: unknown) {
+  return typeof value === 'string' ? value : null
+}
+
+function normalizeTelegramPendingVerificationSummary(
+  row: Record<string, unknown>
+): TelegramPendingVerificationSummary {
+  const profile = unwrapRelation(row.profiles) as Record<string, unknown> | null
+
+  return {
+    id: readString(row.id),
+    user_id: readString(row.user_id),
+    document_type: readString(row.document_type),
+    id_number: readString(row.id_number),
+    description: readNullableString(row.description),
+    status: readString(row.status),
+    admin_notes: readNullableString(row.admin_notes),
+    submitted_at: readNullableString(row.submitted_at),
+    profiles: profile
+      ? {
+          id: readString(profile.id),
+          full_name: readNullableString(profile.full_name),
+          avatar_url: readNullableString(profile.avatar_url),
+        }
+      : null,
+  }
+}
+
 export async function getTelegramVerificationStatus(
   userId: string
 ): Promise<TelegramVerificationSnapshot> {
@@ -96,24 +136,9 @@ export async function listTelegramPendingVerifications() {
     throw new Error(error.message)
   }
 
-  const mappedData = (data ?? []).map((item: any) => {
-    const rawProfile = Array.isArray(item.profiles) ? item.profiles[0] ?? null : item.profiles ?? null
-    const profiles = rawProfile ? { ...rawProfile } : null
-
-    return {
-      id: item.id,
-      user_id: item.user_id,
-      document_type: item.document_type,
-      id_number: item.id_number,
-      description: item.description,
-      status: item.status,
-      admin_notes: item.admin_notes,
-      submitted_at: item.submitted_at,
-      profiles,
-    } as TelegramPendingVerificationSummary
-  })
-
-  return mappedData
+  return (data ?? []).map((row) =>
+    normalizeTelegramPendingVerificationSummary(row as Record<string, unknown>)
+  )
 }
 
 export async function getTelegramPendingVerificationDetails(documentId: string) {
@@ -145,13 +170,7 @@ export async function getTelegramPendingVerificationDetails(documentId: string) 
     return null
   }
 
-  const rawProfile = Array.isArray(data.profiles) ? data.profiles[0] ?? null : data.profiles ?? null
-  const profiles = rawProfile ? { ...rawProfile } : null
-
-  return {
-    ...data,
-    profiles,
-  } as TelegramPendingVerificationSummary
+  return normalizeTelegramPendingVerificationSummary(data as Record<string, unknown>)
 }
 
 export async function approveTelegramVerification(documentId: string) {

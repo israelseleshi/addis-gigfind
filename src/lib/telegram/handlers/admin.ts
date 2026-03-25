@@ -27,8 +27,11 @@ import {
   buildTemporaryUnavailableMessage,
 } from '@/lib/telegram/messages'
 import { respondWithTelegramMessage } from '@/lib/telegram/respond'
+import { shouldThrottleTelegramAction } from '@/lib/telegram/rate-limit'
+import { buildTelegramLogContext } from '@/lib/telegram/log-context'
 
 const ADMIN_ONLY_MESSAGE = 'This action is only available to admin and regulator accounts.'
+const REJECT_REPLY_WINDOW_MS = 10_000
 
 async function safeAnswerCallbackQuery(
   ctx: TelegramBotContext,
@@ -82,7 +85,10 @@ export async function handleAdminHome(ctx: TelegramBotContext) {
       reply_markup: buildLinkedHomeKeyboard(role),
     })
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram admin home handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'admin-home' }) },
+      'Telegram admin home handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -119,7 +125,13 @@ export async function handlePendingVerifications(ctx: TelegramBotContext) {
       }
     )
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram admin pending verifications handler failed')
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, { handler: 'admin-pending-verifications' }),
+      },
+      'Telegram admin pending verifications handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -150,7 +162,59 @@ export async function handlePendingVerificationDetails(
       reply_markup: buildAdminVerificationDetailKeyboard(document.id),
     })
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram admin verification detail handler failed')
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, {
+          handler: 'admin-verification-detail',
+          documentId,
+        }),
+      },
+      'Telegram admin verification detail handler failed'
+    )
+    await ctx.reply(buildTemporaryUnavailableMessage())
+  }
+}
+
+export async function handleNextPendingVerification(
+  ctx: TelegramBotContext,
+  currentDocumentId: string
+) {
+  try {
+    const resolved = await requireTelegramRole(ctx, ['admin', 'regulator'], ADMIN_ONLY_MESSAGE)
+    if (!resolved) {
+      await safeAnswerCallbackQuery(ctx)
+      return
+    }
+
+    const documents = await listTelegramPendingVerifications()
+    await safeAnswerCallbackQuery(ctx)
+
+    if (documents.length === 0) {
+      await respondWithTelegramMessage(ctx, buildAdminPendingVerificationsEmptyState(), {
+        reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+      })
+      return
+    }
+
+    const currentIndex = documents.findIndex((document) => document.id === currentDocumentId)
+    const nextDocument = documents[currentIndex + 1] ?? documents[0]
+
+    await respondWithTelegramMessage(ctx, buildAdminVerificationDetailMessage(nextDocument), {
+      parse_mode: 'HTML',
+      reply_markup: buildAdminVerificationDetailKeyboard(nextDocument.id),
+    })
+  } catch (error) {
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, {
+          handler: 'admin-next-verification',
+          documentId: currentDocumentId,
+        }),
+      },
+      'Telegram admin next verification handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -209,7 +273,16 @@ export async function handleApproveVerification(
       }
     )
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram admin approve verification handler failed')
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, {
+          handler: 'admin-approve-verification',
+          documentId,
+        }),
+      },
+      'Telegram admin approve verification handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -245,7 +318,16 @@ export async function handleRejectVerificationPrompt(
       }
     )
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram admin reject prompt handler failed')
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, {
+          handler: 'admin-reject-verification-prompt',
+          documentId,
+        }),
+      },
+      'Telegram admin reject prompt handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
@@ -269,6 +351,14 @@ export async function handleRejectVerificationReply(ctx: TelegramBotContext) {
     const documentId = extractDocumentIdFromRejectPrompt(ctx.message?.reply_to_message?.text)
     if (!documentId) {
       return false
+    }
+
+    const throttleKey = `reject-reply:${resolved.profile.id}:${ctx.message?.reply_to_message?.message_id ?? 'unknown'}`
+    if (shouldThrottleTelegramAction(throttleKey, REJECT_REPLY_WINDOW_MS)) {
+      await ctx.reply('That rejection reason is already being processed.', {
+        reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'admin'),
+      })
+      return true
     }
 
     const reason = ctx.message?.text?.trim() ?? ''
@@ -313,7 +403,15 @@ export async function handleRejectVerificationReply(ctx: TelegramBotContext) {
     )
     return true
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram admin reject reply handler failed')
+    telegramLogger.error(
+      {
+        error,
+        ...buildTelegramLogContext(ctx, {
+          handler: 'admin-reject-verification-reply',
+        }),
+      },
+      'Telegram admin reject reply handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
     return true
   }

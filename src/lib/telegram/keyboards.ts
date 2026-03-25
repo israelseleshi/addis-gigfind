@@ -5,7 +5,11 @@ import type {
   TelegramApplicationSummary,
   TelegramGigApplicantSummary,
 } from '@/lib/actions/telegram/applications'
-import type { TelegramBrowseGig, TelegramClientGigSummary } from '@/lib/actions/telegram/gigs'
+import type {
+  TelegramBrowseGig,
+  TelegramClientGigSummary,
+  TelegramGigBrowseFilters,
+} from '@/lib/actions/telegram/gigs'
 import type { TelegramPendingVerificationSummary } from '@/lib/actions/telegram/verifications'
 import type { TelegramUserRole } from '@/lib/telegram/types'
 
@@ -26,11 +30,16 @@ export function buildClientHomeKeyboard() {
     .text('Review applicants', 'client:review_applicants')
 }
 
-export function buildAdminHomeKeyboard() {
+export function buildClientHomeWebviewKeyboard(postGigUrl: string, myGigsUrl: string) {
   return new InlineKeyboard()
-    .text('Pending verifications', 'admin:pending_verifications')
+    .url('Post gig', postGigUrl)
+    .url('My gigs', myGigsUrl)
     .row()
-    .text('Platform stats', 'admin:platform_stats')
+    .text('Review applicants', 'client:review_applicants')
+}
+
+export function buildAdminHomeKeyboard() {
+  return new InlineKeyboard().text('Pending verifications', 'admin:pending_verifications')
 }
 
 export function buildLinkedHomeKeyboard(role: TelegramUserRole) {
@@ -49,11 +58,28 @@ export function buildGigListKeyboard(
   gigs: TelegramBrowseGig[],
   page: number,
   hasPreviousPage: boolean,
-  hasNextPage: boolean
+  hasNextPage: boolean,
+  filters: TelegramGigBrowseFilters,
+  detailUrls?: Record<string, string>
 ) {
   const keyboard = new InlineKeyboard()
 
+  keyboard
+    .text('Choose category', 'freelancer:choose_category')
+    .text('Choose location', 'freelancer:choose_location')
+    .row()
+
+  if (filters.category || filters.location) {
+    keyboard.text('Clear filters', 'freelancer:clear_filters').row()
+  }
+
   for (const gig of gigs) {
+    const detailUrl = detailUrls?.[gig.id]
+    if (detailUrl) {
+      keyboard.url(`View: ${gig.title.slice(0, 24)}`, detailUrl).row()
+      continue
+    }
+
     keyboard.text(`View: ${gig.title.slice(0, 24)}`, `freelancer:view_gig:${gig.id}`).row()
   }
 
@@ -73,11 +99,61 @@ export function buildGigListKeyboard(
   return keyboard
 }
 
+export function buildGigCategoryOptionsKeyboard(categories: string[], currentValue?: string | null) {
+  const keyboard = new InlineKeyboard()
+
+  for (const category of categories) {
+    const label = category === currentValue ? `• ${category}` : category
+    keyboard.text(label.slice(0, 28), `freelancer:set_category:${encodeURIComponent(category)}`).row()
+  }
+
+  keyboard.text('Type category', 'freelancer:prompt_category')
+
+  if (currentValue) {
+    keyboard.text('Clear category', 'freelancer:clear_category')
+  }
+
+  keyboard.row().text('Back to gigs', 'freelancer:browse_gigs:0')
+  return keyboard
+}
+
+export function buildGigLocationOptionsKeyboard(locations: string[], currentValue?: string | null) {
+  const keyboard = new InlineKeyboard()
+
+  for (const location of locations) {
+    const label = location === currentValue ? `• ${location}` : location
+    keyboard.text(label.slice(0, 28), `freelancer:set_location:${encodeURIComponent(location)}`).row()
+  }
+
+  keyboard.text('Type location', 'freelancer:prompt_location')
+
+  if (currentValue) {
+    keyboard.text('Clear location', 'freelancer:clear_location')
+  }
+
+  keyboard.row().text('Back to gigs', 'freelancer:browse_gigs:0')
+  return keyboard
+}
+
 export function buildGigDetailKeyboard(gigId: string) {
   return new InlineKeyboard()
     .text('Apply to this gig', `freelancer:apply_gig:${gigId}`)
     .row()
     .text('Browse more gigs', 'freelancer:browse_gigs:0')
+    .text('Back to menu', 'freelancer:home')
+}
+
+export function buildGigApplyDraftKeyboard(gigId: string, hasCoverNote: boolean) {
+  const keyboard = new InlineKeyboard()
+
+  if (hasCoverNote) {
+    keyboard.text('Confirm application', `freelancer:confirm_apply:${gigId}`).row()
+  }
+
+  return keyboard
+    .text('Cancel application', 'freelancer:cancel_apply')
+    .row()
+    .text('Back to gig', `freelancer:view_gig:${gigId}`)
     .text('Back to menu', 'freelancer:home')
 }
 
@@ -182,6 +258,7 @@ export function buildAdminPendingVerificationsKeyboard(
       .row()
   }
 
+  keyboard.text('Refresh queue', 'admin:pending_verifications').row()
   keyboard.text('Back to menu', 'admin:home')
   return keyboard
 }
@@ -193,6 +270,8 @@ export function buildAdminVerificationDetailKeyboard(documentId: string) {
     .row()
     .text('Refresh verification', `admin:view_verification:${documentId}`)
     .row()
+    .text('Next pending', `admin:next_verification:${documentId}`)
+    .row()
     .text('Pending verifications', 'admin:pending_verifications')
     .text('Back to menu', 'admin:home')
 }
@@ -201,11 +280,18 @@ export function buildClientGigsListKeyboard(
   gigs: TelegramClientGigSummary[],
   page: number,
   hasPreviousPage: boolean,
-  hasNextPage: boolean
+  hasNextPage: boolean,
+  detailUrls?: Record<string, string>
 ) {
   const keyboard = new InlineKeyboard()
 
   for (const gig of gigs) {
+    const detailUrl = detailUrls?.[gig.id]
+    if (detailUrl) {
+      keyboard.url(`View: ${gig.title.slice(0, 24)}`, detailUrl).row()
+      continue
+    }
+
     keyboard.text(`View: ${gig.title.slice(0, 24)}`, `client:view_gig:${gig.id}`).row()
   }
 
@@ -223,6 +309,49 @@ export function buildClientGigsListKeyboard(
 
   keyboard.text('Back to menu', 'client:home')
   return keyboard
+}
+
+export function buildClientPostGigCategoryKeyboard(
+  categories: ReadonlyArray<{ value: string; label: string }>,
+  currentValue?: string | null
+) {
+  const keyboard = new InlineKeyboard()
+
+  for (const category of categories) {
+    const label = category.value === currentValue ? `• ${category.label}` : category.label
+    keyboard.text(label.slice(0, 28), `client:post_category:${category.value}`).row()
+  }
+
+  return keyboard
+    .text('Cancel posting', 'client:cancel_post_gig')
+    .row()
+    .text('Back to menu', 'client:home')
+}
+
+export function buildClientPostGigLocationKeyboard(
+  locations: ReadonlyArray<{ value: string; label: string }>,
+  currentValue?: string | null
+) {
+  const keyboard = new InlineKeyboard()
+
+  for (const location of locations) {
+    const label = location.value === currentValue ? `• ${location.label}` : location.label
+    keyboard.text(label.slice(0, 28), `client:post_location:${location.value}`).row()
+  }
+
+  return keyboard
+    .text('Cancel posting', 'client:cancel_post_gig')
+    .row()
+    .text('Back to menu', 'client:home')
+}
+
+export function buildClientPostGigReviewKeyboard() {
+  return new InlineKeyboard()
+    .text('Publish gig', 'client:confirm_post_gig')
+    .row()
+    .text('Cancel posting', 'client:cancel_post_gig')
+    .row()
+    .text('Back to menu', 'client:home')
 }
 
 export function buildClientGigDetailKeyboard(gigId: string) {

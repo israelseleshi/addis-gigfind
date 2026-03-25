@@ -1,12 +1,14 @@
 import { consumeTelegramLinkCode } from '@/lib/telegram/account-link'
 import type { TelegramBotContext } from '@/lib/telegram/context'
+import { buildTelegramLogContext } from '@/lib/telegram/log-context'
 import { telegramLogger } from '@/lib/telegram/logger'
 import { buildRoleMenu, buildTemporaryUnavailableMessage } from '@/lib/telegram/messages'
 
 export async function handleLinkCommand(ctx: TelegramBotContext) {
   try {
     const from = ctx.from
-    if (!from) {
+    const chat = ctx.chat
+    if (!from || !chat) {
       await ctx.reply('Could not identify your Telegram account.')
       return
     }
@@ -22,7 +24,7 @@ export async function handleLinkCommand(ctx: TelegramBotContext) {
     const result = await consumeTelegramLinkCode({
       code,
       telegramUserId: String(from.id),
-      telegramChatId: String(ctx.chat.id),
+      telegramChatId: String(chat.id),
       username: from.username,
       firstName: from.first_name,
       lastName: from.last_name,
@@ -42,7 +44,10 @@ export async function handleLinkCommand(ctx: TelegramBotContext) {
       ].join('\n')
     )
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram /link handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'link' }) },
+      'Telegram /link handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }

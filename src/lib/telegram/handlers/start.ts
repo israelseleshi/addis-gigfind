@@ -2,6 +2,7 @@ import { touchTelegramAccount } from '@/lib/telegram/account-link'
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import { resolveLinkedTelegramAccount } from '@/lib/telegram/guards'
 import { buildLinkedHomeKeyboard } from '@/lib/telegram/keyboards'
+import { buildTelegramLogContext } from '@/lib/telegram/log-context'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
   buildLinkInstructions,
@@ -35,7 +36,10 @@ export async function handleStartCommand(ctx: TelegramBotContext) {
       reply_markup: buildLinkedHomeKeyboard(role),
     })
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram /start handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'start' }) },
+      'Telegram /start handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }

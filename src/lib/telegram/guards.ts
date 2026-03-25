@@ -3,6 +3,20 @@ import type { TelegramBotContext } from '@/lib/telegram/context'
 import { buildLinkInstructions } from '@/lib/telegram/messages'
 import type { TelegramLinkedAccount, TelegramLinkedProfile, TelegramUserRole } from '@/lib/telegram/types'
 
+type ResolvedTelegramAccount = {
+  telegramUserId: string
+  account: TelegramLinkedAccount | null
+  profile: TelegramLinkedProfile | null
+  role: TelegramUserRole | null
+}
+
+type RequiredResolvedTelegramAccount = {
+  telegramUserId: string
+  account: TelegramLinkedAccount
+  profile: TelegramLinkedProfile
+  role: TelegramUserRole | null
+}
+
 function normalizeProfile(
   account: TelegramLinkedAccount | null
 ): TelegramLinkedProfile | null {
@@ -32,7 +46,7 @@ export async function resolveLinkedTelegramAccount(ctx: TelegramBotContext) {
     account,
     profile,
     role: profile?.role ?? null,
-  }
+  } satisfies ResolvedTelegramAccount
 }
 
 export async function requireLinkedTelegramAccount(ctx: TelegramBotContext) {
@@ -42,7 +56,7 @@ export async function requireLinkedTelegramAccount(ctx: TelegramBotContext) {
     return null
   }
 
-  return resolved
+  return resolved as RequiredResolvedTelegramAccount
 }
 
 export async function requireTelegramRole(

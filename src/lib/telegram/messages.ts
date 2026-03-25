@@ -3,9 +3,54 @@ import type {
   TelegramApplicationSummary,
   TelegramGigApplicantSummary,
 } from '@/lib/actions/telegram/applications'
-import type { TelegramBrowseGig, TelegramClientGigSummary } from '@/lib/actions/telegram/gigs'
+import type {
+  TelegramBrowseGig,
+  TelegramClientGigSummary,
+  TelegramGigBrowseFilters,
+} from '@/lib/actions/telegram/gigs'
 import type { TelegramVerificationSnapshot } from '@/lib/actions/telegram/verifications'
 import type { TelegramPendingVerificationSummary } from '@/lib/actions/telegram/verifications'
+
+const TELEGRAM_MESSAGE_MAX_LENGTH = 4096
+const TELEGRAM_LONG_TEXT_LIMIT = 900
+const TELEGRAM_NOTE_TEXT_LIMIT = 700
+const TELEGRAM_LIST_TEXT_LIMIT = 3600
+
+function truncateTelegramText(value: string, maxLength: number) {
+  const normalized = value.trim()
+  if (normalized.length <= maxLength) {
+    return normalized
+  }
+
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}...`
+}
+
+function joinTelegramMessage(lines: Array<string | null | undefined>) {
+  return truncateTelegramText(
+    lines.filter((line): line is string => typeof line === 'string' && line.length > 0).join('\n'),
+    TELEGRAM_MESSAGE_MAX_LENGTH
+  )
+}
+
+function truncateTelegramLongText(value: string | null | undefined) {
+  if (!value) {
+    return ''
+  }
+
+  return truncateTelegramText(value, TELEGRAM_LONG_TEXT_LIMIT)
+}
+
+function truncateTelegramNoteText(value: string | null | undefined) {
+  if (!value) {
+    return ''
+  }
+
+  return truncateTelegramText(value, TELEGRAM_NOTE_TEXT_LIMIT)
+}
+
+function joinTelegramList(items: string[]) {
+  return truncateTelegramText(items.join('\n\n'), TELEGRAM_LIST_TEXT_LIMIT)
+}
 
 export function buildRoleMenu(role: string) {
   if (role === 'client') {
@@ -21,7 +66,6 @@ export function buildRoleMenu(role: string) {
     return [
       'Available actions:',
       '- Review verifications',
-      '- View platform stats',
       '- Moderate users and gigs',
     ].join('\n')
   }
@@ -182,10 +226,25 @@ export function buildGigBrowseIntro(page: number, total: number) {
   ].join('\n')
 }
 
+export function buildGigBrowseFilterSummary(filters: TelegramGigBrowseFilters) {
+  const category = filters.category?.trim()
+  const location = filters.location?.trim()
+
+  if (!category && !location) {
+    return 'Showing all open gigs.'
+  }
+
+  return [
+    'Current filters:',
+    `- Category: ${category ?? 'Any'}`,
+    `- Location: ${location ?? 'Any'}`,
+  ].join('\n')
+}
+
 export function buildGigBrowseEmptyState() {
   return [
     'No open gigs are available right now.',
-    'Check back later or use the website to browse again.',
+    'Adjust the filters below or check back later.',
   ].join('\n')
 }
 
@@ -198,20 +257,20 @@ export function buildGigSummaryLines(gig: TelegramBrowseGig) {
 }
 
 export function buildGigListMessage(gigs: TelegramBrowseGig[]) {
-  return gigs.map(buildGigSummaryLines).join('\n\n')
+  return joinTelegramList(gigs.map(buildGigSummaryLines))
 }
 
 export function buildGigDetailMessage(gig: TelegramBrowseGig) {
   const rating = gig.client?.average_rating ? ` | Rating ${gig.client.average_rating}` : ''
 
-  return [
+  return joinTelegramMessage([
     `<b>${gig.title}</b>`,
     `${gig.category} | ${gig.location}`,
     `Budget: <b>ETB ${gig.budget.toLocaleString()}</b>`,
     `Client: ${gig.client?.full_name ?? 'Unknown client'}${rating}`,
     '',
-    gig.description,
-  ].join('\n')
+    truncateTelegramLongText(gig.description),
+  ])
 }
 
 export function buildGigNotFoundMessage() {
@@ -219,15 +278,26 @@ export function buildGigNotFoundMessage() {
 }
 
 export function buildGigApplyPromptMessage(gig: TelegramBrowseGig) {
-  return [
-    `Apply prompt for gig ${gig.id}`,
-    '',
-    `<b>${gig.title}</b>`,
+  return joinTelegramMessage([
+    `<b>Application draft for ${gig.title}</b>`,
+    `Gig ID: <code>${gig.id}</code>`,
     `Budget: ETB ${gig.budget.toLocaleString()}`,
     '',
-    'Reply to this exact message with your cover note.',
+    'Send your cover note in the next message.',
     'Minimum length: 20 characters.',
-  ].join('\n')
+  ])
+}
+
+export function buildGigApplyDraftReviewMessage(gigTitle: string, coverNote: string) {
+  return joinTelegramMessage([
+    `<b>Review your application</b>`,
+    `Gig: ${gigTitle}`,
+    '',
+    '<b>Cover note</b>',
+    truncateTelegramNoteText(coverNote),
+    '',
+    'Tap confirm to submit or send a new message to replace the cover note.',
+  ])
 }
 
 export function buildGigApplySuccessMessage(title: string) {
@@ -239,8 +309,42 @@ export function buildGigApplySuccessMessage(title: string) {
 
 export function buildGigApplyInstructionMessage() {
   return [
-    'Please reply directly to the apply prompt message with your cover note.',
-    'That lets the bot know which gig you are applying to.',
+    'Send your cover note as a normal message.',
+    'The bot will attach it to your current application draft automatically.',
+  ].join('\n')
+}
+
+export function buildGigApplyCancelledMessage() {
+  return [
+    'Your application draft was cancelled.',
+    'You can browse gigs and start again anytime.',
+  ].join('\n')
+}
+
+export function buildGigFilterPromptMessage(field: 'category' | 'location', currentValue?: string | null) {
+  const label = field === 'category' ? 'category' : 'location'
+  const current = currentValue?.trim()
+
+  return [
+    `Send the ${label} you want to filter by.`,
+    current ? `Current ${label}: ${current}` : `No ${label} filter is set yet.`,
+    'Send "any" to clear that filter.',
+  ].join('\n')
+}
+
+export function buildGigFilterOptionsMessage(
+  field: 'category' | 'location',
+  options: string[],
+  currentValue?: string | null
+) {
+  const label = field === 'category' ? 'category' : 'location'
+
+  return [
+    `Choose a ${label} filter below.`,
+    currentValue ? `Current ${label}: ${currentValue}` : `No ${label} filter is set yet.`,
+    options.length > 0
+      ? `Tap one of the suggested ${label} values or type your own.`
+      : `There are no suggested ${label} values right now. Type your own instead.`,
   ].join('\n')
 }
 
@@ -272,7 +376,7 @@ export function buildApplicationSummaryLines(application: TelegramApplicationSum
 }
 
 export function buildApplicationsListMessage(applications: TelegramApplicationSummary[]) {
-  return applications.map(buildApplicationSummaryLines).join('\n\n')
+  return joinTelegramList(applications.map(buildApplicationSummaryLines))
 }
 
 export function buildApplicationDetailMessage(
@@ -280,7 +384,7 @@ export function buildApplicationDetailMessage(
     gig: TelegramApplicationSummary['gig'] & { description: string }
   }
 ) {
-  return [
+  return joinTelegramMessage([
     `<b>${application.gig?.title ?? 'Unknown gig'}</b>`,
     `Status: <b>${formatApplicationStatus(application.status)}</b>`,
     `${application.gig?.category ?? 'Uncategorized'} | ${application.gig?.location ?? 'Unknown location'}`,
@@ -288,8 +392,8 @@ export function buildApplicationDetailMessage(
     `Client: ${application.gig?.client?.full_name ?? 'Unknown client'}`,
     '',
     `<b>Your cover note</b>`,
-    application.cover_note ?? 'No cover note provided.',
-  ].join('\n')
+    truncateTelegramNoteText(application.cover_note) || 'No cover note provided.',
+  ])
 }
 
 export function buildApplicationNotFoundMessage() {
@@ -324,19 +428,19 @@ export function buildActiveJobSummaryLines(job: TelegramActiveJobSummary) {
 }
 
 export function buildActiveJobsListMessage(jobs: TelegramActiveJobSummary[]) {
-  return jobs.map(buildActiveJobSummaryLines).join('\n\n')
+  return joinTelegramList(jobs.map(buildActiveJobSummaryLines))
 }
 
 export function buildActiveJobDetailMessage(job: TelegramActiveJobSummary) {
-  return [
+  return joinTelegramMessage([
     `<b>${job.gig?.title ?? 'Unknown gig'}</b>`,
     `Job status: <b>${formatGigStatus(job.gig?.status ?? null)}</b>`,
     `${job.gig?.category ?? 'Uncategorized'} | ${job.gig?.location ?? 'Unknown location'}`,
     `Budget: ETB ${job.gig?.budget?.toLocaleString() ?? '0'}`,
     `Client: ${job.gig?.client?.full_name ?? 'Unknown client'}`,
     '',
-    job.gig?.description ?? 'No description available.',
-  ].join('\n')
+    truncateTelegramLongText(job.gig?.description) || 'No description available.',
+  ])
 }
 
 export function buildActiveJobNotFoundMessage() {
@@ -407,7 +511,7 @@ export function buildVerificationStatusMessage(snapshot: TelegramVerificationSna
   if (snapshot.status === 'rejected') {
     lines.push('', 'Your latest verification was rejected.')
     if (snapshot.document.admin_notes) {
-      lines.push(`Reason: ${snapshot.document.admin_notes}`)
+      lines.push(`Reason: ${truncateTelegramNoteText(snapshot.document.admin_notes)}`)
     }
     lines.push('Resubmit your documents on the website when ready.')
   }
@@ -416,7 +520,7 @@ export function buildVerificationStatusMessage(snapshot: TelegramVerificationSna
     lines.push('', 'Submit your verification documents on the website to start applying for gigs.')
   }
 
-  return lines.join('\n')
+  return joinTelegramMessage(lines)
 }
 
 export function buildClientGigsIntro(page: number, total: number) {
@@ -437,6 +541,81 @@ export function buildClientGigsEmptyState() {
   ].join('\n')
 }
 
+export function buildClientPostGigStartMessage() {
+  return [
+    'Let’s post a new gig.',
+    '',
+    'Send the gig title in your next message.',
+    'Minimum length: 5 characters.',
+  ].join('\n')
+}
+
+export function buildClientPostGigBudgetPromptMessage(title: string, categoryLabel: string, locationLabel: string) {
+  return [
+    'Post a new gig',
+    '',
+    `Title: ${title}`,
+    `Category: ${categoryLabel}`,
+    `Location: ${locationLabel}`,
+    '',
+    'Send the budget in ETB as a number.',
+  ].join('\n')
+}
+
+export function buildClientPostGigDescriptionPromptMessage(
+  title: string,
+  categoryLabel: string,
+  locationLabel: string,
+  budget: number
+) {
+  return [
+    'Post a new gig',
+    '',
+    `Title: ${title}`,
+    `Category: ${categoryLabel}`,
+    `Location: ${locationLabel}`,
+    `Budget: ETB ${budget.toLocaleString()}`,
+    '',
+    'Send the gig description in your next message.',
+    'Minimum length: 20 characters.',
+  ].join('\n')
+}
+
+export function buildClientPostGigReviewMessage(input: {
+  title: string
+  categoryLabel: string
+  locationLabel: string
+  budget: number
+  description: string
+}) {
+  return joinTelegramMessage([
+    '<b>Review your gig</b>',
+    `Title: ${input.title}`,
+    `Category: ${input.categoryLabel}`,
+    `Location: ${input.locationLabel}`,
+    `Budget: ETB ${input.budget.toLocaleString()}`,
+    '',
+    '<b>Description</b>',
+    truncateTelegramLongText(input.description),
+    '',
+    'Tap publish when everything looks correct.',
+  ])
+}
+
+export function buildClientPostGigCancelledMessage() {
+  return [
+    'Gig posting was cancelled.',
+    'You can start again any time from the client menu.',
+  ].join('\n')
+}
+
+export function buildClientPostGigSuccessMessage(title: string) {
+  return [
+    `Your gig "${title}" is now live.`,
+    'Freelancers can start applying immediately.',
+  ].join('\n')
+}
+
 export function buildClientGigSummaryLines(gig: TelegramClientGigSummary) {
   const applicants = gig.applications?.[0]?.count ?? 0
 
@@ -448,21 +627,21 @@ export function buildClientGigSummaryLines(gig: TelegramClientGigSummary) {
 }
 
 export function buildClientGigsListMessage(gigs: TelegramClientGigSummary[]) {
-  return gigs.map(buildClientGigSummaryLines).join('\n\n')
+  return joinTelegramList(gigs.map(buildClientGigSummaryLines))
 }
 
 export function buildClientGigDetailMessage(gig: TelegramClientGigSummary) {
   const applicants = gig.applications?.[0]?.count ?? 0
 
-  return [
+  return joinTelegramMessage([
     `<b>${gig.title}</b>`,
     `Status: <b>${formatGigStatusLower(gig.status)}</b>`,
     `${gig.category} | ${gig.location}`,
     `Budget: ETB ${gig.budget.toLocaleString()}`,
     `Applicants: ${applicants}`,
     '',
-    gig.description,
-  ].join('\n')
+    truncateTelegramLongText(gig.description),
+  ])
 }
 
 export function buildClientGigNotFoundMessage() {
@@ -498,7 +677,7 @@ export function buildAdminPendingVerificationSummaryLines(
 export function buildAdminPendingVerificationsListMessage(
   documents: TelegramPendingVerificationSummary[]
 ) {
-  return documents.map(buildAdminPendingVerificationSummaryLines).join('\n\n')
+  return joinTelegramList(documents.map(buildAdminPendingVerificationSummaryLines))
 }
 
 export function buildAdminVerificationDetailMessage(
@@ -517,10 +696,10 @@ export function buildAdminVerificationDetailMessage(
   }
 
   if (document.description) {
-    lines.push('', '<b>Description</b>', document.description)
+    lines.push('', '<b>Description</b>', truncateTelegramLongText(document.description))
   }
 
-  return lines.join('\n')
+  return joinTelegramMessage(lines)
 }
 
 export function buildAdminVerificationNotFoundMessage() {
@@ -588,7 +767,7 @@ export function buildClientApplicantSummaryLines(applicant: TelegramGigApplicant
 }
 
 export function buildClientApplicantsListMessage(applicants: TelegramGigApplicantSummary[]) {
-  return applicants.map(buildClientApplicantSummaryLines).join('\n\n')
+  return joinTelegramList(applicants.map(buildClientApplicantSummaryLines))
 }
 
 export function buildClientApplicantDetailMessage(
@@ -615,8 +794,12 @@ export function buildClientApplicantDetailMessage(
     lines.push(`Bid amount: ETB ${applicant.bid_amount.toLocaleString()}`)
   }
 
-  lines.push('', '<b>Cover note</b>', applicant.cover_note ?? 'No cover note provided.')
-  return lines.join('\n')
+  lines.push(
+    '',
+    '<b>Cover note</b>',
+    truncateTelegramNoteText(applicant.cover_note) || 'No cover note provided.'
+  )
+  return joinTelegramMessage(lines)
 }
 
 export function buildClientApplicantNotFoundMessage() {

@@ -54,10 +54,9 @@ function ProfileForm() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [userEmail, setUserEmail] = useState('');
-  const supabase = createClient();
-
   const loadProfile = useCallback(async () => {
     try {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error('Please log in first');
@@ -159,6 +158,7 @@ function ProfileForm() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error('Please log in first');

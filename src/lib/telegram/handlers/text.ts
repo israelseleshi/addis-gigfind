@@ -1,17 +1,23 @@
 import { touchTelegramAccount } from '@/lib/telegram/account-link'
 import type { TelegramBotContext } from '@/lib/telegram/context'
 import { handleAdminHome, handlePendingVerifications } from '@/lib/telegram/handlers/admin'
-import { handleClientHome, handleClientMyGigs } from '@/lib/telegram/handlers/client'
+import {
+  handleClientConversationText,
+  handleClientHome,
+  handleClientMyGigs,
+} from '@/lib/telegram/handlers/client'
 import { handleRejectVerificationReply } from '@/lib/telegram/handlers/admin'
 import {
   handleActiveJobs,
   handleApplyReply,
+  handleBrowseFilterReply,
   handleBrowseGigs,
   handleFreelancerHome,
   handleMyApplications,
   handleVerificationStatus,
 } from '@/lib/telegram/handlers/freelancer'
 import { requireLinkedTelegramAccount } from '@/lib/telegram/guards'
+import { buildTelegramLogContext } from '@/lib/telegram/log-context'
 import { telegramLogger } from '@/lib/telegram/logger'
 import {
   buildQuickActionHintMessage,
@@ -22,7 +28,12 @@ import { buildLinkedHomeKeyboard } from '@/lib/telegram/keyboards'
 
 export async function handleTextMessage(ctx: TelegramBotContext) {
   try {
-    const input = ctx.message.text.trim()
+    const messageText = ctx.message?.text
+    if (!messageText) {
+      return
+    }
+
+    const input = messageText.trim()
     if (input.startsWith('/')) {
       return
     }
@@ -34,6 +45,16 @@ export async function handleTextMessage(ctx: TelegramBotContext) {
 
     const rejectVerificationHandled = await handleRejectVerificationReply(ctx)
     if (rejectVerificationHandled) {
+      return
+    }
+
+    const browseFilterHandled = await handleBrowseFilterReply(ctx)
+    if (browseFilterHandled) {
+      return
+    }
+
+    const clientConversationHandled = await handleClientConversationText(ctx)
+    if (clientConversationHandled) {
       return
     }
 
@@ -105,7 +126,10 @@ export async function handleTextMessage(ctx: TelegramBotContext) {
       reply_markup: buildLinkedHomeKeyboard(resolved.role ?? 'freelancer'),
     })
   } catch (error) {
-    telegramLogger.error({ error }, 'Telegram text handler failed')
+    telegramLogger.error(
+      { error, ...buildTelegramLogContext(ctx, { handler: 'text' }) },
+      'Telegram text handler failed'
+    )
     await ctx.reply(buildTemporaryUnavailableMessage())
   }
 }
