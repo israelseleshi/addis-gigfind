@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { Loader2, Tag, DollarSign, FileText, Send } from "lucide-react"
+import { LocationPicker } from "@/components/gig/location-picker"
 
 const gigFormSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters." }),
@@ -20,6 +21,8 @@ const gigFormSchema = z.object({
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
   budget: z.string().min(1, { message: "Please enter a valid budget." }),
   location: z.string().min(1, { message: "Please select a location." }),
+  latitude: z.number(),
+  longitude: z.number(),
 })
 
 type GigFormValues = z.infer<typeof gigFormSchema>
@@ -50,6 +53,8 @@ const LOCATIONS = [
 export default function PostGigPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null)
+  
   const form = useForm<GigFormValues>({
     resolver: zodResolver(gigFormSchema),
     defaultValues: {
@@ -58,8 +63,17 @@ export default function PostGigPage() {
       description: "",
       budget: "",
       location: "",
+      latitude: 0,
+      longitude: 0,
     },
   })
+
+  const handleLocationSelect = (locationValue: string, lat: number, lng: number) => {
+    setCoordinates({ lat, lng });
+    form.setValue("location", locationValue);
+    form.setValue("latitude", lat);
+    form.setValue("longitude", lng);
+  };
 
   async function onSubmit(data: GigFormValues) {
     setLoading(true)
@@ -180,20 +194,10 @@ export default function PostGigPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Location</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500 h-9 sm:h-10 md:h-11 text-sm">
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {LOCATIONS.map((loc) => (
-                          <SelectItem key={loc.value} value={loc.value}>
-                            {loc.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <LocationPicker
+                      onLocationSelect={handleLocationSelect}
+                      selectedLocation={field.value}
+                    />
                     <FormMessage className="text-red-500 text-[10px] sm:text-xs md:text-sm" />
                   </FormItem>
                 )}

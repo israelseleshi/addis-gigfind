@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createClient } from '@/lib/supabase/client'
 import { markGigInProgress } from '@/lib/actions/applications'
+import { markGigComplete } from '@/lib/actions/payments'
 import Link from 'next/link'
 import { Briefcase, MapPin, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
@@ -265,6 +266,25 @@ export default function ActiveJobsPage() {
                     }}
                   >
                     Mark as In Progress
+                  </Button>
+                )}
+
+                {job.gig?.status === 'in_progress' && (
+                  <Button 
+                    size="sm" 
+                    className="w-full bg-green-500 hover:bg-green-600"
+                    onClick={async () => {
+                      if (!job.gig?.id) return
+                      const result = await markGigComplete(job.gig.id)
+                      if (result.error) {
+                        toast.error(result.error)
+                        return
+                      }
+                      toast.success('Job marked as completed. Waiting for client to pay.')
+                      loadActiveJobs()
+                    }}
+                  >
+                    Mark as Complete
                   </Button>
                 )}
               </CardContent>

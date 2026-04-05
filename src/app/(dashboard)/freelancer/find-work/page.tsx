@@ -7,10 +7,22 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
-import { List, Map, Loader2, MapPin, Star, Search } from 'lucide-react';
+import { List, Map, Loader2, MapPin, Star, Search, Navigation } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
 import { createClient } from "@/lib/supabase/client";
+import { useGeolocation, formatDistance } from "@/hooks/use-geolocation";
+import { DistanceBadge } from "@/components/gig/distance-badge";
+import dynamic from "next/dynamic";
+
+const GigMap = dynamic(() => import("@/components/gig/gig-map").then(mod => ({ default: mod.GigMap })), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[400px] w-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
+      <span className="text-gray-400">Loading map...</span>
+    </div>
+  ),
+});
 
 const GIGS_PER_PAGE = 5;
 
@@ -21,6 +33,7 @@ interface Gig {
   location: string;
   budget: number | null;
   created_at: string;
+  distance?: number | null;
   client: {
     id: string;
     full_name: string | null;
@@ -30,6 +43,7 @@ interface Gig {
 }
 
 function formatLocation(value: string) {
+  if (!value) return 'Unknown';
   return value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
@@ -39,20 +53,45 @@ function formatCategory(value: string) {
 
 export default function FindWorkPage() {
   const supabase = createClient()
+  const { position, loading: locationLoading, error: locationError, requestLocation, clearError } = useGeolocation()
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState('all');
+  const [distanceFilter, setDistanceFilter] = useState('25'); // km
   const [currentPage, setCurrentPage] = useState(1);
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
+  const [locationRequested, setLocationRequested] = useState(false);
 
   const loadGigs = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Fetch gigs with client info
+
+      if (position) {
+        const params = new URLSearchParams({
+          lat: position.latitude.toString(),
+          lng: position.longitude.toString(),
+          radius: distanceFilter,
+          category: selectedCategory,
+          search: searchTerm,
+        });
+
+        const response = await fetch(`/api/gigs/nearby?${params}`);
+        const result = await response.json();
+
+        if (result.success) {
+          setGigs(result.gigs || []);
+          const uniqueCategories = [...new Set(result.gigs?.map((g: Gig) => g.category).filter(Boolean) as string[] || [])];
+          const uniqueLocations = [...new Set(result.gigs?.map((g: Gig) => g.location).filter(Boolean) as string[] || [])];
+          setCategories(uniqueCategories);
+          setLocations(uniqueLocations);
+        }
+        return;
+      }
+
+      // Fallback to direct query if no location
       const { data, error } = await supabase
         .from('gigs')
         .select(`
@@ -67,7 +106,6 @@ export default function FindWorkPage() {
       } else {
         setGigs(data || []);
         
-        // Extract unique categories and locations
         const uniqueCategories = [...new Set(data?.map((g: Gig) => g.category).filter(Boolean) || [])];
         const uniqueLocations = [...new Set(data?.map((g: Gig) => g.location).filter(Boolean) || [])];
         setCategories(uniqueCategories);
@@ -78,7 +116,7 @@ export default function FindWorkPage() {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, position, distanceFilter, selectedCategory, searchTerm]);
 
   useEffect(() => {
     loadGigs();
@@ -148,6 +186,57 @@ export default function FindWorkPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Distance Filter */}
+          {position && (
+            <div className="flex items-center gap-2">
+              <Navigation className="w-4 h-4 text-gray-400" />
+              <Select value={distanceFilter} onValueChange={setDistanceFilter}>
+                <SelectTrigger className="w-[140px] bg-gray-50 border-gray-200 h-9">
+                  <SelectValue placeholder="Distance" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">Within 5 km</SelectItem>
+                  <SelectItem value="10">Within 10 km</SelectItem>
+                  <SelectItem value="25">Within 25 km</SelectItem>
+                  <SelectItem value="50">Within 50 km</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {locationError ? (
+            <div className="flex items-center gap-2">
+              <Button 
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  clearError();
+                  requestLocation();
+                  setLocationRequested(true);
+                }}
+              >
+                <Navigation className="w-4 h-4 mr-1" />
+                Enable Location
+              </Button>
+            </div>
+          ) : !position && !locationLoading && !locationRequested && (
+            <div className="flex items-center gap-2">
+              <Button 
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  requestLocation();
+                  setLocationRequested(true);
+                }}
+              >
+                <Navigation className="w-4 h-4 mr-1" />
+                Find gigs near me
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -182,6 +271,9 @@ export default function FindWorkPage() {
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <MapPin className="w-3 h-3" />
                         {formatLocation(gig.location)}
+                        {gig.distance !== undefined && (
+                          <DistanceBadge distance={gig.distance} />
+                        )}
                       </div>
                     </div>
                     
@@ -286,8 +378,15 @@ export default function FindWorkPage() {
 
         <TabsContent value="map">
           <Card className="shadow-md">
-            <CardContent className="pt-6 h-64 sm:h-96 flex items-center justify-center">
-              <p className="text-zinc-500">Map view coming soon.</p>
+            <CardContent className="p-4">
+              {position ? (
+                <GigMap 
+                  gigs={filteredGigs} 
+                  center={[position.latitude, position.longitude]}
+                />
+              ) : (
+                <GigMap gigs={filteredGigs} />
+              )}
             </CardContent>
           </Card>
         </TabsContent>

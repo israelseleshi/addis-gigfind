@@ -3,12 +3,14 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Briefcase, FileText, CheckCircle, Clock, ArrowRight, Search, Zap } from 'lucide-react'
+import { Briefcase, FileText, CheckCircle, Clock, ArrowRight, Search, Zap, Coins } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getFreelancerDashboardStats, getRecentApplications, getRecommendedGigs } from '@/lib/actions/dashboard'
 import { Skeleton } from '@/components/ui/skeleton'
+import { WalletCard } from '@/components/wallet/wallet-card'
+import { TransactionList } from '@/components/wallet/transaction-list'
 
 interface DashboardStats {
   activeApplications: number
@@ -245,6 +247,33 @@ export default function FreelancerDashboardPage() {
           <StatCard key={stat.title} {...stat} delay={index * 0.1} />
         ))}
       </div>
+
+      {/* Wallet Section */}
+      <motion.div variants={itemVariants}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <WalletCard />
+            <div className="mt-4">
+              <Button asChild className="w-full bg-amber-600 hover:bg-amber-700">
+                <Link href="/buy-coins">
+                  <Coins className="w-4 h-4 mr-2" />
+                  Buy More Coins
+                </Link>
+              </Button>
+            </div>
+          </div>
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Recent Transactions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TransactionList />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

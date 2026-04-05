@@ -13,7 +13,9 @@ import {
   Users,
   Settings,
   PlusCircle,
-  MessageSquare
+  MessageSquare,
+  CreditCard,
+  Search
 } from 'lucide-react'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
@@ -30,8 +32,10 @@ export default function ClientLayout({
   const navItems = [
     { href: '/client/dashboard', label: 'Dashboard', icon: Home },
     { href: '/client/my-gigs', label: 'My Gigs', icon: Briefcase },
+    { href: '/client/find-freelancers', label: 'Find Talent', icon: Search },
     { href: '/client/chat', label: 'Chat', icon: MessageSquare },
     { href: '/client/applicants', label: 'Applicants', icon: Users },
+    { href: '/client/buy-coins', label: 'Payments', icon: CreditCard },
     { href: '/client/gigs/create', label: 'Post Gig', icon: PlusCircle },
     { href: '/client/settings', label: 'Settings', icon: Settings },
   ]

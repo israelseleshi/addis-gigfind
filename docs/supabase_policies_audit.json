@@ -201,6 +201,16 @@
   },
   {
     "schemaname": "public",
+    "tablename": "coin_purchases",
+    "policyname": "Service role can manage purchases",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'service_role'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
     "tablename": "applications",
     "policyname": "allow_user_select",
     "permissive": "PERMISSIVE",
@@ -507,6 +517,116 @@
     "roles": "{public}",
     "cmd": "UPDATE",
     "qual": "(auth.uid() = recipient_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "payments",
+    "policyname": "Clients can view their gig payments",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM gigs\n  WHERE ((gigs.id = payments.gig_id) AND (gigs.client_id = auth.uid()))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "payments",
+    "policyname": "Freelancers can view their payments",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(freelancer_id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "coin_purchases",
+    "policyname": "Users can view own purchases",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "coin_purchases",
+    "policyname": "Users can insert own purchases",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "payments",
+    "policyname": "Clients can create payments for their gigs",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(EXISTS ( SELECT 1\n   FROM gigs\n  WHERE ((gigs.id = payments.gig_id) AND (gigs.client_id = auth.uid()))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "payments",
+    "policyname": "Users can update payment status",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM gigs\n  WHERE ((gigs.id = payments.gig_id) AND (gigs.client_id = auth.uid()))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "payments",
+    "policyname": "Admins can view all payments",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "payments",
+    "policyname": "Admins can update payments",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::user_role))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_wallets",
+    "policyname": "Users can view own wallet",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_wallets",
+    "policyname": "Users can update own wallet",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_wallets",
+    "policyname": "Service role can manage wallets",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'service_role'::text)",
     "with_check": null
   }
 ]

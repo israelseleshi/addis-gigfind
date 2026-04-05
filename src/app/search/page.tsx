@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, MapPin, DollarSign, Clock } from 'lucide-react';
+import { Search, MapPin, DollarSign, Clock, Coins, AlertCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Footer } from '@/components/footer';
+import { useWalletBalance } from '@/hooks/use-wallet';
+import { toast } from 'sonner';
 import Link from 'next/link';
 
 interface Gig {
@@ -80,6 +82,9 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [applyingGigId, setApplyingGigId] = useState<string | null>(null);
+  
+  const { coins, refresh: refreshWallet } = useWalletBalance();
 
   useEffect(() => {
     setMounted(true);
@@ -126,6 +131,64 @@ export default function SearchPage() {
     const now = new Date();
     const hours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
     return hours < 24;
+  };
+
+  const GIG_COST = 1;
+
+  const handleApply = async (gig: Gig) => {
+    if (coins < GIG_COST) {
+      toast.error(`You need at least ${GIG_COST} coin to apply. Buy coins to continue!`, {
+        action: {
+          label: 'Buy Coins',
+          onClick: () => window.location.href = '/buy-coins',
+        },
+      });
+      return;
+    }
+
+    setApplyingGigId(gig.id);
+    
+    try {
+      const response = await fetch('/api/wallet/get');
+      const walletData = await response.json();
+      
+      if (!walletData.success || walletData.wallet.coin_balance < GIG_COST) {
+        toast.error('Insufficient coins. Please buy more coins.');
+        setApplyingGigId(null);
+        return;
+      }
+      
+      const applyResponse = await fetch('/api/freelancer/find-work/' + gig.id + '/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          coverNote: `Hi, I'm interested in your "${gig.title}" gig. I have the skills needed to complete this work.`,
+          gigId: gig.id
+        })
+      });
+      
+      const applyData = await applyResponse.json();
+      
+      if (applyData.success) {
+        toast.success(`Successfully applied to "${gig.title}"!`);
+        refreshWallet();
+      } else {
+        if (applyData.needsCoins) {
+          toast.error('Insufficient coins to apply. Please buy more coins.', {
+            action: {
+              label: 'Buy Coins',
+              onClick: () => window.location.href = '/buy-coins',
+            },
+          });
+        } else {
+          toast.error(applyData.error || 'Failed to apply. Please try again.');
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to apply. Please try again.');
+    } finally {
+      setApplyingGigId(null);
+    }
   };
 
   return (
@@ -230,6 +293,18 @@ export default function SearchPage() {
           <p className="text-sm font-medium text-slate-600">
             Showing {filteredGigs.length} gig{filteredGigs.length !== 1 ? 's' : ''}
           </p>
+          {mounted && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-3 py-1.5">
+                <Coins className="w-4 h-4 text-amber-600" />
+                <span className="font-semibold text-amber-700">{coins}</span>
+                <span className="text-xs text-amber-600">coins</span>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/buy-coins">Buy More</Link>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Gigs Grid */}
@@ -311,14 +386,27 @@ export default function SearchPage() {
                       <Link href={`/search/${gig.id}`}>View Details</Link>
                     </Button>
                     <Button
-                      disabled
-                      className="flex-1 bg-slate-300 text-slate-500 hover:bg-slate-300"
+                      onClick={() => handleApply(gig)}
+                      disabled={applyingGigId === gig.id}
+                      className={`flex-1 ${coins < GIG_COST ? 'bg-red-500 hover:bg-red-600' : 'bg-green-600 hover:bg-green-700'}`}
                     >
-                      Apply
+                      {applyingGigId === gig.id ? (
+                        <>Applying...</>
+                      ) : coins < GIG_COST ? (
+                        <span className="flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Need Coins
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1">
+                          <Coins className="w-3 h-3" />
+                          Apply ({GIG_COST} Coin)
+                        </span>
+                      )}
                     </Button>
                   </div>
                   <p className="text-center text-xs text-slate-500">
-                    Login required to apply
+                    Applying costs {GIG_COST} coin
                   </p>
                 </CardContent>
               </Card>

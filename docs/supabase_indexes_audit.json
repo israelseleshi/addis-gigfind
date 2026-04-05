@@ -1,0 +1,222 @@
+[
+  {
+    "indexname": "applications_gig_id_freelancer_id_key",
+    "tablename": "applications",
+    "indexdef": "CREATE UNIQUE INDEX applications_gig_id_freelancer_id_key ON public.applications USING btree (gig_id, freelancer_id)"
+  },
+  {
+    "indexname": "applications_pkey",
+    "tablename": "applications",
+    "indexdef": "CREATE UNIQUE INDEX applications_pkey ON public.applications USING btree (id)"
+  },
+  {
+    "indexname": "idx_applications_coins_spent",
+    "tablename": "applications",
+    "indexdef": "CREATE INDEX idx_applications_coins_spent ON public.applications USING btree (coins_spent)"
+  },
+  {
+    "indexname": "client_profiles_pkey",
+    "tablename": "client_profiles",
+    "indexdef": "CREATE UNIQUE INDEX client_profiles_pkey ON public.client_profiles USING btree (id)"
+  },
+  {
+    "indexname": "coin_purchases_payment_tx_ref_key",
+    "tablename": "coin_purchases",
+    "indexdef": "CREATE UNIQUE INDEX coin_purchases_payment_tx_ref_key ON public.coin_purchases USING btree (payment_tx_ref)"
+  },
+  {
+    "indexname": "coin_purchases_pkey",
+    "tablename": "coin_purchases",
+    "indexdef": "CREATE UNIQUE INDEX coin_purchases_pkey ON public.coin_purchases USING btree (id)"
+  },
+  {
+    "indexname": "idx_coin_purchases_status",
+    "tablename": "coin_purchases",
+    "indexdef": "CREATE INDEX idx_coin_purchases_status ON public.coin_purchases USING btree (status)"
+  },
+  {
+    "indexname": "idx_coin_purchases_tx_ref",
+    "tablename": "coin_purchases",
+    "indexdef": "CREATE INDEX idx_coin_purchases_tx_ref ON public.coin_purchases USING btree (payment_tx_ref)"
+  },
+  {
+    "indexname": "idx_coin_purchases_user_id",
+    "tablename": "coin_purchases",
+    "indexdef": "CREATE INDEX idx_coin_purchases_user_id ON public.coin_purchases USING btree (user_id)"
+  },
+  {
+    "indexname": "conversations_gig_id_key",
+    "tablename": "conversations",
+    "indexdef": "CREATE UNIQUE INDEX conversations_gig_id_key ON public.conversations USING btree (gig_id)"
+  },
+  {
+    "indexname": "conversations_pkey",
+    "tablename": "conversations",
+    "indexdef": "CREATE UNIQUE INDEX conversations_pkey ON public.conversations USING btree (id)"
+  },
+  {
+    "indexname": "freelancer_profiles_pkey",
+    "tablename": "freelancer_profiles",
+    "indexdef": "CREATE UNIQUE INDEX freelancer_profiles_pkey ON public.freelancer_profiles USING btree (id)"
+  },
+  {
+    "indexname": "gigs_pkey",
+    "tablename": "gigs",
+    "indexdef": "CREATE UNIQUE INDEX gigs_pkey ON public.gigs USING btree (id)"
+  },
+  {
+    "indexname": "idx_messages_conversation_id",
+    "tablename": "messages",
+    "indexdef": "CREATE INDEX idx_messages_conversation_id ON public.messages USING btree (conversation_id)"
+  },
+  {
+    "indexname": "idx_messages_gig_id",
+    "tablename": "messages",
+    "indexdef": "CREATE INDEX idx_messages_gig_id ON public.messages USING btree (gig_id)"
+  },
+  {
+    "indexname": "idx_messages_sender_recipient",
+    "tablename": "messages",
+    "indexdef": "CREATE INDEX idx_messages_sender_recipient ON public.messages USING btree (sender_id, recipient_id)"
+  },
+  {
+    "indexname": "messages_pkey",
+    "tablename": "messages",
+    "indexdef": "CREATE UNIQUE INDEX messages_pkey ON public.messages USING btree (id)"
+  },
+  {
+    "indexname": "notifications_pkey",
+    "tablename": "notifications",
+    "indexdef": "CREATE UNIQUE INDEX notifications_pkey ON public.notifications USING btree (id)"
+  },
+  {
+    "indexname": "idx_otp_verifications_email",
+    "tablename": "otp_verifications",
+    "indexdef": "CREATE INDEX idx_otp_verifications_email ON public.otp_verifications USING btree (email)"
+  },
+  {
+    "indexname": "idx_otp_verifications_expires_at",
+    "tablename": "otp_verifications",
+    "indexdef": "CREATE INDEX idx_otp_verifications_expires_at ON public.otp_verifications USING btree (expires_at)"
+  },
+  {
+    "indexname": "otp_verifications_pkey",
+    "tablename": "otp_verifications",
+    "indexdef": "CREATE UNIQUE INDEX otp_verifications_pkey ON public.otp_verifications USING btree (id)"
+  },
+  {
+    "indexname": "idx_payments_client_id",
+    "tablename": "payments",
+    "indexdef": "CREATE INDEX idx_payments_client_id ON public.payments USING btree (client_id)"
+  },
+  {
+    "indexname": "idx_payments_freelancer_id",
+    "tablename": "payments",
+    "indexdef": "CREATE INDEX idx_payments_freelancer_id ON public.payments USING btree (freelancer_id)"
+  },
+  {
+    "indexname": "idx_payments_gig_id",
+    "tablename": "payments",
+    "indexdef": "CREATE INDEX idx_payments_gig_id ON public.payments USING btree (gig_id)"
+  },
+  {
+    "indexname": "idx_payments_status",
+    "tablename": "payments",
+    "indexdef": "CREATE INDEX idx_payments_status ON public.payments USING btree (status)"
+  },
+  {
+    "indexname": "idx_payments_transaction_id",
+    "tablename": "payments",
+    "indexdef": "CREATE INDEX idx_payments_transaction_id ON public.payments USING btree (transaction_id)"
+  },
+  {
+    "indexname": "payments_pkey",
+    "tablename": "payments",
+    "indexdef": "CREATE UNIQUE INDEX payments_pkey ON public.payments USING btree (id)"
+  },
+  {
+    "indexname": "idx_profiles_banned",
+    "tablename": "profiles",
+    "indexdef": "CREATE INDEX idx_profiles_banned ON public.profiles USING btree (is_banned)"
+  },
+  {
+    "indexname": "profiles_phone_number_key",
+    "tablename": "profiles",
+    "indexdef": "CREATE UNIQUE INDEX profiles_phone_number_key ON public.profiles USING btree (phone_number)"
+  },
+  {
+    "indexname": "profiles_pkey",
+    "tablename": "profiles",
+    "indexdef": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)"
+  },
+  {
+    "indexname": "reviews_gig_id_reviewer_id_key",
+    "tablename": "reviews",
+    "indexdef": "CREATE UNIQUE INDEX reviews_gig_id_reviewer_id_key ON public.reviews USING btree (gig_id, reviewer_id)"
+  },
+  {
+    "indexname": "reviews_pkey",
+    "tablename": "reviews",
+    "indexdef": "CREATE UNIQUE INDEX reviews_pkey ON public.reviews USING btree (id)"
+  },
+  {
+    "indexname": "telegram_accounts_pkey",
+    "tablename": "telegram_accounts",
+    "indexdef": "CREATE UNIQUE INDEX telegram_accounts_pkey ON public.telegram_accounts USING btree (id)"
+  },
+  {
+    "indexname": "telegram_accounts_telegram_user_id_key",
+    "tablename": "telegram_accounts",
+    "indexdef": "CREATE UNIQUE INDEX telegram_accounts_telegram_user_id_key ON public.telegram_accounts USING btree (telegram_user_id)"
+  },
+  {
+    "indexname": "telegram_accounts_user_id_key",
+    "tablename": "telegram_accounts",
+    "indexdef": "CREATE UNIQUE INDEX telegram_accounts_user_id_key ON public.telegram_accounts USING btree (user_id)"
+  },
+  {
+    "indexname": "telegram_link_codes_code_key",
+    "tablename": "telegram_link_codes",
+    "indexdef": "CREATE UNIQUE INDEX telegram_link_codes_code_key ON public.telegram_link_codes USING btree (code)"
+  },
+  {
+    "indexname": "telegram_link_codes_pkey",
+    "tablename": "telegram_link_codes",
+    "indexdef": "CREATE UNIQUE INDEX telegram_link_codes_pkey ON public.telegram_link_codes USING btree (id)"
+  },
+  {
+    "indexname": "idx_user_wallets_user_id",
+    "tablename": "user_wallets",
+    "indexdef": "CREATE INDEX idx_user_wallets_user_id ON public.user_wallets USING btree (user_id)"
+  },
+  {
+    "indexname": "user_wallets_pkey",
+    "tablename": "user_wallets",
+    "indexdef": "CREATE UNIQUE INDEX user_wallets_pkey ON public.user_wallets USING btree (id)"
+  },
+  {
+    "indexname": "user_wallets_user_id_key",
+    "tablename": "user_wallets",
+    "indexdef": "CREATE UNIQUE INDEX user_wallets_user_id_key ON public.user_wallets USING btree (user_id)"
+  },
+  {
+    "indexname": "idx_verification_documents_status",
+    "tablename": "verification_documents",
+    "indexdef": "CREATE INDEX idx_verification_documents_status ON public.verification_documents USING btree (status)"
+  },
+  {
+    "indexname": "idx_verification_documents_submitted_at",
+    "tablename": "verification_documents",
+    "indexdef": "CREATE INDEX idx_verification_documents_submitted_at ON public.verification_documents USING btree (submitted_at DESC)"
+  },
+  {
+    "indexname": "idx_verification_documents_user_id",
+    "tablename": "verification_documents",
+    "indexdef": "CREATE INDEX idx_verification_documents_user_id ON public.verification_documents USING btree (user_id)"
+  },
+  {
+    "indexname": "verification_documents_pkey",
+    "tablename": "verification_documents",
+    "indexdef": "CREATE UNIQUE INDEX verification_documents_pkey ON public.verification_documents USING btree (id)"
+  }
+]

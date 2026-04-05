@@ -184,10 +184,19 @@ export async function getClientDashboardStats(userId: string) {
       totalHires: totalHires || 0,
       pendingApplications: pendingApplications || 0,
       completedJobs: completedJobs || 0,
+      totalSpent: 0,
+      pendingPayments: 0,
     }
   } catch (error) {
-    console.error('Client dashboard stats fetch error:', error)
-    return null
+    console.error('Error fetching client dashboard stats:', error)
+    return {
+      activeGigs: 0,
+      totalHires: 0,
+      pendingApplications: 0,
+      completedJobs: 0,
+      totalSpent: 0,
+      pendingPayments: 0,
+    }
   }
 }
 

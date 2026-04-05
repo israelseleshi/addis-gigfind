@@ -16,6 +16,8 @@ const applicationSchema = z.object({
   coverNote: z.string().min(20, 'Cover note must be at least 20 characters.'),
 })
 
+const APPLICATION_COST = 1;
+
 export async function applyForGig(data: { gigId: string; coverNote: string }) {
   const supabase = await createClient()
 
@@ -51,7 +53,7 @@ export async function applyForGig(data: { gigId: string; coverNote: string }) {
 
   const { data: gig, error: gigError } = await supabase
     .from('gigs')
-    .select('status')
+    .select('status, client_id')
     .eq('id', gigId)
     .single()
 
@@ -61,6 +63,10 @@ export async function applyForGig(data: { gigId: string; coverNote: string }) {
 
   if (gig.status !== 'open') {
     return { error: 'This gig is no longer accepting applications.' }
+  }
+
+  if (gig.client_id === user.id) {
+    return { error: 'You cannot apply to your own gig.' }
   }
 
   // Security Check 1: Check if already applied
@@ -86,15 +92,55 @@ export async function applyForGig(data: { gigId: string; coverNote: string }) {
     return { error: 'You cannot have more than 5 active applications.' }
   }
 
+  // Check coin balance
+  const { data: wallet } = await supabase
+    .from('user_wallets')
+    .select('coin_balance')
+    .eq('user_id', user.id)
+    .single()
+
+  const currentBalance = wallet?.coin_balance ?? 0
+
+  if (currentBalance < APPLICATION_COST) {
+    return { 
+      error: 'Insufficient coins.',
+      needsCoins: true,
+      currentBalance,
+      required: APPLICATION_COST
+    }
+  }
+
+  // Deduct coins and insert application in a transaction-like manner
+  const { error: updateWalletError } = await supabase
+    .from('user_wallets')
+    .update({ 
+      coin_balance: currentBalance - APPLICATION_COST,
+      total_coins_spent: (wallet?.coin_balance || 0) + APPLICATION_COST
+    })
+    .eq('user_id', user.id)
+    .eq('coin_balance', currentBalance)
+
+  if (updateWalletError) {
+    console.error('Failed to deduct coins:', updateWalletError)
+    return { error: 'Failed to process application. Please try again.' }
+  }
+
   // Insert new application
   const { error } = await supabase.from('applications').insert({
     gig_id: gigId,
     freelancer_id: user.id,
     cover_note: coverNote,
     status: 'pending',
+    coins_spent: APPLICATION_COST,
   })
 
   if (error) {
+    // Rollback: Refund coins if application fails
+    await supabase
+      .from('user_wallets')
+      .update({ coin_balance: currentBalance })
+      .eq('user_id', user.id)
+    
     return { error: error.message }
   }
 
@@ -110,7 +156,7 @@ export async function applyForGig(data: { gigId: string; coverNote: string }) {
   })
 
   revalidatePath(`/client/applicants`)
-  return { success: true }
+  return { success: true, coinsSpent: APPLICATION_COST, remainingBalance: currentBalance - APPLICATION_COST }
 }
 
 export async function acceptApplication(applicationId: string) {
@@ -353,5 +399,7 @@ export async function markGigInProgress(gigId: string) {
   })
 
   revalidatePath('/freelancer/active-jobs')
+  revalidatePath('/freelancer/my-applications')
+  revalidatePath('/freelancer/dashboard')
   return { success: true }
 }

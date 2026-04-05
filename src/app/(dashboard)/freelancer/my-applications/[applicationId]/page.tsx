@@ -21,7 +21,10 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { markGigInProgress } from '@/lib/actions/applications'
+import { markGigComplete } from '@/lib/actions/payments'
 import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
 
 interface Gig {
   id: string
@@ -63,6 +66,7 @@ export default function ApplicationDetailsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [application, setApplication] = useState<Application | null>(null)
+  const [processing, setProcessing] = useState(false)
 
   const loadApplication = useCallback(async (applicationId: string) => {
     try {
@@ -300,9 +304,47 @@ export default function ApplicationDetailsPage() {
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {application.status === 'accepted' && (
-                <Button className="w-full bg-amber-500 hover:bg-amber-600">
+              {application.status === 'accepted' && application.gig?.status === 'assigned' && (
+                <Button 
+                  className="w-full bg-amber-500 hover:bg-amber-600" 
+                  onClick={async () => {
+                    if (!application.gig?.id) return
+                    setProcessing(true)
+                    const result = await markGigInProgress(application.gig.id)
+                    if (result.error) {
+                      toast.error(result.error)
+                    } else {
+                      toast.success('Job marked as in progress!')
+                      window.location.reload()
+                    }
+                    setProcessing(false)
+                  }}
+                  disabled={processing}
+                >
+                  {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Start Work
+                </Button>
+              )}
+              
+              {application.status === 'accepted' && application.gig?.status === 'in_progress' && (
+                <Button 
+                  className="w-full bg-green-500 hover:bg-green-600" 
+                  onClick={async () => {
+                    if (!application.gig?.id) return
+                    setProcessing(true)
+                    const result = await markGigComplete(application.gig.id)
+                    if (result.error) {
+                      toast.error(result.error)
+                    } else {
+                      toast.success('Job marked as complete! Waiting for client to pay.')
+                      window.location.reload()
+                    }
+                    setProcessing(false)
+                  }}
+                  disabled={processing}
+                >
+                  {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Mark as Complete
                 </Button>
               )}
               

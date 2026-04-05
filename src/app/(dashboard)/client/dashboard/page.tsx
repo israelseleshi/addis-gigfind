@@ -2,35 +2,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import Link from 'next/link'
-import { Briefcase, Users, Clock, TrendingUp, Plus, ArrowRight, Activity, Zap } from 'lucide-react'
+import { Briefcase, Users, Clock, TrendingUp, Plus, ArrowRight, Activity, Zap, DollarSign, CreditCard } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { motion } from 'framer-motion'
 import { getClientDashboardStats, getRecentGigs, getRecentActivity } from '@/lib/actions/dashboard'
-import { Skeleton } from '@/components/ui/skeleton'
+import { motion } from 'framer-motion'
 
-interface ClientDashboardStats {
+interface DashboardStats {
   activeGigs: number
   totalHires: number
   pendingApplications: number
   completedJobs: number
-}
-
-interface Gig {
-  id: string
-  title: string
-  status: string
-  budget: string
-  applicants: number
-  created_at: string
-}
-
-interface Activity {
-  id: string
-  text: string
-  time: string
-  type: string
+  totalSpent: number
+  pendingPayments: number
 }
 
 interface StatItem {
@@ -122,9 +108,9 @@ function StatusBadge({ status }: { status: string }) {
 export default function ClientDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<{ full_name: string } | null>(null)
-  const [stats, setStats] = useState<ClientDashboardStats | null>(null)
-  const [recentGigs, setRecentGigs] = useState<Gig[]>([])
-  const [activities, setActivities] = useState<Activity[]>([])
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [recentGigs, setRecentGigs] = useState<any[]>([])
+  const [activities, setActivities] = useState<any[]>([])
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -153,14 +139,18 @@ export default function ClientDashboardPage() {
           getRecentActivity(user.id)
         ])
         
-        setStats(statsData || {
+        const defaultStats: DashboardStats = {
           activeGigs: 0,
           totalHires: 0,
           pendingApplications: 0,
           completedJobs: 0,
-        })
-        setRecentGigs(gigsData)
-        setActivities(activitiesData)
+          totalSpent: 0,
+          pendingPayments: 0,
+        }
+        
+        setStats(statsData || defaultStats)
+        setRecentGigs(gigsData || [])
+        setActivities(activitiesData || [])
       } catch (error) {
         console.error('Dashboard fetch error:', error)
       } finally {
@@ -255,6 +245,57 @@ export default function ClientDashboardPage() {
           <StatCard key={stat.title} {...stat} delay={index * 0.1} />
         ))}
       </div>
+
+      {/* Payment Stats */}
+      <motion.div variants={itemVariants}>
+        <Card className="border-0 shadow-lg bg-gradient-to-r from-green-50 to-emerald-50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-green-600" />
+                Payment Summary
+              </CardTitle>
+              <CardDescription>Track your payments to freelancers</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                  <DollarSign className="w-4 h-4" />
+                  Total Spent
+                </div>
+                <p className="text-2xl font-bold text-gray-800">0 ETB</p>
+                <p className="text-xs text-gray-400">All time</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                  <Users className="w-4 h-4" />
+                  Freelancers Hired
+                </div>
+                <p className="text-2xl font-bold text-gray-800">0</p>
+                <p className="text-xs text-gray-400">This month</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                  <Clock className="w-4 h-4" />
+                  Pending Payments
+                </div>
+                <p className="text-2xl font-bold text-gray-800">0</p>
+                <p className="text-xs text-gray-400">Awaiting completion</p>
+              </div>
+            </div>
+            <div className="mt-4 flex gap-3">
+              <Button asChild className="bg-green-600 hover:bg-green-700">
+                <Link href="/client/my-jobs">
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  Pay Freelancers
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">

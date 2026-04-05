@@ -14,7 +14,8 @@ import {
   CheckCircle,
   LayoutDashboard,
   MessageSquare,
-  Shield
+  Shield,
+  Coins
 } from 'lucide-react'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
@@ -24,6 +25,7 @@ const navItems = [
   { href: '/freelancer/find-work', label: 'Find Work', icon: Search },
   { href: '/freelancer/my-applications', label: 'My Applications', icon: Briefcase },
   { href: '/freelancer/active-jobs', label: 'Active Jobs', icon: CheckCircle },
+  { href: '/freelancer/buy-coins', label: 'Buy Coins', icon: Coins },
   { href: '/freelancer/kyc', label: 'Verification', icon: Shield },
   { href: '/freelancer/chat', label: 'Chat', icon: MessageSquare },
   { href: '/freelancer/settings', label: 'Settings', icon: Settings },

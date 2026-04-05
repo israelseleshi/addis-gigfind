@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Edit, Users, MapPin, DollarSign } from 'lucide-react'
+import { ArrowLeft, Edit, Users, MapPin, DollarSign, CreditCard } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { initiateChapaPayment } from '@/lib/actions/payments'
 
 interface Gig {
   id: string
@@ -41,6 +42,7 @@ export default function GigDetailPage() {
   const gigId = params.gigId as string
   const [gig, setGig] = useState<Gig | null>(null)
   const [loading, setLoading] = useState(true)
+  const [processingPayment, setProcessingPayment] = useState(false)
 
   useEffect(() => {
     const fetchGig = async () => {
@@ -276,6 +278,27 @@ export default function GigDetailPage() {
                     <Users className="h-4 w-4 mr-2" />
                     View Applicants
                   </Link>
+                </Button>
+              )}
+              {gig.status === 'completed' && (
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700" 
+                  disabled={processingPayment}
+                  onClick={async () => {
+                    setProcessingPayment(true)
+                    const result = await initiateChapaPayment(gig.id)
+                    if (result.error) {
+                      toast.error(result.error)
+                    } else if (result.checkout_url) {
+                      window.location.href = result.checkout_url
+                    } else {
+                      toast.error('Failed to initiate payment')
+                    }
+                    setProcessingPayment(false)
+                  }}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Pay Freelancer
                 </Button>
               )}
             </CardContent>

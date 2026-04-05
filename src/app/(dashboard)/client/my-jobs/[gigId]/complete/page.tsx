@@ -13,6 +13,8 @@ import { ArrowLeft, Star, MapPin, DollarSign, CheckCircle, Loader2 } from 'lucid
 import Link from 'next/link'
 import { toast } from 'sonner'
 
+import { initiateChapaPayment } from '@/lib/actions/payments'
+
 interface HiredFreelancer {
   id: string
   full_name: string
@@ -197,8 +199,19 @@ export default function CompletePage() {
           .eq('id', gig.hired_freelancer!.id)
       }
 
-      toast.success("Gig marked as completed! Review submitted.")
-      router.push("/client/my-jobs")
+      toast.success("Review submitted. Redirecting to payment...")
+
+      // Initiate payment
+      const paymentResult = await initiateChapaPayment(gigId)
+      if (paymentResult?.error) {
+        toast.error(paymentResult.error)
+        router.push("/client/my-jobs")
+      } else if (paymentResult?.checkout_url) {
+        window.location.href = paymentResult.checkout_url
+      } else {
+        router.push("/client/my-jobs")
+      }
+      
     } catch (error) {
       console.error("Error completing gig:", error)
       toast.error("Failed to complete gig. Please try again.")
@@ -455,7 +468,7 @@ export default function CompletePage() {
             ) : (
               <>
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Mark as Completed
+                Submit Review & Pay
               </>
             )}
           </Button>
