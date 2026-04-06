@@ -50,6 +50,16 @@ export default function KycPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
+        // Check Fayda verification first
+        const faydaResponse = await fetch(`/api/verify/fayda?user_id=${user.id}`)
+        const faydaData = await faydaResponse.json()
+
+        if (faydaData.verified) {
+          setVerificationStatus('fayda_verified')
+          return
+        }
+
+        // Check document verification
         const result = await getVerificationStatus(user.id)
         
         if (result.status && result.status !== 'unverified') {
@@ -101,8 +111,8 @@ export default function KycPage() {
     }
   }
 
-  // If already verified, show success state
-  if (verificationStatus === 'verified') {
+  // If already verified (either document or Fayda), show success state
+  if (verificationStatus === 'verified' || verificationStatus === 'fayda_verified') {
     return (
       <div className="container mx-auto py-12 px-4">
         <Card className="max-w-md mx-auto">
@@ -115,6 +125,13 @@ export default function KycPage() {
               <p className="text-muted-foreground">
                 Your identity has been verified. You can now apply for jobs and access all freelancer features.
               </p>
+              
+              {verificationStatus === 'fayda_verified' && (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-700 font-medium">Verified via Fayda (National ID)</p>
+                </div>
+              )}
+              
               <div className="space-y-2">
                 {verificationData?.document_type && (
                   <p className="text-sm text-gray-600">
@@ -406,6 +423,30 @@ export default function KycPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Fayda Verification Option */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Shield className="w-8 h-8 text-blue-600" />
+                <div>
+                  <p className="font-medium text-blue-900">Verify with Fayda (Demo)</p>
+                  <p className="text-sm text-blue-600">Quick national ID verification</p>
+                </div>
+              </div>
+              <Button 
+                type="button"
+                onClick={() => router.push('/freelancer/verify-fayda')}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Verify Now
+              </Button>
+            </div>
+          </div>
+
+          <div className="text-center text-sm text-gray-500 mb-4">
+            Or verify with traditional ID document:
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label>ID Type</Label>
