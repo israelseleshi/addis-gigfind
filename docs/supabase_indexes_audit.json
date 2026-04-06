@@ -60,6 +60,11 @@
     "indexdef": "CREATE UNIQUE INDEX freelancer_profiles_pkey ON public.freelancer_profiles USING btree (id)"
   },
   {
+    "indexname": "gigs_location_idx",
+    "tablename": "gigs",
+    "indexdef": "CREATE INDEX gigs_location_idx ON public.gigs USING gist (location)"
+  },
+  {
     "indexname": "gigs_pkey",
     "tablename": "gigs",
     "indexdef": "CREATE UNIQUE INDEX gigs_pkey ON public.gigs USING btree (id)"
@@ -140,6 +145,11 @@
     "indexdef": "CREATE INDEX idx_profiles_banned ON public.profiles USING btree (is_banned)"
   },
   {
+    "indexname": "profiles_location_idx",
+    "tablename": "profiles",
+    "indexdef": "CREATE INDEX profiles_location_idx ON public.profiles USING gist (location)"
+  },
+  {
     "indexname": "profiles_phone_number_key",
     "tablename": "profiles",
     "indexdef": "CREATE UNIQUE INDEX profiles_phone_number_key ON public.profiles USING btree (phone_number)"
@@ -158,6 +168,11 @@
     "indexname": "reviews_pkey",
     "tablename": "reviews",
     "indexdef": "CREATE UNIQUE INDEX reviews_pkey ON public.reviews USING btree (id)"
+  },
+  {
+    "indexname": "spatial_ref_sys_pkey",
+    "tablename": "spatial_ref_sys",
+    "indexdef": "CREATE UNIQUE INDEX spatial_ref_sys_pkey ON public.spatial_ref_sys USING btree (srid)"
   },
   {
     "indexname": "telegram_accounts_pkey",

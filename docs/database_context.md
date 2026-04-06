@@ -1,6 +1,6 @@
 # Addis GigFind Live Data (Admin Export)
 
-Exported on: 4/6/2026, 9:56:32 AM
+Exported on: 4/6/2026, 8:00:38 PM
 
 ---
 
@@ -39,7 +39,7 @@ _No data returned. Check if the table is empty._
 | be002f3e-4eb0-4b79-9c76-05a89e4ffaa7 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | Electrician Needed | Need to fix Faulty line around piasa  | electrical | 3000 | open | 2026-03-12T13:55:03.489452+00:00 | 2026-03-12T13:55:03.489452+00:00 | unpaid | null | null |
 | ec4c5e43-c592-48a0-8deb-7b4640de89fa | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | Konso Traditional Attire Photoshoot | We have been looking for a skilled photographer to capture our new line of Konso traditional clothing. The photoshoot will take place outdoors to highlight the vibrant colors and intricate designs of the garments. | design | 15000 | in_progress | 2026-01-27T07:27:08.602283+00:00 | 2026-01-27T07:27:08.602283+00:00 | unpaid | null | null |
 | 42bebd4d-e444-43cd-9d42-90939b0bb5e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | Tutor Needed | We need a tutor for our son. He is 4th grade student. | tutoring | 3000 | assigned | 2026-01-30T06:16:22.668939+00:00 | 2026-01-30T06:16:22.668939+00:00 | unpaid | null | null |
-| 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | 6th Grade Tutor Needed | I need tutor for my 6th grade son. | tutoring | 4500 | assigned | 2026-04-06T04:42:06.219269+00:00 | 2026-04-06T04:42:06.219269+00:00 | unpaid | null | 0101000020E61000002EFB75A73B60434052280B5F5F012240 |
+| 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | 6th Grade Tutor Needed | I need tutor for my 6th grade son. | tutoring | 4500 | completed | 2026-04-06T04:42:06.219269+00:00 | 2026-04-06T04:42:06.219269+00:00 | unpaid | null | 0101000020E61000002EFB75A73B60434052280B5F5F012240 |
 
 ---
 ## Table: applications
@@ -61,27 +61,43 @@ _No data returned. Check if the table is empty._
 
 | id | user_id | coin_balance | total_coins_spent | total_earned_etb | created_at | updated_at |
 | --- | --- | --- | --- | --- | --- | --- |
-| 8170f477-1606-4fe5-aee4-7d565741347e | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | 5 | 0 | 0 | 2026-04-06T05:08:59.124473+00:00 | 2026-04-06T05:08:59.124473+00:00 |
 | ef115533-eb57-4c1b-9221-c4c0e21a1784 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 29 | 1 | 0 | 2026-04-05T19:23:44.987137+00:00 | 2026-04-06T05:19:16.86567+00:00 |
+| 8170f477-1606-4fe5-aee4-7d565741347e | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | 15 | 0 | 0 | 2026-04-06T05:08:59.124473+00:00 | 2026-04-06T08:02:17.889212+00:00 |
 
 ---
 ## Table: coin_purchases
 
-**Total Rows Found:** 3
+**Total Rows Found:** 5
 
 | id | user_id | package_id | coins_purchased | amount_paid_etb | payment_tx_ref | status | created_at |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 697887a9-653b-4dd1-9e02-35e3268d3e49 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | starter | 10 | 100 | coin-starter-a14f1026-1775416180288 | pending | 2026-04-05T19:09:41.790864+00:00 |
 | 025b1381-d66f-4430-86b3-0081a0adada7 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | pro | 25 | 200 | coin-pro-a14f1026-1775416608766 | pending | 2026-04-05T19:16:51.852829+00:00 |
 | 4b6035f4-600c-4349-8d09-5eceac305d5a | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | pro | 25 | 200 | coin-pro-a14f1026-1775417001692 | completed | 2026-04-05T19:23:23.191011+00:00 |
+| 4ee4b2db-1f0e-4b35-bd2f-9f4ed09f6896 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | starter | 10 | 100 | coin-starter-26a290f5-1775461986047 | pending | 2026-04-06T07:53:08.488033+00:00 |
+| f0b1d44d-5f62-4e43-9b18-fca67bca05ca | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | starter | 10 | 100 | coin-starter-26a290f5-1775462520192 | completed | 2026-04-06T08:02:00.840212+00:00 |
 
 ---
 ## Table: payments
 
-**Total Rows Found:** 0
+**Total Rows Found:** 12
 
-_No data returned. Check if the table is empty._
+| id | gig_id | client_id | freelancer_id | amount | status | currency | transaction_id | payment_method | payment_note | paid_at | created_at | updated_at | invoice_number | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 8ddd6d51-7e8c-4f49-a143-a3ca89e6a7de | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | tx-6a9fb679-859ec4d5 | chapa | null | null | 2026-04-06T07:11:20.095587+00:00 | 2026-04-06T07:11:20.095587+00:00 | null | null |
+| b906ae66-1c8e-498c-b9e8-445a32ebfcd0 | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | tx-6a9fb679-ef29eee0 | chapa | null | null | 2026-04-06T07:11:27.330931+00:00 | 2026-04-06T07:11:27.330931+00:00 | null | null |
+| 2bbf08e8-dbc3-475d-a9d4-061c4395f4a7 | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | tx-6a9fb679-ac04ee45 | chapa | null | null | 2026-04-06T07:12:03.937643+00:00 | 2026-04-06T07:12:03.937643+00:00 | null | null |
+| c05dc859-0a2c-4849-b460-37522d06b84f | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | tx-6a9fb679-fbfb1f38 | chapa | null | null | 2026-04-06T07:13:25.985712+00:00 | 2026-04-06T07:13:25.985712+00:00 | null | null |
+| 7e920c1f-bfaa-4d13-aabc-e325a2e0f548 | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | tx-6a9fb679-67695d98 | chapa | null | null | 2026-04-06T07:14:54.363252+00:00 | 2026-04-06T07:14:54.363252+00:00 | null | null |
+| a10919e1-ff51-497e-a376-97ded18d0585 | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | tx-6a9fb679-fa9d4fc6 | chapa | null | null | 2026-04-06T07:16:27.4198+00:00 | 2026-04-06T07:16:27.4198+00:00 | null | null |
+| e09c5925-fc2f-4730-94d9-2872ad969861 | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | gig-6a9fb679-efde1bd6 | chapa | null | null | 2026-04-06T07:17:58.359306+00:00 | 2026-04-06T07:17:58.359306+00:00 | null | null |
+| 53f543cd-bb61-4531-a216-d7fc0a582c5c | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | gig-6a9fb679-d60c1fc3 | chapa | null | null | 2026-04-06T07:19:38.913859+00:00 | 2026-04-06T07:19:38.913859+00:00 | null | null |
+| 61d81a5d-5489-4290-b615-0851cceb9fd7 | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | gig-6a9fb679-7dd9b6f2 | chapa | null | null | 2026-04-06T07:19:48.417176+00:00 | 2026-04-06T07:19:48.417176+00:00 | null | null |
+| 07733e5a-4ffb-4e24-a850-b92343d4c50b | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | gig-6a9fb679-aa0141a6 | chapa | null | null | 2026-04-06T07:27:58.029265+00:00 | 2026-04-06T07:27:58.029265+00:00 | null | null |
+| 18e561d2-79a5-4815-b4bd-7ffc6c70ce65 | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | gig-6a9fb679-3e21b84a | chapa | null | null | 2026-04-06T07:28:30.52472+00:00 | 2026-04-06T07:28:30.52472+00:00 | null | null |
+| 34e19265-b3fb-46f4-abc5-ad8a216108c5 | 6a9fb679-0689-43f9-aebf-d9966d33a0e4 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | 4500 | pending | ETB | gig-6a9fb679-6c601670 | chapa | null | null | 2026-04-06T07:30:24.60315+00:00 | 2026-04-06T07:30:24.60315+00:00 | null | null |
 
+---
 ## Table: reviews
 
 **Total Rows Found:** 0
@@ -155,10 +171,10 @@ _No data returned. Check if the table is empty._
 
 | id | email | email_confirmed_at | email_verification_status | full_name | role | id_verification_status | verification_exempt | created_at |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| dc5ba84c-62e1-4744-97d1-fa652df9e8ab | abeltheodor12@gmail.com | 2026-01-25T10:48:41.310826+00:00 | verified | abel | client | unverified | false | 2026-01-25T10:48:21.779296+00:00 |
 | a20a98a0-6e00-4fae-99a6-69e13f4846e5 | joyseleshi@gmail.com | 2026-01-27T08:56:38.564976+00:00 | verified | System Administrator | admin | verified | true | 2026-01-27T08:55:08.102583+00:00 |
 | a14f1026-3f8d-43d6-b9ea-17dd7aff5967 | israelseleshi09@gmail.com | 2026-01-26T06:23:48.024465+00:00 | verified | Israel Seleshi | freelancer | verified | false | 2026-01-26T06:23:23.720623+00:00 |
 | 26a290f5-35a2-4a13-952c-3f6cd23d2b01 | israeltheodros09@gmail.com | 2026-01-27T06:05:08.200934+00:00 | verified | Israel Theodros | client | unverified | false | 2026-01-27T06:04:54.811523+00:00 |
 | 31b6acb3-da37-47af-951c-267d2a6e86f5 | vevelav370@paylaar.com | 2026-03-23T17:05:21.152743+00:00 | verified | John Locke | client | unverified | false | 2026-03-23T17:04:29.260709+00:00 |
+| dc5ba84c-62e1-4744-97d1-fa652df9e8ab | abeltheodor12@gmail.com | 2026-01-25T10:48:41.310826+00:00 | verified | abel | client | unverified | false | 2026-01-25T10:48:21.779296+00:00 |
 
 ---

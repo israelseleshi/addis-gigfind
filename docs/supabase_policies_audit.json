@@ -686,7 +686,7 @@
     "permissive": "PERMISSIVE",
     "roles": "{public}",
     "cmd": "UPDATE",
-    "qual": "has_accepted_application_for_gig(id) AND status IN ('assigned', 'in_progress')",
-    "with_check": "status IN ('in_progress', 'completed')"
+    "qual": "(has_accepted_application_for_gig(id) AND (status = ANY (ARRAY['assigned'::gig_status, 'in_progress'::gig_status])))",
+    "with_check": "(status = ANY (ARRAY['in_progress'::gig_status, 'completed'::gig_status]))"
   }
 ]

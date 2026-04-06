@@ -47,6 +47,7 @@ const clientOnboardingSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
   industry: z.string().min(1, 'Please select an industry'),
   website: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  phoneNumber: z.string().min(10, 'Please enter a valid phone number'),
 })
 
 type ClientOnboardingValues = z.infer<typeof clientOnboardingSchema>
@@ -62,6 +63,7 @@ export function ClientOnboardingForm() {
       companyName: '',
       industry: '',
       website: '',
+      phoneNumber: '',
     },
   })
 
@@ -81,6 +83,16 @@ export function ClientOnboardingForm() {
         industry: values.industry,
         website: values.website || null,
       })
+
+      // Also update phone number in profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ phone_number: values.phoneNumber })
+        .eq('id', user.id)
+
+      if (profileError) {
+        console.error('Phone update error:', profileError)
+      }
 
       if (error) {
         toast.error('Failed to save profile: ' + error.message)
@@ -153,6 +165,20 @@ export function ClientOnboardingForm() {
               <FormLabel>Website (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="https://yourcompany.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="phoneNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone Number</FormLabel>
+              <FormControl>
+                <Input placeholder="+2519XXXXXXXX" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

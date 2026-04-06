@@ -41,6 +41,7 @@ const freelancerOnboardingSchema = z.object({
   hourlyRate: z.string().optional(),
   portfolioUrl: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
   bio: z.string().min(20, 'Bio must be at least 20 characters'),
+  phoneNumber: z.string().min(10, 'Please enter a valid phone number'),
 })
 
 type FreelancerOnboardingValues = z.infer<typeof freelancerOnboardingSchema>
@@ -58,6 +59,7 @@ export function FreelancerOnboardingForm() {
       hourlyRate: undefined,
       portfolioUrl: '',
       bio: '',
+      phoneNumber: '',
     },
   })
 
@@ -85,6 +87,16 @@ export function FreelancerOnboardingForm() {
         portfolio_url: values.portfolioUrl || null,
         bio: values.bio,
       })
+
+      // Also update phone number in profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ phone_number: values.phoneNumber })
+        .eq('id', user.id)
+
+      if (profileError) {
+        console.error('Phone update error:', profileError)
+      }
 
       if (error) {
         toast.error('Failed to save profile: ' + error.message)
@@ -195,6 +207,20 @@ export function FreelancerOnboardingForm() {
                   className="resize-none min-h-32"
                   {...field}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="phoneNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone Number</FormLabel>
+              <FormControl>
+                <Input placeholder="+2519XXXXXXXX" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
