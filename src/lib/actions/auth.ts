@@ -89,20 +89,38 @@ export async function registerClient(values: z.infer<typeof clientSignUpSchema>)
       return { error: 'Account created but failed to sign in. Please try logging in.' }
     }
 
-    // Now create profile with active session
+    // Now create profile with active session (if not already created by trigger)
     if (signUpData.user) {
       console.log('[registerClient] Creating profile...')
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: signUpData.user.id,
-        full_name: fullName,
-        role: 'client',
-      })
+      
+      // Check if profile already exists (trigger may have created it)
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', signUpData.user.id)
+        .single()
+      
+      if (!existingProfile) {
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: signUpData.user.id,
+          full_name: fullName,
+          role: 'client',
+        })
 
-      if (profileError) {
-        console.error('[registerClient] Profile creation error:', profileError)
-        return { error: `Profile error: ${profileError.message}` }
+        if (profileError) {
+          // Check if it's the duplicate key error (trigger beat us to it)
+          if (profileError.code === '23505') {
+            console.log('[registerClient] Profile already created by trigger')
+          } else {
+            console.error('[registerClient] Profile creation error:', profileError)
+            return { error: `Profile error: ${profileError.message}` }
+          }
+        } else {
+          console.log('[registerClient] Profile created successfully')
+        }
+      } else {
+        console.log('[registerClient] Profile already exists (created by trigger)')
       }
-      console.log('[registerClient] Profile created successfully')
     }
 
     return { success: true, userId: signUpData.user?.id }
@@ -156,20 +174,38 @@ export async function registerFreelancer(values: z.infer<typeof freelancerSignUp
       return { error: 'Account created but failed to sign in. Please try logging in.' }
     }
 
-    // Now create profile with active session
+    // Now create profile with active session (if not already created by trigger)
     if (signUpData.user) {
       console.log('[registerFreelancer] Creating profile...')
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: signUpData.user.id,
-        full_name: fullName,
-        role: 'freelancer',
-      })
+      
+      // Check if profile already exists (trigger may have created it)
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', signUpData.user.id)
+        .single()
+      
+      if (!existingProfile) {
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: signUpData.user.id,
+          full_name: fullName,
+          role: 'freelancer',
+        })
 
-      if (profileError) {
-        console.error('[registerFreelancer] Profile creation error:', profileError)
-        return { error: `Profile error: ${profileError.message}` }
+        if (profileError) {
+          // Check if it's the duplicate key error (trigger beat us to it)
+          if (profileError.code === '23505') {
+            console.log('[registerFreelancer] Profile already created by trigger')
+          } else {
+            console.error('[registerFreelancer] Profile creation error:', profileError)
+            return { error: `Profile error: ${profileError.message}` }
+          }
+        } else {
+          console.log('[registerFreelancer] Profile created successfully')
+        }
+      } else {
+        console.log('[registerFreelancer] Profile already exists (created by trigger)')
       }
-      console.log('[registerFreelancer] Profile created successfully')
     }
 
     return { success: true, userId: signUpData.user?.id }
