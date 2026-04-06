@@ -354,7 +354,7 @@ export default function KycPage() {
       })
 
       if (result.error) {
-        toast.error(result.error)
+        toast.error(String(result.error))
       } else {
         toast.success("Verification submitted successfully!")
         setIsSubmitted(true)

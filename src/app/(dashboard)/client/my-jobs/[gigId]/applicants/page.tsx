@@ -109,7 +109,7 @@ export default function GigApplicantsPage() {
     try {
       const result = await acceptApplication(applicationId)
       if (result.error) {
-        toast.error(result.error)
+        toast.error(String(result.error))
         return
       }
 
@@ -125,7 +125,7 @@ export default function GigApplicantsPage() {
     try {
       const result = await rejectApplication(applicationId)
       if (result.error) {
-        toast.error(result.error)
+        toast.error(String(result.error))
         return
       }
 

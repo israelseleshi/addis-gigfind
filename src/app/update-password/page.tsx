@@ -76,7 +76,7 @@ function UpdatePasswordForm() {
       const result = await response.json()
 
       if (result?.error) {
-        toast.error(result.error)
+        toast.error(String(result.error))
       } else {
         toast.success('Password updated successfully!')
         router.push('/login')

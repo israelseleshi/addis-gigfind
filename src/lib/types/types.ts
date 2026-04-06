@@ -40,6 +40,7 @@ export interface Gig {
   deadline: string;
   created_at: string;
   applicant_count: number;
+  payment_status?: 'pending' | 'paid';
 }
 
 export interface Application {

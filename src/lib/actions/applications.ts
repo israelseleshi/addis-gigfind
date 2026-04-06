@@ -95,7 +95,7 @@ export async function applyForGig(data: { gigId: string; coverNote: string }) {
   // Check coin balance
   const { data: wallet } = await supabase
     .from('user_wallets')
-    .select('coin_balance')
+    .select('coin_balance, total_coins_spent')
     .eq('user_id', user.id)
     .single()
 
@@ -115,7 +115,7 @@ export async function applyForGig(data: { gigId: string; coverNote: string }) {
     .from('user_wallets')
     .update({ 
       coin_balance: currentBalance - APPLICATION_COST,
-      total_coins_spent: (wallet?.coin_balance || 0) + APPLICATION_COST
+      total_coins_spent: (wallet?.total_coins_spent || 0) + APPLICATION_COST
     })
     .eq('user_id', user.id)
     .eq('coin_balance', currentBalance)
@@ -331,18 +331,23 @@ export async function rejectApplication(applicationId: string) {
 export async function markGigInProgress(gigId: string) {
   const supabase = await createClient()
 
+  console.log('markGigInProgress called for gig:', gigId)
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'You must be logged in to update a job.' }
   }
 
+  // First check the application status
   const { data: application, error: applicationError } = await supabase
     .from('applications')
-    .select('id')
+    .select('id, status, gig_id')
     .eq('gig_id', gigId)
     .eq('freelancer_id', user.id)
-    .eq('status', 'accepted')
+    .in('status', ['accepted', 'pending'])
     .single()
+
+  console.log('Application found:', application, 'error:', applicationError)
 
   if (applicationError || !application) {
     return { error: 'Active job not found.' }
@@ -354,23 +359,31 @@ export async function markGigInProgress(gigId: string) {
     .eq('id', gigId)
     .single()
 
+  console.log('Gig found:', gig, 'error:', gigError)
+
   if (gigError || !gig) {
     return { error: 'Gig not found.' }
   }
+
+  console.log('Current gig status:', gig.status)
+  console.log('Expected status for Start Work: assigned')
 
   if (gig.status === 'in_progress') {
     return { error: 'This job is already marked as in progress.' }
   }
 
   if (gig.status !== 'assigned') {
-    return { error: 'Only assigned jobs can be moved to in progress.' }
+    return { error: `Only assigned jobs can be moved to in progress. Current status: ${gig.status}` }
   }
 
+  // Try to update gig status to in_progress
   const { error } = await supabase
     .from('gigs')
     .update({ status: 'in_progress' })
     .eq('id', gigId)
     .eq('status', 'assigned')
+
+  console.log('Update result error:', error)
 
   if (error) {
     return { error: error.message }

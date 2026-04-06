@@ -15,7 +15,8 @@ import {
   PlusCircle,
   MessageSquare,
   CreditCard,
-  Search
+  Search,
+  Coins
 } from 'lucide-react'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
@@ -35,7 +36,7 @@ export default function ClientLayout({
     { href: '/client/find-freelancers', label: 'Find Talent', icon: Search },
     { href: '/client/chat', label: 'Chat', icon: MessageSquare },
     { href: '/client/applicants', label: 'Applicants', icon: Users },
-    { href: '/client/buy-coins', label: 'Payments', icon: CreditCard },
+    { href: '/client/buy-coins', label: 'Buy Coins', icon: Coins },
     { href: '/client/gigs/create', label: 'Post Gig', icon: PlusCircle },
     { href: '/client/settings', label: 'Settings', icon: Settings },
   ]
@@ -119,7 +120,7 @@ export default function ClientLayout({
 
       {/* Main Content - Adjust padding based on sidebar state */}
       <main className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:pl-20 xl:pl-20' : 'lg:pl-64 xl:pl-72'}`}>
-        <div className="p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10 2xl:p-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           {children}
         </div>
       </main>

@@ -258,7 +258,7 @@ export default function ActiveJobsPage() {
                       if (!job.gig?.id) return
                       const result = await markGigInProgress(job.gig.id)
                       if (result.error) {
-                        toast.error(result.error)
+                        toast.error(String(result.error))
                         return
                       }
                       toast.success('Job marked as in progress')
@@ -277,7 +277,7 @@ export default function ActiveJobsPage() {
                       if (!job.gig?.id) return
                       const result = await markGigComplete(job.gig.id)
                       if (result.error) {
-                        toast.error(result.error)
+                        toast.error(String(result.error))
                         return
                       }
                       toast.success('Job marked as completed. Waiting for client to pay.')

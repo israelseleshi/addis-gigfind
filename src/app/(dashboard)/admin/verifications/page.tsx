@@ -61,7 +61,7 @@ export default function AdminVerificationsPage() {
     try {
       const result = await adminApproveVerification(documentId)
       if (result.error) {
-        toast.error(result.error)
+        toast.error(String(result.error))
       } else {
         toast.success('Verification approved!')
         loadVerifications()
@@ -76,7 +76,7 @@ export default function AdminVerificationsPage() {
     try {
       const result = await adminRejectVerification(documentId, reason)
       if (result.error) {
-        toast.error(result.error)
+        toast.error(String(result.error))
       } else {
         toast.success('Verification rejected')
         loadVerifications()

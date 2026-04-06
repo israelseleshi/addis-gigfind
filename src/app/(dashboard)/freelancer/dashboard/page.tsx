@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Briefcase, FileText, CheckCircle, Clock, ArrowRight, Search, Zap, Coins } from 'lucide-react'
+import { Briefcase, FileText, CheckCircle, Clock, ArrowRight, Search, Zap, Coins, Sparkles, TrendingUp, Target, Award, Users } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -62,26 +62,20 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 }
 
-function StatCard({ title, value, icon: Icon, color, delay }: { title: string; value: string; icon: React.ElementType; color: string; delay: number }) {
+function StatCard({ title, value, icon: Icon, color }: { title: string; value: string; icon: React.ElementType; color: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, delay }}
-    >
-      <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${color} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2`} />
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div className={`p-2 rounded-lg bg-gradient-to-br ${color} shadow-md`}>
-            <Icon className="h-5 w-5 text-white" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold tracking-tight">{value}</div>
-          <p className="text-sm text-muted-foreground mt-1">{title}</p>
-        </CardContent>
-      </Card>
-    </motion.div>
+    <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 p-3 sm:p-4 md:p-5 lg:p-6">
+      <div className={`absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-gradient-to-br ${color} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2`} />
+      <CardHeader className="flex flex-row items-center justify-between pb-2 p-0 sm:p-1">
+        <div className={`p-1.5 sm:p-2 md:p-3 rounded-lg bg-gradient-to-br ${color} shadow-md`}>
+          <Icon className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-white" />
+        </div>
+      </CardHeader>
+      <CardContent className="p-0 sm:p-1">
+        <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">{value}</div>
+        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1 sm:mt-2">{title}</p>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -91,41 +85,35 @@ function QuickAction({ icon: Icon, label, href, color }: { icon: React.ElementTy
       <motion.div
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="group relative overflow-hidden rounded-xl bg-white p-4 shadow-sm border border-zinc-100 hover:shadow-md transition-all"
+        className="group relative overflow-hidden rounded-xl bg-white p-3 sm:p-4 shadow-sm border border-zinc-100 hover:shadow-md transition-all"
       >
         <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-5 transition-opacity`} />
-        <div className={`inline-flex p-2 rounded-lg bg-gradient-to-br ${color} mb-3 shadow-md`}>
-          <Icon className="h-5 w-5 text-white" />
+        <div className="flex items-center gap-3">
+          <div className={`p-2 sm:p-3 rounded-lg bg-gradient-to-br ${color} shadow-md`}>
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+          </div>
+          <div>
+            <p className="font-semibold text-zinc-900 text-sm sm:text-base">{label}</p>
+          </div>
+          <ArrowRight className="h-4 w-4 ml-auto text-zinc-400 group-hover:text-zinc-600 transition-colors" />
         </div>
-        <p className="font-semibold text-zinc-900">{label}</p>
-        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 group-hover:text-orange-500 transition-colors">
-          Open <ArrowRight className="h-3 w-3" />
-        </p>
       </motion.div>
     </Link>
   )
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    'In Review': 'bg-blue-100 text-blue-700 border-blue-200',
-    Accepted: 'bg-green-100 text-green-700 border-green-200',
-    Pending: 'bg-amber-100 text-amber-700 border-amber-200',
-    Rejected: 'bg-red-100 text-red-700 border-red-200',
-  }
-  
-  return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${styles[status] || 'bg-zinc-100 text-zinc-700 border-zinc-200'}`}>
-      {status}
-    </span>
-  )
-}
+const DESIGN_TEMPLATES = [
+  { id: 'modern', name: 'Modern Cards' },
+  { id: 'compact', name: 'Compact Grid' },
+  { id: 'timeline', name: 'Activity Timeline' },
+  { id: 'hero', name: 'Hero Focus' },
+]
 
 export default function FreelancerDashboardPage() {
+  const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [recentApplications, setRecentApplications] = useState<Application[]>([])
   const [recommendedGigs, setRecommendedGigs] = useState<Gig[]>([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -133,12 +121,7 @@ export default function FreelancerDashboardPage() {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
         
-        if (!user) {
-          console.error('No user found')
-          setLoading(false)
-          return
-        }
-        
+        if (!user) return
         
         const [statsData, applicationsData, gigsData] = await Promise.all([
           getFreelancerDashboardStats(user.id),
@@ -146,75 +129,19 @@ export default function FreelancerDashboardPage() {
           getRecommendedGigs()
         ])
         
-        setStats(statsData || {
-          activeApplications: 0,
-          pendingJobs: 0,
-          completedJobs: 0,
-          availableGigs: 0,
-        })
-        setRecentApplications(applicationsData)
-        setRecommendedGigs(gigsData)
+        console.log('Freelancer stats data:', statsData)
+        setStats(statsData)
+        setRecentApplications(applicationsData || [])
+        setRecommendedGigs(gigsData || [])
       } catch (error) {
-        console.error('Dashboard fetch error:', error)
+        console.error('Error fetching dashboard data:', error)
       } finally {
         setLoading(false)
       }
     }
-
+    
     fetchData()
   }, [])
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-20" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-16" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-20 w-full" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
-
-  const statsData: StatItem[] = [
-    { title: 'Active Applications', value: stats?.activeApplications.toString() || '0', icon: FileText, color: 'from-blue-500 to-blue-600' },
-    { title: 'Pending Jobs', value: stats?.pendingJobs.toString() || '0', icon: Clock, color: 'from-amber-500 to-orange-500' },
-    { title: 'Completed Jobs', value: stats?.completedJobs.toString() || '0', icon: CheckCircle, color: 'from-green-500 to-green-600' },
-    { title: 'Available Gigs', value: stats?.availableGigs.toString() || '0', icon: Briefcase, color: 'from-purple-500 to-purple-600' },
-  ]
 
   const quickActions: QuickAction[] = [
     { icon: Search, label: 'Find Work', href: '/freelancer/find-work', color: 'from-orange-500 to-amber-500' },
@@ -223,7 +150,41 @@ export default function FreelancerDashboardPage() {
     { icon: Zap, label: 'Profile Boost', href: '/freelancer/profile/edit', color: 'from-purple-500 to-pink-500' },
   ]
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-50 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <Skeleton className="h-48 w-full" />
+            </div>
+            <div className="lg:col-span-2">
+              <Skeleton className="h-48 w-full" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Skeleton className="h-64 w-full" />
+            </div>
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
+  const renderDesign = () => {
+    return <FreelancerDesignHero { ...{ stats, recentApplications, recommendedGigs, quickActions } } />
+  }
+
+  return (
+    <div className="space-y-6">
+      {renderDesign()}
+    </div>
+  )
+}
+
+function FreelancerDesignModern({ stats, recentApplications, recommendedGigs, quickActions }: any) {
   return (
     <motion.div
       initial="hidden"
@@ -231,31 +192,20 @@ export default function FreelancerDashboardPage() {
       variants={containerVariants}
       className="space-y-6"
     >
-      {/* Welcome Section */}
       <motion.div variants={itemVariants}>
-        <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-zinc-900">
-            Freelancer Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Find work and manage your applications.</p>
-        </div>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-zinc-900">
+          Freelancer Dashboard
+        </h1>
+        <p className="text-muted-foreground mt-1 text-sm sm:text-base">Find work and manage your applications.</p>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statsData.map((stat: StatItem, index: number) => (
-          <StatCard key={stat.title} {...stat} delay={index * 0.1} />
-        ))}
-      </div>
-
-      {/* Wallet Section */}
       <motion.div variants={itemVariants}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
             <WalletCard />
             <div className="mt-4">
               <Button asChild className="w-full bg-amber-600 hover:bg-amber-700">
-                <Link href="/buy-coins">
+                <Link href="/freelancer/buy-coins">
                   <Coins className="w-4 h-4 mr-2" />
                   Buy More Coins
                 </Link>
@@ -275,9 +225,7 @@ export default function FreelancerDashboardPage() {
         </div>
       </motion.div>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Applications - Takes 2 columns */}
         <motion.div variants={itemVariants} className="lg:col-span-2">
           <Card className="border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -291,95 +239,306 @@ export default function FreelancerDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentApplications.map((app) => (
-                  <motion.div
-                    key={app.id}
-                    whileHover={{ x: 4 }}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-zinc-50 rounded-xl border border-zinc-100 hover:border-orange-200 hover:bg-orange-50/30 transition-all cursor-pointer gap-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center flex-shrink-0">
-                        <FileText className="h-5 w-5 text-orange-500" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-zinc-900 text-sm sm:text-base">{app.gig}</h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground">{app.budget}</p>
-                      </div>
+                {recentApplications.slice(0, 3).map((app: Application) => (
+                  <div key={app.id} className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg hover:bg-zinc-100 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-zinc-900 truncate">{app.gig}</p>
+                      <p className="text-xs text-muted-foreground">{app.applied}</p>
                     </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-3">
-                      <div className="flex flex-col items-end gap-1">
-                        <StatusBadge status={app.status} />
-                        <span className="text-xs text-muted-foreground hidden sm:block">Applied {app.applied}</span>
-                      </div>
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/freelancer/my-applications/${app.id}`}>View</Link>
-                      </Button>
+                    <div className="flex items-center gap-3 ml-4">
+                      <span className="text-sm font-medium text-zinc-600">{app.budget}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        app.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                        app.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                        app.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                        'bg-zinc-100 text-zinc-700'
+                      }`}>
+                        {app.status}
+                      </span>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
+                {recentApplications.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">No applications yet. Start applying!</p>
+                )}
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Sidebar - Quick Actions & Recommended Gigs */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <motion.div variants={itemVariants}>
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
-                <CardDescription>Common tasks and shortcuts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  {quickActions.map((action) => (
-                    <QuickAction key={action.label} {...action} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+        <motion.div variants={itemVariants}>
+          <Card className="border-0 shadow-lg h-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {quickActions.map((action: QuickAction, index: number) => (
+                <QuickAction key={index} {...action} />
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
-          {/* Recommended Gigs */}
-          <motion.div variants={itemVariants}>
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg">Recommended Gigs</CardTitle>
-                <CardDescription>New opportunities for you</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recommendedGigs.map((gig) => (
-                    <motion.div
-                      key={gig.id}
-                      whileHover={{ x: 4 }}
-                      className="p-3 sm:p-4 bg-zinc-50 rounded-xl border border-zinc-100 hover:border-orange-200 hover:bg-orange-50/30 transition-all cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-zinc-900 text-sm sm:text-base">{gig.title}</h3>
-                        <StatusBadge status="New" />
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground mb-2">{gig.budget}</p>
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {gig.skills.map((skill: string) => (
-                          <span key={skill} className="text-xs bg-zinc-200 text-zinc-600 px-2 py-0.5 rounded-full">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">Posted {gig.posted}</span>
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/freelancer/find-work/${gig.id}/apply`}>Apply</Link>
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))}
+      <motion.div variants={itemVariants}>
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-lg sm:text-xl">Recommended Gigs</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Handpicked opportunities for you</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/freelancer/find-work">View All</Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recommendedGigs.slice(0, 6).map((gig: Gig) => (
+                <Link key={gig.id} href={`/freelancer/find-work/${gig.id}`}>
+                  <div className="p-4 bg-zinc-50 rounded-lg hover:bg-zinc-100 transition-colors border border-zinc-100">
+                    <p className="font-medium text-zinc-900 line-clamp-2">{gig.title}</p>
+                    <p className="text-sm font-semibold text-amber-600 mt-2">{gig.budget}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{gig.posted}</p>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {gig.skills?.slice(0, 3).map((skill: string) => (
+                        <span key={skill} className="px-2 py-0.5 bg-zinc-200 text-zinc-600 rounded text-xs">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function FreelancerDesignCompact({ stats, recentApplications, quickActions }: any) {
+  return (
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-4">
+      <motion.div variants={itemVariants}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-zinc-900">Dashboard</h1>
+            <p className="text-xs text-muted-foreground">Overview</p>
+          </div>
+          <div className="flex gap-2">
+            {quickActions.slice(0, 2).map((action: any, i: number) => (
+              <Button key={i} asChild variant="outline" size="sm">
+                <Link href={action.href}>
+                  <action.icon className="w-4 h-4 mr-1" />
+                  {action.label}
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card className="p-3 bg-gradient-to-br from-orange-50 to-amber-50">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-orange-500 rounded-lg">
+              <FileText className="w-3 h-3 text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{stats?.activeApplications || 0}</p>
+              <p className="text-xs text-muted-foreground">Applications</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-3 bg-gradient-to-br from-blue-50 to-cyan-50">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-blue-500 rounded-lg">
+              <Clock className="w-3 h-3 text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{stats?.pendingJobs || 0}</p>
+              <p className="text-xs text-muted-foreground">Pending</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-3 bg-gradient-to-br from-green-50 to-emerald-50">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-green-500 rounded-lg">
+              <CheckCircle className="w-3 h-3 text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{stats?.completedJobs || 0}</p>
+              <p className="text-xs text-muted-foreground">Completed</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-3 bg-gradient-to-br from-purple-50 to-pink-50">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-purple-500 rounded-lg">
+              <Briefcase className="w-3 h-3 text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{stats?.availableGigs || 0}</p>
+              <p className="text-xs text-muted-foreground">Available</p>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-4">
+          <CardHeader className="p-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Recent Applications</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 space-y-2">
+            {recentApplications.slice(0, 4).map((app: any) => (
+              <div key={app.id} className="flex justify-between text-xs">
+                <span className="truncate">{app.gig}</span>
+                <span className={`px-1.5 py-0.5 rounded ${app.status === 'pending' ? 'bg-amber-100' : app.status === 'accepted' ? 'bg-green-100' : 'bg-zinc-100'}`}>
+                  {app.status}
+                </span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="p-4">
+          <CardHeader className="p-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Wallet</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <WalletCard />
+          </CardContent>
+        </Card>
+      </div>
+    </motion.div>
+  )
+}
+
+function FreelancerDesignTimeline({ stats, recentApplications, recommendedGigs, quickActions }: any) {
+  return (
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-6">
+      <motion.div variants={itemVariants} className="text-center py-8 bg-gradient-to-r from-orange-100 to-amber-100 rounded-2xl">
+        <h1 className="text-2xl font-bold text-zinc-900">Welcome Back!</h1>
+        <p className="text-muted-foreground mt-1">Here's your activity timeline</p>
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 space-y-4">
+          <h2 className="text-lg font-semibold">Recent Activity</h2>
+          <div className="space-y-3">
+            {recentApplications.slice(0, 5).map((app: any, i: number) => (
+              <motion.div 
+                key={app.id} 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="flex items-start gap-4 p-4 bg-white rounded-xl border shadow-sm"
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  app.status === 'pending' ? 'bg-amber-100' :
+                  app.status === 'accepted' ? 'bg-green-100' :
+                  'bg-zinc-100'
+                }`}>
+                  {app.status === 'pending' ? <Clock className="w-5 h-5 text-amber-600" /> :
+                   app.status === 'accepted' ? <CheckCircle className="w-5 h-5 text-green-600" /> :
+                   <FileText className="w-5 h-5 text-zinc-600" />}
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+                <div className="flex-1">
+                  <p className="font-medium">{app.gig}</p>
+                  <p className="text-sm text-muted-foreground">{app.applied}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  app.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                  app.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                  'bg-zinc-100 text-zinc-700'
+                }`}>
+                  {app.status}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Card className="p-4 bg-gradient-to-br from-amber-500 to-orange-500 text-white">
+            <div className="text-center">
+              <Coins className="w-8 h-8 mx-auto mb-2" />
+              <p className="text-3xl font-bold">5</p>
+              <p className="text-sm opacity-80">Coins Available</p>
+              <Button asChild variant="secondary" size="sm" className="mt-3 w-full">
+                <Link href="/freelancer/buy-coins">Buy More</Link>
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <h3 className="font-semibold mb-3">Quick Actions</h3>
+            <div className="space-y-2">
+              {quickActions.map((action: QuickAction, i: number) => (
+                <Button key={i} asChild variant="outline" className="w-full justify-start text-xs">
+                  <Link href={action.href}>
+                    <action.icon className="w-4 h-4 mr-2" />
+                    {action.label}
+                  </Link>
+                </Button>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+function FreelancerDesignHero({ stats, recentApplications, recommendedGigs, quickActions }: any) {
+  return (
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-8">
+      <motion.div variants={itemVariants} className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 to-zinc-800 text-white p-8">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-500 to-amber-500 rounded-full -translate-y-1/2 translate-x-1/2 opacity-20" />
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold mb-2">Find Your Next Gig</h1>
+          <p className="text-zinc-300 mb-6">Browse available opportunities and start earning</p>
+          <div className="flex gap-3">
+            <Button asChild className="bg-amber-500 hover:bg-amber-600">
+              <Link href="/freelancer/find-work">
+                <Search className="w-4 h-4 mr-2" />
+                Browse Gigs
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Latest Opportunities</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recommendedGigs.slice(0, 4).map((gig: any) => (
+                  <Link key={gig.id} href={`/freelancer/find-work/${gig.id}`}>
+                    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-zinc-50">
+                      <div>
+                        <p className="font-medium">{gig.title}</p>
+                        <p className="text-sm text-muted-foreground">{gig.posted}</p>
+                      </div>
+                      <p className="font-semibold text-amber-600">{gig.budget}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div>
+          <WalletCard />
+          <Button asChild className="w-full mt-3 bg-amber-600">
+            <Link href="/freelancer/buy-coins">Buy Coins</Link>
+          </Button>
         </div>
       </div>
     </motion.div>

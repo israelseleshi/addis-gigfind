@@ -102,7 +102,7 @@ export default function ApplyPage() {
       })
 
       if (result.error) {
-        toast.error(result.error)
+        toast.error(String(result.error))
         return
       }
 

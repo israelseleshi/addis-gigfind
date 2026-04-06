@@ -5,13 +5,17 @@ import { createClient } from '@/lib/supabase/server'
 export async function getFreelancerDashboardStats(userId: string) {
   const supabase = await createClient()
 
+  console.log('getFreelancerDashboardStats called with userId:', userId)
+
   try {
     // Get active applications count
     const { count: activeApplications, error: activeError } = await supabase
       .from('applications')
       .select('*', { count: 'exact', head: true })
       .eq('freelancer_id', userId)
-      .in('status', ['pending', 'accepted'])
+      .in('status', ['pending', 'in_review', 'accepted'])
+
+    console.log('Active applications:', activeApplications, activeError)
 
     // Get pending jobs count (accepted applications)
     const { count: pendingJobs, error: pendingError } = await supabase
@@ -20,12 +24,16 @@ export async function getFreelancerDashboardStats(userId: string) {
       .eq('freelancer_id', userId)
       .eq('status', 'accepted')
 
+    console.log('Pending jobs:', pendingJobs, pendingError)
+
     // Get completed jobs count
     const { count: completedJobs, error: completedError } = await supabase
       .from('applications')
       .select('*', { count: 'exact', head: true })
       .eq('freelancer_id', userId)
       .eq('status', 'completed')
+
+    console.log('Completed jobs:', completedJobs, completedError)
 
     // Get available gigs count
     const { count: availableGigs, error: gigsError } = await supabase

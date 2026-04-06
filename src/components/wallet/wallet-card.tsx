@@ -5,8 +5,14 @@ import { Coins, TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
-export function WalletCard() {
+interface WalletCardProps {
+  userRole?: 'freelancer' | 'client'
+}
+
+export function WalletCard({ userRole = 'freelancer' }: WalletCardProps) {
   const { coins, totalSpent, totalEarned, loading } = useWalletBalance();
+
+  const buyCoinsLink = userRole === 'client' ? '/client/buy-coins' : '/freelancer/buy-coins';
 
   if (loading) {
     return (
@@ -27,8 +33,14 @@ export function WalletCard() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-4xl font-bold mb-4">{coins} Coins</div>
-        <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Coins className="w-8 h-8" />
+            <span className="text-2xl font-bold">{coins}</span>
+          </div>
+          <div className="text-sm text-white/70">coins</div>
+        </div>
+        <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2 bg-white/10 rounded-lg p-2">
             <TrendingDown className="w-4 h-4 text-red-200" />
             <div>
@@ -44,12 +56,6 @@ export function WalletCard() {
             </div>
           </div>
         </div>
-        <Link
-          href="/freelancer/buy-coins"
-          className="w-full block text-center bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-        >
-          Buy More Coins
-        </Link>
       </CardContent>
     </Card>
   );

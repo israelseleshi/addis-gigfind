@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Star, MapPin, DollarSign, CheckCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { parsePostGISPoint, reverseGeocode, calculateDistanceKm } from '@/components/gig/location-picker'
 
 import { initiateChapaPayment } from '@/lib/actions/payments'
 
@@ -38,6 +39,10 @@ interface GigDetails {
   status: string
   client_id: string
   hired_freelancer?: HiredFreelancer | null
+  _displayLocation?: string
+  _distanceKm?: number
+  _lat?: number
+  _lng?: number
 }
 
 export default function CompletePage() {
@@ -100,6 +105,16 @@ export default function CompletePage() {
         const gigWithFreelancer: GigDetails = {
           ...gigData,
           hired_freelancer: hiredApplication?.freelancer || null
+        }
+
+        if (gigData.location) {
+          const coords = parsePostGISPoint(gigData.location);
+          if (coords) {
+            gigWithFreelancer._displayLocation = reverseGeocode(coords.lat, coords.lng) || undefined;
+            gigWithFreelancer._distanceKm = calculateDistanceKm(coords.lat, coords.lng);
+            gigWithFreelancer._lat = coords.lat;
+            gigWithFreelancer._lng = coords.lng;
+          }
         }
 
         setGig(gigWithFreelancer)
@@ -204,7 +219,7 @@ export default function CompletePage() {
       // Initiate payment
       const paymentResult = await initiateChapaPayment(gigId)
       if (paymentResult?.error) {
-        toast.error(paymentResult.error)
+        toast.error(String(paymentResult.error))
         router.push("/client/my-jobs")
       } else if (paymentResult?.checkout_url) {
         window.location.href = paymentResult.checkout_url
@@ -364,7 +379,19 @@ export default function CompletePage() {
                 <MapPin className="h-4 w-4 text-blue-600" />
                 <div>
                   <p className="text-sm text-gray-500">Location</p>
-                  <p className="font-semibold capitalize">{gig.location}</p>
+                  {gig._lat && gig._lng ? (
+                    <button 
+                      onClick={() => {
+                        const url = `https://www.openstreetmap.org/?mlat=${gig._lat}&mlon=${gig._lng}#map=15/${gig._lat}/${gig._lng}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="font-semibold text-blue-600 hover:underline text-left"
+                    >
+                      {gig._displayLocation || 'View Location'} ({gig._distanceKm?.toFixed(1)} km from center)
+                    </button>
+                  ) : (
+                    <p className="font-semibold">Location not set</p>
+                  )}
                 </div>
               </div>
             </div>

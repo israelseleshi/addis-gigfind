@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Edit, Users, MapPin, DollarSign, CreditCard } from 'lucide-react'
+import { ArrowLeft, Edit, Users, MapPin, DollarSign, CreditCard, Navigation } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { initiateChapaPayment } from '@/lib/actions/payments'
+import { parsePostGISPoint, reverseGeocode, calculateDistanceKm } from '@/components/gig/location-picker'
+import { useGeolocation, calculateDistance, formatDistance } from '@/hooks/use-geolocation'
 
 interface Gig {
   id: string
@@ -22,6 +24,11 @@ interface Gig {
   status: string
   created_at: string
   updated_at: string
+  payment_status?: 'pending' | 'paid'
+  _displayLocation?: string
+  _distanceKm?: number
+  _lat?: number
+  _lng?: number
   applications?: Array<{
     id: string
     freelancer_id: string
@@ -43,6 +50,7 @@ export default function GigDetailPage() {
   const [gig, setGig] = useState<Gig | null>(null)
   const [loading, setLoading] = useState(true)
   const [processingPayment, setProcessingPayment] = useState(false)
+  const { position: userPosition, requestLocation: requestUserLocation, loading: locationLoading } = useGeolocation()
 
   useEffect(() => {
     const fetchGig = async () => {
@@ -77,6 +85,21 @@ export default function GigDetailPage() {
           toast.error("Gig not found or you don't have permission to view it")
           router.push("/client/my-gigs")
           return
+        }
+
+        if (gigData.location) {
+          console.log('Raw location:', gigData.location);
+          console.log('Location type:', typeof gigData.location);
+          console.log('Starts with POINT:', gigData.location.startsWith('POINT'));
+          console.log('Starts with 010100:', gigData.location.startsWith('010100'));
+          const coords = parsePostGISPoint(gigData.location);
+          console.log('Parsed coords:', coords);
+          if (coords) {
+            gigData._displayLocation = reverseGeocode(coords.lat, coords.lng);
+            gigData._distanceKm = calculateDistanceKm(coords.lat, coords.lng);
+            gigData._lat = coords.lat;
+            gigData._lng = coords.lng;
+          }
         }
 
         setGig(gigData)
@@ -182,8 +205,45 @@ export default function GigDetailPage() {
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <div>
-                    <p className="text-sm text-gray-500">Location</p>
-                    <p className="font-semibold capitalize">{gig.location}</p>
+                    <p className="text-sm text-gray-500">Distance</p>
+                    {gig._lat && gig._lng ? (
+                      userPosition ? (
+                        <button 
+                          onClick={() => {
+                            const url = `https://www.openstreetmap.org/?mlat=${gig._lat}&mlon=${gig._lng}#map=15/${gig._lat}/${gig._lng}`;
+                            window.open(url, '_blank');
+                          }}
+                          className="font-semibold text-blue-600 hover:underline text-left"
+                        >
+                          {formatDistance(calculateDistance(userPosition.latitude, userPosition.longitude, gig._lat, gig._lng))} away
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">{gig._distanceKm?.toFixed(1)} km from center</p>
+                          <Button 
+                            variant="link" 
+                            size="sm" 
+                            className="h-auto p-0 text-xs text-blue-600"
+                            onClick={requestUserLocation}
+                            disabled={locationLoading}
+                          >
+                            {locationLoading ? 'Getting...' : 'Find my distance'}
+                          </Button>
+                        </div>
+                      )
+                    ) : (
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        className="h-auto p-0 text-xs"
+                        asChild
+                      >
+                        <Link href={`/client/gigs/${gig.id}/edit`}>
+                          <Navigation className="h-3 w-3 mr-1" />
+                          Set location
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -266,12 +326,14 @@ export default function GigDetailPage() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full" asChild>
-                <Link href={`/client/gigs/${gig.id}/edit`}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Gig
-                </Link>
-              </Button>
+              {gig.status !== 'completed' && (
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href={`/client/gigs/${gig.id}/edit`}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Gig
+                  </Link>
+                </Button>
+              )}
               {gig.status === 'open' && gig.applications && gig.applications.length > 0 && (
                 <Button className="w-full bg-amber-500 hover:bg-amber-600" asChild>
                   <Link href={`/client/my-jobs/${gig.id}/applicants`}>
@@ -280,7 +342,50 @@ export default function GigDetailPage() {
                   </Link>
                 </Button>
               )}
-              {gig.status === 'completed' && (
+              {gig.status === 'in_progress' && (
+                <Button 
+                  className="w-full bg-purple-600 hover:bg-purple-700" 
+                  disabled={processingPayment}
+                  onClick={async () => {
+                    setProcessingPayment(true)
+                    try {
+                      const supabase = createClient()
+                      const { error: updateError } = await supabase
+                        .from('gigs')
+                        .update({ status: 'completed' })
+                        .eq('id', gig.id)
+                        .eq('status', 'in_progress')
+                      
+                      if (updateError) {
+                        toast.error('Failed to mark as completed: ' + updateError.message)
+                        setProcessingPayment(false)
+                        return
+                      }
+                       
+                      toast.success('Job marked as completed!')
+                      
+                      const result = await initiateChapaPayment(gig.id)
+                      console.log('Payment result:', result)
+                      if (result.error) {
+                        toast.error(String(result.error))
+                      } else if (result.checkout_url) {
+                        window.location.href = result.checkout_url
+                      } else {
+                        toast.error('Failed to initiate payment')
+                      }
+                    } catch (error) {
+                      console.error('Error:', error)
+                      toast.error('An error occurred')
+                    } finally {
+                      setProcessingPayment(false)
+                    }
+                  }}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Mark as Completed & Pay
+                </Button>
+              )}
+              {gig.status === 'completed' && gig.payment_status !== 'paid' && (
                 <Button 
                   className="w-full bg-green-600 hover:bg-green-700" 
                   disabled={processingPayment}
@@ -288,7 +393,7 @@ export default function GigDetailPage() {
                     setProcessingPayment(true)
                     const result = await initiateChapaPayment(gig.id)
                     if (result.error) {
-                      toast.error(result.error)
+                      toast.error(String(result.error))
                     } else if (result.checkout_url) {
                       window.location.href = result.checkout_url
                     } else {

@@ -1,0 +1,37 @@
+[
+  {
+    "trigger_name": "on_coin_purchase_created",
+    "event_object_table": "coin_purchases",
+    "action_statement": "EXECUTE FUNCTION update_coin_purchase_timestamp()",
+    "action_timing": "BEFORE",
+    "event_manipulation": "INSERT"
+  },
+  {
+    "trigger_name": "set_conversation_id",
+    "event_object_table": "messages",
+    "action_statement": "EXECUTE FUNCTION fill_conversation_id()",
+    "action_timing": "BEFORE",
+    "event_manipulation": "INSERT"
+  },
+  {
+    "trigger_name": "update_conversation_on_message",
+    "event_object_table": "messages",
+    "action_statement": "EXECUTE FUNCTION update_conversation_timestamp()",
+    "action_timing": "AFTER",
+    "event_manipulation": "INSERT"
+  },
+  {
+    "trigger_name": "on_profile_created",
+    "event_object_table": "profiles",
+    "action_statement": "EXECUTE FUNCTION create_wallet_on_profile()",
+    "action_timing": "AFTER",
+    "event_manipulation": "INSERT"
+  },
+  {
+    "trigger_name": "on_wallet_updated",
+    "event_object_table": "user_wallets",
+    "action_statement": "EXECUTE FUNCTION update_wallet_timestamp()",
+    "action_timing": "BEFORE",
+    "event_manipulation": "UPDATE"
+  }
+]

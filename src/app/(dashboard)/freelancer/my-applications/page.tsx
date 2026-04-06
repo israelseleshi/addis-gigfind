@@ -52,16 +52,17 @@ export default function MyApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([])
   const [startingWork, setStartingWork] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadApplications()
-  }, [])
-
   const loadApplications = async () => {
+    console.log('=== loadApplications called ===')
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
+      console.log('User:', user?.id)
 
       if (user) {
+        // Use cache-busting by adding a timestamp
+        const timestamp = Date.now()
+        
         const { data, error } = await supabase
           .from('applications')
           .select(`
@@ -74,9 +75,14 @@ export default function MyApplicationsPage() {
           .eq('freelancer_id', user.id)
           .order('created_at', { ascending: false })
 
+        console.log('Applications loaded:', data?.length, 'error:', error)
         if (error) {
           console.error('Error loading applications:', error)
         } else {
+          // Check each application's gig status
+          data?.forEach((app: any, i: number) => {
+            console.log(`App ${i + 1}: ${app.gig?.title} - gig status: ${app.gig?.status}, app status: ${app.status}`)
+          })
           setApplications(data || [])
         }
       }
@@ -87,15 +93,26 @@ export default function MyApplicationsPage() {
     }
   }
 
+  useEffect(() => {
+    loadApplications()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleStartWork = async (gigId: string) => {
+    console.log('=== handleStartWork called ===', gigId)
     setStartingWork(gigId)
     try {
       const result = await markGigInProgress(gigId)
+      console.log('markGigInProgress result:', result)
       if (result.error) {
-        toast.error(result.error)
+        toast.error(String(result.error))
       } else {
         toast.success('Job marked as in progress!')
-        window.location.reload()
+        console.log('Calling loadApplications...')
+        await loadApplications()
+        console.log('loadApplications completed - forcing re-render')
+        // Force state update to trigger re-render
+        setApplications(prev => [...prev])
       }
     } catch (error) {
       console.error('Start work error:', error)
@@ -106,14 +123,19 @@ export default function MyApplicationsPage() {
   }
 
   const handleCompleteWork = async (gigId: string) => {
+    console.log('=== handleCompleteWork called ===', gigId)
     setStartingWork(gigId)
     try {
       const result = await markGigComplete(gigId)
+      console.log('markGigComplete result:', result)
       if (result.error) {
-        toast.error(result.error)
+        toast.error(String(result.error))
       } else {
         toast.success('Job marked as complete! Waiting for client to pay.')
-        window.location.reload()
+        console.log('Calling loadApplications...')
+        await loadApplications()
+        console.log('loadApplications completed - forcing re-render')
+        setApplications(prev => [...prev])
       }
     } catch (error) {
       console.error('Complete work error:', error)
@@ -232,8 +254,9 @@ export default function MyApplicationsPage() {
                             View Details
                           </Link>
                         </Button>
-                        {app.status === 'accepted' && app.gig?.status === 'assigned' && (
+                        {app.status === 'accepted' && (app.gig?.status === 'assigned' || app.gig?.status === 'open') && (
                           <Button 
+                            type="button"
                             size="sm" 
                             className="bg-amber-500 hover:bg-amber-600 flex-1 sm:flex-none cursor-pointer"
                             onClick={() => app.gig?.id && handleStartWork(app.gig.id)}
@@ -246,6 +269,7 @@ export default function MyApplicationsPage() {
                         )}
                         {app.status === 'accepted' && app.gig?.status === 'in_progress' && (
                           <Button 
+                            type="button"
                             size="sm" 
                             className="bg-green-500 hover:bg-green-600 flex-1 sm:flex-none cursor-pointer"
                             onClick={() => app.gig?.id && handleCompleteWork(app.gig.id)}
@@ -254,6 +278,16 @@ export default function MyApplicationsPage() {
                             {startingWork === app.gig?.id ? (
                               <Loader2 className="w-3 h-3 animate-spin" />
                             ) : 'Mark Complete'}
+                          </Button>
+                        )}
+                        {app.status === 'accepted' && app.gig?.status === 'completed' && (
+                          <Button 
+                            type="button"
+                            size="sm" 
+                            className="bg-blue-500 hover:bg-blue-600 flex-1 sm:flex-none cursor-pointer"
+                            disabled
+                          >
+                            Completed
                           </Button>
                         )}
                       </div>

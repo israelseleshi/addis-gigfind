@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { Loader2, ArrowLeft, Tag, DollarSign, FileText, Send } from "lucide-react"
 import Link from "next/link"
+import { LocationPicker, parsePostGISPoint } from "@/components/gig/location-picker"
 
 const gigFormSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters." }),
@@ -21,6 +22,8 @@ const gigFormSchema = z.object({
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
   budget: z.string().min(1, { message: "Please enter a valid budget." }),
   location: z.string().min(1, { message: "Please select a location." }),
+  latitude: z.number(),
+  longitude: z.number(),
   status: z.string().min(1, { message: "Please select a status." }),
 })
 
@@ -38,17 +41,6 @@ const CATEGORIES = [
   { value: "tutoring", label: "Tutoring" },
 ]
 
-const LOCATIONS = [
-  { value: "bole", label: "Bole" },
-  { value: "kazanchis", label: "Kazanchis" },
-  { value: "piassa", label: "Piassa" },
-  { value: "addis_ketema", label: "Addis Ketema" },
-  { value: "gulele", label: "Gulele" },
-  { value: "yeka", label: "Yeka" },
-  { value: "arada", label: "Arada" },
-  { value: "nifas_silk", label: "Nifas Silk" },
-]
-
 const STATUSES = [
   { value: "open", label: "Open" },
   { value: "assigned", label: "Assigned" },
@@ -63,6 +55,8 @@ export default function EditGigPage() {
   const gigId = params.id as string
   const [loading, setLoading] = useState(false)
   const [fetchLoading, setFetchLoading] = useState(true)
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null)
+  
   const form = useForm<GigFormValues>({
     resolver: zodResolver(gigFormSchema),
     defaultValues: {
@@ -71,9 +65,18 @@ export default function EditGigPage() {
       description: "",
       budget: "",
       location: "",
+      latitude: 0,
+      longitude: 0,
       status: "",
     },
   })
+
+  const handleLocationSelect = (locationValue: string, lat: number, lng: number) => {
+    setCoordinates({ lat, lng });
+    form.setValue("location", locationValue);
+    form.setValue("latitude", lat);
+    form.setValue("longitude", lng);
+  };
 
   useEffect(() => {
     const fetchGig = async () => {
@@ -108,12 +111,24 @@ export default function EditGigPage() {
         }
 
         // Set form values
+        if (gig.location) {
+          const coords = parsePostGISPoint(gig.location);
+          if (coords) {
+            setCoordinates(coords);
+            form.setValue("latitude", coords.lat);
+            form.setValue("longitude", coords.lng);
+            form.setValue("location", "current");
+          } else {
+            form.setValue("location", gig.location || "");
+          }
+        }
+        
         form.reset({
           title: gig.title,
           category: gig.category,
           description: gig.description,
           budget: gig.budget.toString(),
-          location: gig.location,
+          location: gig.location ? "current" : "",
           status: gig.status,
         })
       } catch (error) {
@@ -146,7 +161,7 @@ export default function EditGigPage() {
           category: data.category,
           description: data.description,
           budget: parseInt(data.budget),
-          location: data.location,
+          location: data.latitude && data.longitude ? `POINT(${data.longitude} ${data.latitude})` : null,
           status: data.status,
         })
         .eq('id', gigId)
@@ -252,20 +267,10 @@ export default function EditGigPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-gray-700 font-medium">Location</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-gray-50 border-gray-200 focus:border-amber-500 focus:ring-amber-500">
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {LOCATIONS.map((loc) => (
-                          <SelectItem key={loc.value} value={loc.value}>
-                            {loc.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <LocationPicker
+                      onLocationSelect={handleLocationSelect}
+                      selectedLocation={field.value}
+                    />
                     <FormMessage className="text-red-500 text-sm" />
                   </FormItem>
                 )}

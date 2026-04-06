@@ -17,11 +17,7 @@ export default function ClientLayoutWrapper({ children }: { children: ReactNode 
     <>
       {showHeader && <Header />}
       <PageTransition>{children}</PageTransition>
-      <Toaster position="top-center" toastOptions={{
-        classNames: {
-          success: 'bg-amber-500 text-white border-amber-600',
-        },
-      }} />
+      <Toaster position="top-center" />
     </>
   );
 }

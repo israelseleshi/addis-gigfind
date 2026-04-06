@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Star, Navigation, Loader2, Mail, Phone } from 'lucide-react';
+import { Search, MapPin, Star, Navigation, Loader2, Mail, Phone, Grid, List, Map, Heart, Award } from 'lucide-react';
 import { createClient } from "@/lib/supabase/client";
 import { useGeolocation, formatDistance } from "@/hooks/use-geolocation";
 import { DistanceBadge } from "@/components/gig/distance-badge";
 import dynamic from "next/dynamic";
 import { getCoordinatesFromLocation } from "@/components/gig/location-picker";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const GigMap = dynamic(() => import("@/components/gig/gig-map").then(mod => ({ default: mod.GigMap })), {
   ssr: false,
@@ -33,6 +34,12 @@ interface Freelancer {
   skills?: string[];
 }
 
+const DESIGN_TEMPLATES = [
+  { id: 'cards', name: 'Card Grid' },
+  { id: 'list', name: 'List View' },
+  { id: 'modern', name: 'Modern Compact' },
+]
+
 function formatLocation(value: string) {
   if (!value) return 'Unknown';
   return value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -50,6 +57,8 @@ export default function FindFreelancersPage() {
   const [locationRequested, setLocationRequested] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
+  const [selectedDesign, setSelectedDesign] = useState('modern');
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadFreelancers();

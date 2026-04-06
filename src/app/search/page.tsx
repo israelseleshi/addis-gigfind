@@ -54,7 +54,9 @@ const LOCATIONS = [
   'Arada',
 ];
 
-function formatLocation(value: string) {
+function formatLocation(value: string | null | undefined) {
+  if (!value) return 'Location not set';
+  if (value.startsWith('POINT(')) return 'Location set';
   return value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 

@@ -100,7 +100,7 @@ export default function GigDetailPage({ params }: { params: Promise<{ gigId: str
     try {
       const result = await applyForGig({ gigId, coverNote });
       if (result.error) {
-        toast.error(result.error);
+        toast.error(String(result.error));
       } else {
         toast.success('Application submitted successfully!');
         setIsApplyModalOpen(false);

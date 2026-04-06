@@ -1,0 +1,142 @@
+{
+  "profiles": {
+    "accessible": true,
+    "columns": [
+      "id",
+      "full_name",
+      "role",
+      "phone_number",
+      "avatar_url",
+      "bio",
+      "location_sub_city",
+      "verification_status",
+      "average_rating",
+      "reviews_count",
+      "created_at",
+      "updated_at",
+      "is_onboarding_complete",
+      "is_banned",
+      "ban_reason",
+      "location"
+    ],
+    "sample": {
+      "id": "dc5ba84c-62e1-4744-97d1-fa652df9e8ab",
+      "full_name": "abel",
+      "role": "client",
+      "phone_number": null,
+      "avatar_url": null,
+      "bio": null,
+      "location_sub_city": null,
+      "verification_status": "unverified",
+      "average_rating": 0,
+      "reviews_count": 0,
+      "created_at": "2026-01-25T10:48:21.777627+00:00",
+      "updated_at": "2026-01-25T10:48:21.777627+00:00",
+      "is_onboarding_complete": false,
+      "is_banned": false,
+      "ban_reason": null,
+      "location": null
+    }
+  },
+  "gigs": {
+    "accessible": true,
+    "columns": [
+      "id",
+      "client_id",
+      "title",
+      "description",
+      "category",
+      "budget",
+      "status",
+      "created_at",
+      "updated_at",
+      "payment_status",
+      "payment_id",
+      "location"
+    ],
+    "sample": {
+      "id": "248d7adf-2c67-4c74-bffa-5bd4cd84bd57",
+      "client_id": "26a290f5-35a2-4a13-952c-3f6cd23d2b01",
+      "title": "House Painter Needed",
+      "description": "We need a painter by tomorrow at our house at Bole Apartments.",
+      "category": "design",
+      "budget": 3000,
+      "status": "assigned",
+      "created_at": "2026-01-29T14:42:51.466496+00:00",
+      "updated_at": "2026-01-29T14:42:51.466496+00:00",
+      "payment_status": "unpaid",
+      "payment_id": null,
+      "location": null
+    }
+  },
+  "applications": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "freelancer_profiles": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "client_profiles": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "user_wallets": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "coin_purchases": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "payments": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "reviews": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "conversations": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "messages": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "notifications": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "otp_verifications": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "telegram_accounts": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "telegram_link_codes": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  },
+  "verification_documents": {
+    "accessible": true,
+    "columns": [],
+    "sample": null
+  }
+}

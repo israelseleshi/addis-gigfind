@@ -211,6 +211,56 @@
   },
   {
     "schemaname": "public",
+    "tablename": "user_wallets",
+    "policyname": "Users can insert own wallet",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "coin_purchases",
+    "policyname": "Users can update own purchases",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_wallets",
+    "policyname": "Users cannot delete wallet",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "false",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "coin_purchases",
+    "policyname": "Users cannot delete purchases",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "false",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "Users can update own location",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
     "tablename": "applications",
     "policyname": "allow_user_select",
     "permissive": "PERMISSIVE",
@@ -628,5 +678,15 @@
     "cmd": "ALL",
     "qual": "(auth.role() = 'service_role'::text)",
     "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "gigs",
+    "policyname": "Freelancers can update accepted gig",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "has_accepted_application_for_gig(id) AND status IN ('assigned', 'in_progress')",
+    "with_check": "status IN ('in_progress', 'completed')"
   }
 ]

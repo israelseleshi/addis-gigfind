@@ -13,6 +13,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Quote } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { createClient } from "@/lib/supabase/client";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 
 const testimonials = [
   {
@@ -33,6 +36,58 @@ const testimonials = [
 ];
 
 export default function Home() {
+  const [user, setUser] = useState<{ id: string } | null>(null)
+  const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string; role?: string } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUser(user)
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url, role')
+          .eq('id', user.id)
+          .single()
+        if (profileData) setProfile(profileData)
+      }
+      setLoading(false)
+    }
+    getUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user)
+        supabase.from('profiles').select('full_name, avatar_url, role').eq('id', session.user.id).single()
+          .then(({ data }) => setProfile(data))
+      } else {
+        setUser(null)
+        setProfile(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'U'
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  }
+
+  const getDashboardPath = () => {
+    if (profile?.role === 'freelancer') return '/freelancer/dashboard'
+    if (profile?.role === 'client') return '/client/dashboard'
+    if (profile?.role === 'admin') return '/admin/dashboard'
+    return '/onboarding/client'
+  }
+
+  const getProfilePath = () => {
+    if (profile?.role === 'freelancer') return '/freelancer/profile'
+    if (profile?.role === 'client') return '/client/profile'
+    return '/client/profile'
+  }
   return (
     <div className="w-full">
       <section className="relative min-h-[35rem] sm:min-h-[38rem] md:min-h-[40rem] lg:min-h-[45rem] xl:min-h-[50rem] 2xl:min-h-[55rem] flex items-center">
@@ -62,7 +117,25 @@ export default function Home() {
               Connecting skilled professionals with clients in Addis Ababa. Discover talent, build relationships, and grow your business.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
-              <Button className="bg-amber-500 hover:bg-amber-600 w-full sm:w-auto sm:text-base sm:px-8 sm:py-5">Get Started</Button>
+              {loading ? (
+                <Button className="bg-amber-500 hover:bg-amber-600 w-full sm:w-auto sm:text-base sm:px-8 sm:py-5" disabled>
+                  Loading...
+                </Button>
+              ) : user ? (
+                <Link href={getDashboardPath()} className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 w-full sm:w-auto sm:text-base sm:px-8 sm:py-5 rounded-full text-white font-semibold transition-colors justify-center">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={profile?.avatar_url || ''} />
+                    <AvatarFallback className="bg-amber-400 text-white text-xs">
+                      {getInitials(profile?.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {profile?.full_name || 'My Profile'}
+                </Link>
+              ) : (
+                <Link href="/register" className="bg-amber-500 hover:bg-amber-600 w-full sm:w-auto sm:text-base sm:px-8 sm:py-5 rounded-full text-white font-semibold transition-colors flex items-center justify-center">
+                  <Button className="bg-transparent hover:bg-transparent p-0">Get Started</Button>
+                </Link>
+              )}
               <Button variant="outline" className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 w-full sm:w-auto sm:text-base sm:px-8 sm:py-5">Learn More</Button>
             </div>
           </motion.div>

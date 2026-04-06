@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import Link from 'next/link'
-import { Briefcase, Users, Clock, TrendingUp, Plus, ArrowRight, Activity, Zap, DollarSign, CreditCard } from 'lucide-react'
+import { Briefcase, Users, Clock, TrendingUp, Plus, ArrowRight, Activity, Zap, DollarSign, CreditCard, FileText, CheckCircle, MessageSquare } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getClientDashboardStats, getRecentGigs, getRecentActivity } from '@/lib/actions/dashboard'
 import { motion } from 'framer-motion'
+import { WalletCard } from '@/components/wallet/wallet-card'
 
 interface DashboardStats {
   activeGigs: number
@@ -31,6 +32,24 @@ interface QuickAction {
   label: string
   href: string
   color: string
+}
+
+interface Gig {
+  id: string
+  title: string
+  status: string
+  budget: number | string
+  created_at: string
+  applications_count?: number
+}
+
+interface Activity {
+  id: string
+  type: string
+  text?: string
+  description?: string
+  created_at: string
+  time?: string
 }
 
 const containerVariants = {
@@ -78,13 +97,15 @@ function QuickAction({ icon: Icon, label, href, color }: { icon: React.ElementTy
         className="group relative overflow-hidden rounded-xl bg-white p-3 sm:p-4 shadow-sm border border-zinc-100 hover:shadow-md transition-all"
       >
         <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-5 transition-opacity`} />
-        <div className={`inline-flex p-1.5 sm:p-2 md:p-3 rounded-lg bg-gradient-to-br ${color} mb-2 sm:mb-3 md:mb-4 shadow-md`}>
-          <Icon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
+        <div className="flex items-center gap-3">
+          <div className={`p-2 sm:p-3 rounded-lg bg-gradient-to-br ${color} shadow-md`}>
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+          </div>
+          <div>
+            <p className="font-semibold text-zinc-900 text-sm sm:text-base">{label}</p>
+          </div>
+          <ArrowRight className="h-4 w-4 ml-auto text-zinc-400 group-hover:text-zinc-600 transition-colors" />
         </div>
-        <p className="font-semibold text-zinc-900 text-xs sm:text-sm md:text-base lg:text-lg">{label}</p>
-        <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground mt-0.5 sm:mt-1 flex items-center gap-1 group-hover:text-orange-500 transition-colors">
-          Open <ArrowRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-        </p>
       </motion.div>
     </Link>
   )
@@ -96,6 +117,9 @@ function StatusBadge({ status }: { status: string }) {
     Completed: 'bg-zinc-100 text-zinc-700 border-zinc-200',
     Draft: 'bg-amber-100 text-amber-700 border-amber-200',
     Pending: 'bg-orange-100 text-orange-700 border-orange-200',
+    open: 'bg-green-100 text-green-700 border-green-200',
+    assigned: 'bg-blue-100 text-blue-700 border-blue-200',
+    in_progress: 'bg-amber-100 text-amber-700 border-amber-200',
   }
   
   return (
@@ -105,12 +129,21 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
+const DESIGN_TEMPLATES = [
+  { id: 'modern', name: 'Modern Cards' },
+  { id: 'compact', name: 'Compact Grid' },
+  { id: 'timeline', name: 'Activity Timeline' },
+  { id: 'hero', name: 'Hero Focus' },
+]
+
 export default function ClientDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<{ full_name: string } | null>(null)
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [recentGigs, setRecentGigs] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
+  const [selectedDesign, setSelectedDesign] = useState('modern')
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -161,13 +194,6 @@ export default function ClientDashboardPage() {
     fetchData()
   }, [])
 
-  const statsData: StatItem[] = [
-    { title: 'Active Gigs', value: stats?.activeGigs.toString() || '0', icon: Briefcase, color: 'from-blue-500 to-blue-600' },
-    { title: 'Total Hires', value: stats?.totalHires.toString() || '0', icon: Users, color: 'from-green-500 to-green-600' },
-    { title: 'Pending Applications', value: stats?.pendingApplications.toString() || '0', icon: Clock, color: 'from-amber-500 to-orange-500' },
-    { title: 'Completed Jobs', value: stats?.completedJobs.toString() || '0', icon: TrendingUp, color: 'from-purple-500 to-purple-600' },
-  ]
-
   const quickActions: QuickAction[] = [
     { icon: Plus, label: 'Post New Gig', href: '/client/gigs/create', color: 'from-orange-500 to-amber-500' },
     { icon: Activity, label: 'View Applicants', href: '/client/applicants', color: 'from-blue-500 to-cyan-500' },
@@ -177,224 +203,437 @@ export default function ClientDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="p-3 sm:p-4">
-                <CardHeader className="pb-2 p-0 sm:p-1">
-                  <Skeleton className="h-3 w-16 sm:h-4 sm:w-20" />
-                </CardHeader>
-                <CardContent className="p-0 sm:p-1">
-                  <Skeleton className="h-6 w-12 sm:h-8 sm:w-16" />
-                </CardContent>
-              </Card>
-            ))}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Skeleton className="h-48 w-full" />
+          <div className="lg:col-span-2">
+            <Skeleton className="h-48 w-full" />
           </div>
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
-            <Card className="xl:col-span-2">
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <Skeleton className="h-5 w-24 sm:h-6 sm:w-32" />
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6 pt-0 sm:pt-0 md:pt-0">
-                <div className="space-y-2 sm:space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-16 sm:h-20 w-full" />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <Skeleton className="h-5 w-24 sm:h-6 sm:w-32" />
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-                <div className="space-y-2 sm:space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-14 sm:h-16 w-full" />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Skeleton className="h-64 w-full" />
           </div>
+          <Skeleton className="h-64 w-full" />
         </div>
       </div>
     )
   }
 
+  const renderDesign = () => {
+    return <ClientDesignModern { ...{ stats, recentGigs, activities, quickActions, profile } } />
+  }
+
+  return (
+    <div className="space-y-6">
+      {renderDesign()}
+    </div>
+  )
+}
+
+function ClientDesignModern({ stats, recentGigs, activities, quickActions, profile }: any) {
   return (
     <motion.div
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="min-h-screen bg-zinc-50/50 pb-14 sm:pb-16 md:pb-20 lg:pb-8 xl:pb-10 space-y-4 sm:space-y-6 md:space-y-8"
+      className="space-y-6"
     >
-      {/* Welcome Section */}
       <motion.div variants={itemVariants}>
         <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight text-zinc-900">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-zinc-900">
             Welcome back, {profile?.full_name || 'Client'}
           </h1>
-          <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1 sm:mt-2">Here&apos;s what&apos;s happening with your gigs today.</p>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Here&apos;s what&apos;s happening with your gigs today.</p>
         </div>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-        {statsData.map((stat: StatItem, index: number) => (
-          <StatCard key={stat.title} {...stat} delay={index * 0.1} />
-        ))}
-      </div>
-
-      {/* Payment Stats */}
+      {/* Wallet and Payment Stats */}
       <motion.div variants={itemVariants}>
-        <Card className="border-0 shadow-lg bg-gradient-to-r from-green-50 to-emerald-50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-green-600" />
-                Payment Summary
-              </CardTitle>
-              <CardDescription>Track your payments to freelancers</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                  <DollarSign className="w-4 h-4" />
-                  Total Spent
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-1">
+            <WalletCard userRole="client" />
+          </div>
+          <div className="lg:col-span-3">
+            <Card className="border-0 shadow-lg bg-gradient-to-r from-green-50 to-emerald-50 h-full">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-green-600" />
+                    Payment Summary
+                  </CardTitle>
+                  <CardDescription>Track your payments to freelancers</CardDescription>
                 </div>
-                <p className="text-2xl font-bold text-gray-800">0 ETB</p>
-                <p className="text-xs text-gray-400">All time</p>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                  <Users className="w-4 h-4" />
-                  Freelancers Hired
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                      <DollarSign className="w-4 h-4" />
+                      Total Spent
+                    </div>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800">{stats?.totalSpent?.toLocaleString() || 0} ETB</p>
+                    <p className="text-xs text-gray-400">All time</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                      <Users className="w-4 h-4" />
+                      Freelancers Hired
+                    </div>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800">{stats?.totalHires || 0}</p>
+                    <p className="text-xs text-gray-400">This month</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                      <Clock className="w-4 h-4" />
+                      Pending
+                    </div>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800">{stats?.pendingPayments || 0}</p>
+                    <p className="text-xs text-gray-400">Awaiting completion</p>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-800">0</p>
-                <p className="text-xs text-gray-400">This month</p>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                  <Clock className="w-4 h-4" />
-                  Pending Payments
-                </div>
-                <p className="text-2xl font-bold text-gray-800">0</p>
-                <p className="text-xs text-gray-400">Awaiting completion</p>
-              </div>
-            </div>
-            <div className="mt-4 flex gap-3">
-              <Button asChild className="bg-green-600 hover:bg-green-700">
-                <Link href="/client/my-jobs">
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  Pay Freelancers
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </motion.div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Gigs */}
-        <motion.div variants={itemVariants} className="xl:col-span-2">
+        <motion.div variants={itemVariants} className="lg:col-span-2">
           <Card className="border-0 shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
-                <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl">Your Recent Gigs</CardTitle>
-                <CardDescription className="text-xs sm:text-sm md:text-base">Manage and track your posted gigs</CardDescription>
+                <CardTitle className="text-lg">Your Recent Gigs</CardTitle>
+                <CardDescription className="text-xs">Manage your posted gigs</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm">
-                <Link href="/client/my-jobs">View All</Link>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/client/my-gigs">View All</Link>
               </Button>
             </CardHeader>
-            <CardContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
-              <div className="space-y-2 sm:space-y-3 md:space-y-4">
-                {recentGigs.map((gig) => (
-                  <motion.div
-                    key={gig.id}
-                    whileHover={{ x: 4 }}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 md:p-5 bg-zinc-50 rounded-xl border border-zinc-100 hover:border-orange-200 hover:bg-orange-50/30 transition-all cursor-pointer gap-2 sm:gap-3"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center flex-shrink-0">
-                        <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-orange-500" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-zinc-900 text-xs sm:text-sm md:text-base lg:text-lg truncate">{gig.title}</h3>
-                        <p className="text-xs sm:text-sm md:text-base text-muted-foreground">{gig.budget}</p>
-                      </div>
+            <CardContent>
+              <div className="space-y-3">
+                {recentGigs.slice(0, 4).map((gig: Gig) => (
+                  <div key={gig.id} className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg hover:bg-zinc-100 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-zinc-900 truncate">{gig.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(gig.created_at).toLocaleDateString()} • {gig.budget?.toLocaleString()} ETB
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-auto sm:ml-0">
+                    <div className="flex items-center gap-3 ml-4">
                       <StatusBadge status={gig.status} />
-                      <span className="text-xs text-muted-foreground hidden xs:inline">
-                        {gig.applicants} applicants
-                      </span>
-                      <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm">
-                        <Link href={`/client/my-jobs/${gig.id}`}>View</Link>
-                      </Button>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
+                {recentGigs.length === 0 && (
+                  <div className="text-center py-8">
+                    <Briefcase className="h-12 w-12 text-zinc-300 mx-auto mb-3" />
+                    <p className="text-muted-foreground">No gigs yet. Post your first gig!</p>
+                    <Button asChild className="mt-4 bg-amber-600">
+                      <Link href="/client/gigs/create">Post a Gig</Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Sidebar - Quick Actions & Activity */}
-        <div className="space-y-3 sm:space-y-4 md:space-y-6 lg:space-y-8">
-          {/* Quick Actions */}
-          <motion.div variants={itemVariants}>
-            <Card className="border-0 shadow-lg">
-              <CardHeader className="pb-3 px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6">
-                <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl">Quick Actions</CardTitle>
-                <CardDescription className="text-xs sm:text-sm md:text-base">Common tasks and shortcuts</CardDescription>
-              </CardHeader>
-              <CardContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
-                <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
-                  {quickActions.map((action) => (
-                    <QuickAction key={action.label} {...action} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+        {/* Quick Actions */}
+        <motion.div variants={itemVariants}>
+          <Card className="border-0 shadow-lg h-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {quickActions.map((action: QuickAction, index: number) => (
+                <QuickAction key={index} {...action} />
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
-          {/* Recent Activity */}
-          <motion.div variants={itemVariants}>
-            <Card className="border-0 shadow-lg">
-              <CardHeader className="pb-3 px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6">
-                <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl">Recent Activity</CardTitle>
-                <CardDescription className="text-xs sm:text-sm md:text-base">Your latest updates</CardDescription>
-              </CardHeader>
-              <CardContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
-                <div className="space-y-2 sm:space-y-3 md:space-y-4">
-                  {activities.length > 0 ? (
-                    activities.map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-2 sm:gap-3">
-                        <div className={`w-2 h-2 rounded-full mt-1.5 sm:mt-2 flex-shrink-0 ${
-                          activity.type === 'application' ? 'bg-orange-500' :
-                          activity.type === 'completed' ? 'bg-green-500' :
-                          activity.type === 'payment' ? 'bg-blue-500' : 'bg-purple-500'
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs sm:text-sm md:text-base font-medium text-zinc-900 line-clamp-2">{activity.text}</p>
-                          <p className="text-xs sm:text-sm text-muted-foreground">{activity.time}</p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 sm:py-6 md:py-8">
-                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">No recent activity</p>
-                    </div>
-                  )}
+      {/* Recent Activity */}
+      <motion.div variants={itemVariants}>
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-lg sm:text-xl">Recent Activity</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Latest updates on your gigs</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {activities.slice(0, 5).map((activity: Activity) => (
+                <div key={activity.id} className="flex items-start gap-3 p-3 bg-zinc-50 rounded-lg">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <Activity className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-zinc-900">{activity.description}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(activity.created_at).toLocaleDateString()}</p>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              ))}
+              {activities.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">No recent activity</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function ClientDesignCompact({ stats, recentGigs, activities, quickActions, profile }: any) {
+  return (
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-4">
+      <motion.div variants={itemVariants}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-zinc-900">Dashboard</h1>
+            <p className="text-xs text-muted-foreground">{profile?.full_name || 'Client'}</p>
+          </div>
+          <Button asChild className="bg-amber-600">
+            <Link href="/client/gigs/create">
+              <Plus className="w-4 h-4 mr-1" />
+              Post Gig
+            </Link>
+          </Button>
+        </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <Card className="p-3 bg-gradient-to-br from-orange-50 to-amber-50">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-orange-500 rounded-lg">
+              <Briefcase className="w-3 h-3 text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{stats?.activeGigs || 0}</p>
+              <p className="text-xs text-muted-foreground">Active</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-3 bg-gradient-to-br from-green-50 to-emerald-50">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-green-500 rounded-lg">
+              <CheckCircle className="w-3 h-3 text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{stats?.completedJobs || 0}</p>
+              <p className="text-xs text-muted-foreground">Completed</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-3 bg-gradient-to-br from-blue-50 to-cyan-50">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-blue-500 rounded-lg">
+              <DollarSign className="w-3 h-3 text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{stats?.totalSpent?.toLocaleString() || 0}</p>
+              <p className="text-xs text-muted-foreground">Spent (ETB)</p>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-4">
+          <CardHeader className="p-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Your Gigs</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 space-y-2">
+            {recentGigs.slice(0, 3).map((gig: any) => (
+              <div key={gig.id} className="flex justify-between text-xs">
+                <span className="truncate">{gig.title}</span>
+                <StatusBadge status={gig.status} />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="p-4">
+          <CardHeader className="p-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 space-y-2">
+            {quickActions.slice(0, 3).map((action: any, i: number) => (
+              <Button key={i} asChild variant="outline" size="sm" className="w-full justify-start text-xs">
+                <Link href={action.href}>
+                  <action.icon className="w-4 h-4 mr-2" />
+                  {action.label}
+                </Link>
+              </Button>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </motion.div>
+  )
+}
+
+function ClientDesignTimeline({ stats, recentGigs, activities, quickActions, profile }: any) {
+  return (
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-6">
+      <motion.div variants={itemVariants} className="text-center py-8 bg-gradient-to-r from-green-100 to-emerald-100 rounded-2xl">
+        <h1 className="text-2xl font-bold text-zinc-900">Welcome, {profile?.full_name || 'Client'}!</h1>
+        <p className="text-muted-foreground mt-1">Manage your gigs and freelancers</p>
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 space-y-4">
+          <h2 className="text-lg font-semibold">Your Gigs</h2>
+          <div className="space-y-3">
+            {recentGigs.slice(0, 5).map((gig: any, i: number) => (
+              <motion.div 
+                key={gig.id} 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="flex items-start gap-4 p-4 bg-white rounded-xl border shadow-sm"
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  gig.status === 'open' ? 'bg-green-100' :
+                  gig.status === 'in_progress' ? 'bg-amber-100' :
+                  'bg-zinc-100'
+                }`}>
+                  {gig.status === 'open' ? <Briefcase className="w-5 h-5 text-green-600" /> :
+                   gig.status === 'in_progress' ? <Clock className="w-5 h-5 text-amber-600" /> :
+                   <CheckCircle className="w-5 h-5 text-zinc-600" />}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium">{gig.title}</p>
+                  <p className="text-sm text-muted-foreground">{gig.budget?.toLocaleString()} ETB • {new Date(gig.created_at).toLocaleDateString()}</p>
+                </div>
+                <StatusBadge status={gig.status} />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Card className="p-4 bg-gradient-to-br from-amber-500 to-orange-500 text-white">
+            <div className="text-center">
+              <DollarSign className="w-8 h-8 mx-auto mb-2" />
+              <p className="text-3xl font-bold">{stats?.totalSpent?.toLocaleString() || 0}</p>
+              <p className="text-sm opacity-80">Total Spent (ETB)</p>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <h3 className="font-semibold mb-3">Quick Actions</h3>
+            <div className="space-y-2">
+              {quickActions.map((action: any, i: number) => (
+                <Button key={i} asChild variant="outline" className="w-full justify-start text-xs">
+                  <Link href={action.href}>
+                    <action.icon className="w-4 h-4 mr-2" />
+                    {action.label}
+                  </Link>
+                </Button>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+function ClientDesignHero({ stats, recentGigs, activities, quickActions, profile }: any) {
+  return (
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-8">
+      <motion.div variants={itemVariants} className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 to-zinc-800 text-white p-8">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full -translate-y-1/2 translate-x-1/2 opacity-20" />
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold mb-2">Manage Your Gigs</h1>
+          <p className="text-zinc-300 mb-6">Post jobs and find the best freelancers</p>
+          <div className="flex gap-3">
+            <Button asChild className="bg-amber-500 hover:bg-amber-600">
+              <Link href="/client/gigs/create">
+                <Plus className="w-4 h-4 mr-2" />
+                Post New Gig
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="text-white border-white/30 hover:bg-white/10">
+              <Link href="/client/my-gigs">
+                View My Gigs
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+          <div className="w-14 h-14 mx-auto bg-green-100 rounded-2xl flex items-center justify-center mb-4">
+            <Briefcase className="w-7 h-7 text-green-600" />
+          </div>
+          <p className="text-3xl font-bold">{stats?.activeGigs || 0}</p>
+          <p className="text-muted-foreground">Active Gigs</p>
+        </Card>
+        <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+          <div className="w-14 h-14 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
+            <Users className="w-7 h-7 text-blue-600" />
+          </div>
+          <p className="text-3xl font-bold">{stats?.totalHires || 0}</p>
+          <p className="text-muted-foreground">Freelancers Hired</p>
+        </Card>
+        <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+          <div className="w-14 h-14 mx-auto bg-amber-100 rounded-2xl flex items-center justify-center mb-4">
+            <DollarSign className="w-7 h-7 text-amber-600" />
+          </div>
+          <p className="text-3xl font-bold">{stats?.totalSpent?.toLocaleString() || 0}</p>
+          <p className="text-muted-foreground">Total Spent</p>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Latest Gigs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentGigs.slice(0, 4).map((gig: any) => (
+                  <Link key={gig.id} href={`/client/my-jobs/${gig.id}`}>
+                    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-zinc-50">
+                      <div>
+                        <p className="font-medium">{gig.title}</p>
+                        <p className="text-sm text-muted-foreground">{new Date(gig.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-amber-600">{gig.budget?.toLocaleString()} ETB</p>
+                        <StatusBadge status={gig.status} />
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {quickActions.map((action: any, i: number) => (
+                <Button key={i} asChild variant="outline" className="w-full justify-start">
+                  <Link href={action.href}>
+                    <action.icon className="w-4 h-4 mr-2" />
+                    {action.label}
+                  </Link>
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </motion.div>

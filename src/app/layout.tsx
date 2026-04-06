@@ -75,6 +75,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${publicSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        suppressHydrationWarning
       >
         <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
       </body>

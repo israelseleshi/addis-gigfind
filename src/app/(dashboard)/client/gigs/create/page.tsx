@@ -106,7 +106,7 @@ export default function PostGigPage() {
           category: data.category,
           description: data.description,
           budget: parseInt(data.budget),
-          location: data.location,
+          location: data.latitude && data.longitude ? `POINT(${data.longitude} ${data.latitude})` : null,
           client_id: user.id,
           status: "open",
         })

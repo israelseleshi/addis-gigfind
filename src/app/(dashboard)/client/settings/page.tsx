@@ -142,7 +142,7 @@ function ProfileForm() {
       const result = await uploadProfilePicture(formData);
       
       if (result.error) {
-        toast.error(result.error);
+        toast.error(String(result.error));
         setPreviewUrl(null);
       } else {
         toast.success('Profile picture updated successfully!');
@@ -176,7 +176,7 @@ function ProfileForm() {
       const result = await removeProfilePicture();
       
       if (result.error) {
-        toast.error(result.error);
+        toast.error(String(result.error));
       } else {
         toast.success('Profile picture removed successfully!');
         // Reload profile to update UI

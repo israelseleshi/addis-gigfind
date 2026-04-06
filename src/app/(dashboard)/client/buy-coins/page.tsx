@@ -3,64 +3,75 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { CreditCard, DollarSign, History } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CoinPackageCard } from "@/components/payment/coin-package-card";
+import { toast } from "sonner";
+import { ShieldCheck, CreditCard, HelpCircle, Coins } from "lucide-react";
 
-export default function ClientPaymentsPage() {
+const COIN_PACKAGES = [
+  {
+    id: "starter",
+    coins: 10,
+    price: 100,
+    label: "Starter Pack",
+    popular: false,
+  },
+  {
+    id: "pro",
+    coins: 25,
+    price: 200,
+    label: "Pro Pack",
+    popular: true,
+  },
+  {
+    id: "business",
+    coins: 50,
+    price: 350,
+    label: "Business Pack",
+    popular: false,
+  },
+];
+
+export default function ClientBuyCoinsPage() {
   const router = useRouter();
   const supabase = createClient();
+  const [loading, setLoading] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [payments, setPayments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('Client buy-coins: user:', user?.id);
       
       if (!user) {
-        router.push('/login?redirect=/client/payments');
+        router.push('/login?redirect=/client/buy-coins');
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
 
+      console.log('Client buy-coins: profile:', profile, 'error:', profileError);
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        router.push('/');
+        return;
+      }
+
       if (profile?.role !== 'client') {
+        console.log('Profile role check failed:', profile?.role);
         router.push('/');
         return;
       }
 
       setCheckingAuth(false);
-      fetchPayments(user.id);
     };
 
     checkAuth();
   }, [router, supabase]);
-
-  const fetchPayments = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('payments')
-        .select(`
-          *,
-          gig:gigs(title),
-          freelancer:profiles!freelancer_id(full_name)
-        `)
-        .eq('client_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        setPayments(data);
-      }
-    } catch (err) {
-      console.error("Error fetching payments:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (checkingAuth) {
     return (
@@ -70,116 +81,101 @@ export default function ClientPaymentsPage() {
     );
   }
 
-  const totalSpent = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const handleBuy = async (pkg: typeof COIN_PACKAGES[0]) => {
+    setLoading(pkg.id);
+    
+    try {
+      const response = await fetch('/api/wallet/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packageId: pkg.id })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        toast.error(data.error || 'Failed to initialize payment');
+        setLoading(null);
+      }
+    } catch (error) {
+      toast.error('Payment initialization failed');
+      setLoading(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">Payments</h1>
-        <p className="text-sm text-gray-500">Manage your payments to freelancers</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Buy Coins</h1>
+          <p className="text-sm text-gray-500">Get coins to access premium features</p>
+        </div>
+        <div className="flex items-center gap-2 text-green-600 text-sm">
+          <ShieldCheck className="w-4 h-4" />
+          Secure Payment via Chapa
+        </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* How it works */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Spent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-red-500" />
-              <span className="text-2xl font-bold">{totalSpent.toLocaleString()} ETB</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Payments</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-blue-500" />
-              <span className="text-2xl font-bold">{payments.length}</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <History className="w-5 h-5 text-yellow-500" />
-              <span className="text-2xl font-bold">
-                {payments.filter(p => p.status === 'pending').length}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-amber-50 p-4 rounded-lg text-center">
+          <Coins className="w-8 h-8 text-amber-600 mx-auto mb-2" />
+          <h3 className="font-semibold text-gray-800">1. Buy Coins</h3>
+          <p className="text-sm text-gray-500">Choose a package</p>
+        </div>
+        <div className="bg-amber-50 p-4 rounded-lg text-center">
+          <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
+            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </div>
+          <h3 className="font-semibold text-gray-800">2. Access Premium</h3>
+          <p className="text-sm text-gray-500">Use coins for features</p>
+        </div>
+        <div className="bg-amber-50 p-4 rounded-lg text-center">
+          <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
+            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="font-semibold text-gray-800">3. Get Results</h3>
+          <p className="text-sm text-gray-500">Grow your business</p>
+        </div>
       </div>
 
-      {/* Payment History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-600"></div>
-            </div>
-          ) : payments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>No payments yet</p>
-              <p className="text-sm">When you hire freelancers, payments will appear here</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {payments.map((payment) => (
-                <div
-                  key={payment.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium text-gray-800">
-                      {payment.gig?.title || 'Gig Payment'}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      To: {payment.freelancer?.full_name || 'Freelancer'}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(payment.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-gray-800">
-                      {Number(payment.amount).toLocaleString()} ETB
-                    </p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      payment.status === 'paid' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {payment.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Coin Packages */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {COIN_PACKAGES.map((pkg) => (
+          <CoinPackageCard
+            key={pkg.id}
+            pkg={pkg}
+            onBuy={handleBuy}
+            loading={loading === pkg.id}
+          />
+        ))}
+      </div>
 
-      {/* Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-800 mb-2">How Payments Work</h3>
-        <ul className="text-sm text-blue-700 space-y-1">
-          <li>• When you hire a freelancer, you pay directly via Chapa</li>
-          <li>• A 10% platform fee is added to the gig budget</li>
-          <li>• Payments are processed securely through Chapa</li>
-        </ul>
+      {/* Payment Methods */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <CreditCard className="w-5 h-5" />
+          Accepted Payment Methods
+        </h3>
+        <div className="flex flex-wrap gap-4">
+          {["TeleBirr", "CBE Birr", "Awash Bank", "Visa/MasterCard"].map((method) => (
+            <div key={method} className="bg-gray-100 px-4 py-2 rounded-lg text-sm font-medium text-gray-700">
+              {method}
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex items-start gap-2 text-sm text-gray-500">
+          <HelpCircle className="w-4 h-4 mt-0.5" />
+          <p>All payments are processed securely through Chapa.</p>
+        </div>
       </div>
     </div>
   );
