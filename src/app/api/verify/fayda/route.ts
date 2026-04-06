@@ -1,22 +1,29 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
-// Mock Fayda verification - simulates the real Fayda eSignet flow
-// In production, this would connect to auth.fayda.et
-
-// Simulated OTP storage (in production, use Redis or database)
-const otpStore = new Map<string, { otp: string; expires: number; data: any }>()
-
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
+function createDemoToken(faydaNumber: string, otp: string, name: string): string {
+  const payload = JSON.stringify({ faydaNumber, otp, name: name || 'Demo User', expires: Date.now() + 5 * 60 * 1000 })
+  return Buffer.from(payload).toString('base64')
+}
+
+function parseDemoToken(token: string): { faydaNumber: string; otp: string; name: string; expires: number } | null {
+  try {
+    const decoded = JSON.parse(Buffer.from(token, 'base64').toString())
+    return decoded
+  } catch {
+    return null
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { action, faydaNumber, otp, name, dob } = body
+    const { action, faydaNumber, otp, name } = body
 
-    // Action 1: Request OTP (simulates Fayda sending OTP to phone)
     if (action === 'request_otp') {
       if (!faydaNumber || faydaNumber.length !== 11) {
         return NextResponse.json(
@@ -27,28 +34,25 @@ export async function POST(req: NextRequest) {
 
       const otpCode = generateOTP()
       
-      // Store OTP for 5 minutes
-      otpStore.set(faydaNumber, {
-        otp: otpCode,
-        expires: Date.now() + 5 * 60 * 1000,
-        data: {
-          faydaNumber,
-          name: name || 'Demo User',
-          dob: dob || '1995-01-01',
-        }
-      })
+      const demoToken = createDemoToken(faydaNumber, otpCode, name || 'Demo User')
 
       console.log(`[Mock Fayda] OTP for ${faydaNumber}: ${otpCode}`)
 
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         message: 'OTP sent to registered phone number',
-        // For demo purposes, return the OTP so user can test
         demo_otp: otpCode
       })
+
+      response.cookies.set('fayda_otp_token', demoToken, {
+        httpOnly: false,
+        maxAge: 5 * 60,
+        path: '/',
+      })
+
+      return response
     }
 
-    // Action 2: Verify OTP (simulates Fayda returning verified data)
     if (action === 'verify') {
       if (!faydaNumber || !otp) {
         return NextResponse.json(
@@ -57,17 +61,32 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      const stored = otpStore.get(faydaNumber)
+      const token = req.cookies.get('fayda_otp_token')?.value
       
-      if (!stored) {
+      if (!token) {
         return NextResponse.json(
           { success: false, error: 'No OTP request found. Please request OTP first.' },
           { status: 400 }
         )
       }
 
+      const stored = parseDemoToken(token)
+      
+      if (!stored) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid session. Please request OTP again.' },
+          { status: 400 }
+        )
+      }
+
+      if (stored.faydaNumber !== faydaNumber) {
+        return NextResponse.json(
+          { success: false, error: 'Fayda number mismatch. Please start over.' },
+          { status: 400 }
+        )
+      }
+
       if (Date.now() > stored.expires) {
-        otpStore.delete(faydaNumber)
         return NextResponse.json(
           { success: false, error: 'OTP expired. Please request a new one.' },
           { status: 400 }
@@ -81,22 +100,19 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      // OTP verified - return the verified data
-      const verifiedData = {
-        fayda_number: faydaNumber,
-        full_name: stored.data.name,
-        date_of_birth: stored.data.dob,
-        verified_at: new Date().toISOString()
-      }
-
-      // Clean up OTP
-      otpStore.delete(faydaNumber)
-
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         verified: true,
-        data: verifiedData
+        data: {
+          fayda_number: faydaNumber,
+          full_name: stored.name,
+          verified_at: new Date().toISOString()
+        }
       })
+
+      response.cookies.delete('fayda_otp_token')
+
+      return response
     }
 
     return NextResponse.json(
