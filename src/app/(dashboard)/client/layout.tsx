@@ -16,7 +16,8 @@ import {
   MessageSquare,
   CreditCard,
   Search,
-  Coins
+  Coins,
+  Wallet
 } from 'lucide-react'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
@@ -36,6 +37,7 @@ export default function ClientLayout({
     { href: '/client/find-freelancers', label: 'Find Talent', icon: Search },
     { href: '/client/chat', label: 'Chat', icon: MessageSquare },
     { href: '/client/applicants', label: 'Applicants', icon: Users },
+    { href: '/client/finance', label: 'Finance', icon: Wallet },
     { href: '/client/buy-coins', label: 'Buy Coins', icon: Coins },
     { href: '/client/gigs/create', label: 'Post Gig', icon: PlusCircle },
     { href: '/client/settings', label: 'Settings', icon: Settings },
